@@ -11,7 +11,6 @@
   backdrop-filter: blur(14px);
   isolation: isolate;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  will-change: transform;
   overflow-x: clip;
 }
 
@@ -1786,7 +1785,7 @@
     top: 0;
     right: 0;
     bottom: 0;
-    z-index: 1200;
+    z-index: 1310;
     width: min(92vw, 360px);
     height: 100vh;
     display: flex;
@@ -1799,11 +1798,12 @@
     overflow-y: auto;
     transform: translateX(100%);
     transition: transform var(--transition-base);
-    will-change: transform;
+    pointer-events: none;
   }
 
   .site-header.menu-open .nav-links {
     transform: translateX(0);
+    pointer-events: auto;
   }
 
   body.nav-open {
