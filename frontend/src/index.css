@@ -96,6 +96,7 @@ body,
 html {
   scroll-behavior: smooth;
   scrollbar-gutter: stable;
+  overflow-x: hidden;
 }
 
 body {
@@ -121,6 +122,8 @@ body {
 
 #root {
   width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 a {
@@ -173,6 +176,9 @@ button {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .container {
@@ -304,6 +310,8 @@ button {
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  max-width: 100%;
+  min-width: 0;
 }
 
 .glass-panel {
@@ -340,6 +348,11 @@ button {
   justify-content: center;
   gap: var(--space-xs);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-align: center;
 }
 
 .btn:disabled {
@@ -507,6 +520,9 @@ textarea {
   color: var(--text-base);
   text-transform: capitalize;
   transition: all var(--transition-fast);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .chip-btn:hover {

@@ -12,6 +12,7 @@
   isolation: isolate;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   will-change: transform;
+  overflow-x: clip;
 }
 
 .prototype-nav-shell {
@@ -470,6 +471,7 @@
 
 .home-horizontal-row-shell {
   position: relative;
+  overflow: hidden;
 }
 
 .home-horizontal-row-shell::before,
@@ -2009,7 +2011,8 @@
   }
 
   .nav-links {
-    width: min(100vw, 360px);
+    width: 100%;
+    max-width: 360px;
     padding: 5.3rem 0.85rem 0.9rem;
   }
 
@@ -2094,7 +2097,7 @@
   }
 
   .nav-links {
-    width: 100vw;
+    width: 100%;
   }
 }
 

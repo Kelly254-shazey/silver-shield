@@ -4,6 +4,7 @@ import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { apiFetch, resolveMediaUrl } from "../app/api";
 import { getProgramPath, PROGRAM_NAV_ITEMS } from "../app/programCatalog";
+import { FALLBACK_PROGRAMS } from "../app/fallbackContent";
 import { useToast } from "../context/ToastContext";
 
 function ProgramsPage() {
@@ -28,13 +29,27 @@ function ProgramsPage() {
     };
   }, [pushToast]);
 
-  const categories = useMemo(
-    () => ["all", ...new Set(programs.map((program) => program.category).filter(Boolean))],
+  const livePrograms = useMemo(
+    () => programs.filter((program) => String(program.status || "").toLowerCase() !== "draft"),
     [programs],
   );
 
-  const filtered = programs.filter((program) =>
-    category === "all" ? true : program.category === category,
+  const programItems = useMemo(
+    () => (livePrograms.length ? livePrograms : FALLBACK_PROGRAMS),
+    [livePrograms],
+  );
+
+  const categories = useMemo(
+    () => ["all", ...new Set(programItems.map((program) => program.category).filter(Boolean))],
+    [programItems],
+  );
+
+  const filtered = useMemo(
+    () =>
+      programItems.filter((program) =>
+        category === "all" ? true : program.category === category,
+      ),
+    [programItems, category],
   );
 
   return (
@@ -92,7 +107,10 @@ function ProgramsPage() {
                       Program details
                     </Link>
                     <div className="program-card-actions">
-                      <Link to={`/donate?programId=${program.id}`} className="btn btn-primary">
+                      <Link
+                        to={program.isFallback ? "/donate" : `/donate?programId=${program.id}`}
+                        className="btn btn-primary"
+                      >
                         Donate
                       </Link>
                       <Link

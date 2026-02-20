@@ -211,6 +211,8 @@ const FALLBACK_EVENTS = [
   },
 ];
 
+const INITIAL_NOW_TS = Date.now();
+
 function formatEventDate(value) {
   if (!value) {
     return "Date TBA";
@@ -252,6 +254,7 @@ function HomePage() {
   const [events, setEvents] = useState([]);
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [nowTimestamp, setNowTimestamp] = useState(INITIAL_NOW_TS);
   const { pushToast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -267,7 +270,6 @@ function HomePage() {
   );
   const publishedEvents = useMemo(() => events.filter((item) => item.status !== "draft"), [events]);
   const comingEvents = useMemo(() => {
-    const now = Date.now();
     return [...publishedEvents]
       .filter((item) => {
         const status = String(item.status || "").toLowerCase();
@@ -281,14 +283,14 @@ function HomePage() {
         if (Number.isNaN(eventTime)) {
           return status === "upcoming" || status === "ongoing";
         }
-        return eventTime >= now - 24 * 60 * 60 * 1000;
+        return eventTime >= nowTimestamp - 24 * 60 * 60 * 1000;
       })
       .sort((a, b) => {
         const aTime = a.eventDate ? new Date(a.eventDate).getTime() : Number.MAX_SAFE_INTEGER;
         const bTime = b.eventDate ? new Date(b.eventDate).getTime() : Number.MAX_SAFE_INTEGER;
         return aTime - bTime;
       });
-  }, [publishedEvents]);
+  }, [publishedEvents, nowTimestamp]);
   const programItems = useMemo(
     () => (livePrograms.length ? livePrograms : FALLBACK_PROGRAMS),
     [livePrograms],
@@ -421,6 +423,16 @@ function HomePage() {
       mounted = false;
     };
   }, [pushToast]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+    const syncNow = () => setNowTimestamp(Date.now());
+    syncNow();
+    const timer = window.setInterval(syncNow, 60000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const onContactSubmit = async (event) => {
     event.preventDefault();
@@ -1145,4 +1157,3 @@ function HomePage() {
 }
 
 export default HomePage;
-

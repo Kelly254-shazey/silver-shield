@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { apiFetch, resolveMediaUrl } from "../app/api";
+import { FALLBACK_EVENTS } from "../app/fallbackContent";
 import { useToast } from "../context/ToastContext";
 
 function formatDate(value) {
@@ -45,12 +46,22 @@ function EventsPage() {
     };
   }, [pushToast]);
 
+  const liveEvents = useMemo(
+    () => events.filter((item) => String(item.status || "").toLowerCase() !== "draft"),
+    [events],
+  );
+
+  const eventItems = useMemo(
+    () => (liveEvents.length ? liveEvents : FALLBACK_EVENTS),
+    [liveEvents],
+  );
+
   const filteredEvents = useMemo(() => {
     if (filter === "all") {
-      return events;
+      return eventItems;
     }
-    return events.filter((item) => item.status === filter);
-  }, [events, filter]);
+    return eventItems.filter((item) => String(item.status || "").toLowerCase() === filter);
+  }, [eventItems, filter]);
 
   return (
     <PageTransition className="page-space">
@@ -88,9 +99,9 @@ function EventsPage() {
                     />
                   </div>
                   <div className="media-content">
-                    <p className="chip">{event.status}</p>
+                    <p className="chip">{String(event.status || "upcoming").toLowerCase()}</p>
                     <h3>{event.title}</h3>
-                    <p>{event.description}</p>
+                    <p>{event.description || "Event details coming soon."}</p>
                     <div className="inline-meta">
                       <small>{formatDate(event.eventDate)}</small>
                       <small>{event.location || "Location TBA"}</small>
