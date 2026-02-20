@@ -1128,7 +1128,7 @@ function HomePage() {
             )}
 
             {stats.length > 0 && (
-              <section className="prototype-section compact-top">
+              <section className="prototype-section compact-top home-impact-section">
                 <div className="section-head split">
                   <h2>Live Impact Snapshot</h2>
                   <Link to="/impact" className="text-link">
@@ -1137,7 +1137,7 @@ function HomePage() {
                 </div>
                 <div className="grid four">
                   {stats.map((item) => (
-                    <article key={item.id} className="stat-card glass-card">
+                    <article key={item.id} className="stat-card glass-card hover-lift home-impact-card">
                       <p className="stat-label">{item.label}</p>
                       <h3>{Number(item.value || 0).toLocaleString()}</h3>
                       <small className={Number(item.trend) >= 0 ? "positive" : "negative"}>

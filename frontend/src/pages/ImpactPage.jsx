@@ -39,36 +39,56 @@ function ImpactPage() {
     [stats],
   );
 
+  const reports = stats.filter((item) => item.reportUrl);
+
   return (
-    <PageTransition className="page-space">
-      <section className="mini-hero container glass-panel">
-        <p className="eyebrow">Impact</p>
+    <PageTransition className="page-space impact-dashboard-page">
+      <section className="container impact-dashboard-hero glass-panel">
+        <p className="eyebrow">Impact Dashboard</p>
         <h1>Real-time impact indicators and downloadable accountability reports.</h1>
+        <p className="impact-dashboard-subtitle">
+          Live snapshots of community outcomes, progress trends, and verified reporting links.
+        </p>
+        <div className="impact-dashboard-hero-meta">
+          <span>{stats.length || 0} indicators</span>
+          <span>Auto-refresh every 20 seconds</span>
+        </div>
       </section>
 
       <section className="container section">
-        <div className="grid four">
+        <div className="grid four impact-metrics-grid">
           {loading
             ? Array.from({ length: 4 }).map((_, index) => (
-                <LoadingSkeleton key={`impact-skeleton-${index}`} className="stat-card" />
+                <LoadingSkeleton key={`impact-skeleton-${index}`} className="stat-card impact-stat-card" />
               ))
-            : stats.map((item) => (
-                <article key={item.id} className="stat-card glass-premium hover-lift">
+            : null}
+          {!loading && !stats.length ? (
+            <article className="glass-card impact-empty-card">
+              <h2>No impact indicators published yet</h2>
+              <p>Publish impact stats from admin to populate this dashboard.</p>
+            </article>
+          ) : null}
+          {!loading
+            ? stats.map((item) => (
+                <article key={item.id} className="stat-card glass-premium hover-lift impact-stat-card">
                   <p className="stat-label">{item.label}</p>
                   <h3>
                     <CountUp value={item.value} /> {item.unit}
                   </h3>
-                  <small className={Number(item.trend) >= 0 ? "positive" : "negative"}>
+                  <small
+                    className={`impact-trend ${Number(item.trend) >= 0 ? "positive" : "negative"}`}
+                  >
                     {Number(item.trend) >= 0 ? "+" : ""}
                     {item.trend}% trend
                   </small>
                 </article>
-              ))}
+              ))
+            : null}
         </div>
       </section>
 
-      <section className="container section impact-grid">
-        <article className="glass-card">
+      <section className="container section impact-grid impact-dashboard-grid">
+        <article className="glass-card impact-detail-card">
           <h2>Impact Distribution</h2>
           <div className="bar-chart">
             {stats.map((item) => (
@@ -88,7 +108,7 @@ function ImpactPage() {
           </div>
         </article>
 
-        <article className="glass-card">
+        <article className="glass-card impact-detail-card">
           <h2>Program Footprint Map</h2>
           <div className="map-embed">
             <iframe
@@ -100,17 +120,19 @@ function ImpactPage() {
       </section>
 
       <section className="container section">
-        <article className="glass-card">
+        <article className="glass-card impact-detail-card">
           <h2>Downloadable Reports</h2>
           <div className="report-list">
-            {stats
-              .filter((item) => item.reportUrl)
-              .map((item) => (
-                <a key={item.id} href={item.reportUrl} className="report-row">
+            {reports.length ? (
+              reports.map((item) => (
+                <a key={item.id} href={item.reportUrl} className="report-row" target="_blank" rel="noreferrer">
                   <span>{item.label} report</span>
                   <span>Download</span>
                 </a>
-              ))}
+              ))
+            ) : (
+              <p className="impact-empty-copy">No downloadable reports available yet.</p>
+            )}
           </div>
         </article>
       </section>
