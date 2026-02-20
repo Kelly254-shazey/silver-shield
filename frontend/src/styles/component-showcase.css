@@ -3,13 +3,15 @@
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 1200;
+  z-index: 1250;
   width: 100%;
   border-bottom: 1px solid rgba(255, 255, 255, 0.28);
   background: rgba(243, 232, 250, 0.68);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   isolation: isolate;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  will-change: transform;
 }
 
 .prototype-nav-shell {
@@ -1782,8 +1784,9 @@
     top: 0;
     right: 0;
     bottom: 0;
-    z-index: 1300;
+    z-index: 1200;
     width: min(92vw, 360px);
+    height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -1794,10 +1797,15 @@
     overflow-y: auto;
     transform: translateX(100%);
     transition: transform var(--transition-base);
+    will-change: transform;
   }
 
   .site-header.menu-open .nav-links {
     transform: translateX(0);
+  }
+
+  body.nav-open {
+    overflow: hidden;
   }
 
   .nav-dropdown-group {

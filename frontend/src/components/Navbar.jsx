@@ -29,8 +29,10 @@ function Navbar() {
       return undefined;
     }
     document.body.style.overflow = menuOpen ? "hidden" : "";
+    document.body.classList.toggle("nav-open", menuOpen);
     return () => {
       document.body.style.overflow = "";
+      document.body.classList.remove("nav-open");
     };
   }, [menuOpen]);
 

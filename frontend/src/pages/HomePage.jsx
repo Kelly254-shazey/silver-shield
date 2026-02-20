@@ -504,7 +504,17 @@ function HomePage() {
     if (!rail) {
       return;
     }
-    const step = Math.max(280, Math.floor(rail.clientWidth * 0.78));
+    
+    // Get first card's width to scroll by exact card width
+    const firstCard = rail.querySelector('.prototype-media-card');
+    if (!firstCard) {
+      return;
+    }
+    
+    const cardWidth = firstCard.offsetWidth;
+    const gap = parseInt(window.getComputedStyle(rail).gap || '0', 10);
+    const step = cardWidth + gap;
+    
     rail.scrollBy({
       left: direction * step,
       behavior: "smooth",
