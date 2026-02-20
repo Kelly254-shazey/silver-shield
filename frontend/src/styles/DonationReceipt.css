@@ -1,0 +1,229 @@
+/* ============================================================================
+   DONATION RECEIPT STYLES
+   ============================================================================ */
+
+.donation-receipt-container {
+  padding: var(--space-xl);
+  background: var(--white);
+  border-radius: var(--radius-lg);
+}
+
+.receipt-actions {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  justify-content: flex-end;
+}
+
+.donation-receipt {
+  background: var(--white);
+  padding: var(--space-2xl);
+  border: 2px solid rgba(106, 13, 173, 0.15);
+  border-radius: var(--radius-lg);
+  max-width: 8.5in;
+  margin: 0 auto;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.receipt-content {
+  margin: var(--space-2xl) 0;
+}
+
+.receipt-section {
+  margin-bottom: var(--space-2xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid rgba(106, 13, 173, 0.1);
+}
+
+.receipt-section:last-of-type {
+  border-bottom: none;
+}
+
+.receipt-section h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: var(--space-lg);
+  color: var(--primary-purple);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.receipt-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-lg);
+}
+
+.receipt-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.receipt-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.receipt-field label {
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-xs);
+}
+
+.receipt-field p {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  font-size: 1rem;
+}
+
+.donation-summary {
+  background: linear-gradient(135deg, rgba(106, 13, 173, 0.08) 0%, rgba(255, 46, 147, 0.08) 100%);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--primary-purple);
+}
+
+.amount-highlight {
+  font-size: 1.75rem !important;
+  font-weight: 900 !important;
+  background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.receipt-footer {
+  text-align: center;
+  margin: var(--space-2xl) 0;
+  padding: var(--space-lg);
+  background: linear-gradient(135deg, rgba(255, 46, 147, 0.05) 0%, rgba(106, 13, 173, 0.05) 100%);
+  border-radius: var(--radius-md);
+}
+
+.receipt-footer .thank-you {
+  font-size: 1.25rem;
+  color: var(--accent-pink);
+  margin-bottom: var(--space-md);
+}
+
+.receipt-footer .tax-note {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-bottom: var(--space-sm);
+}
+
+.receipt-footer .footer-contact {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.receipt-footer-branding {
+  text-align: center;
+  border-top: 2px solid rgba(106, 13, 173, 0.2);
+  padding-top: var(--space-lg);
+  margin-top: var(--space-lg);
+}
+
+.receipt-footer-branding p {
+  margin: var(--space-xs) 0;
+  color: var(--text-secondary);
+}
+
+.receipt-footer-branding p:first-child {
+  font-weight: 800;
+  color: var(--primary-purple);
+  font-size: 1.125rem;
+  letter-spacing: 1px;
+}
+
+.receipt-footer-branding p:last-child {
+  font-style: italic;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-pink), #ff6b8f);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1rem;
+}
+
+/* Status Colors */
+.status-completed {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.status-pending {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.status-failed {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+/* Print Styles */
+@media print {
+  .receipt-actions {
+    display: none;
+  }
+
+  .donation-receipt-container {
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  .donation-receipt {
+    border: 1px solid #ccc;
+    box-shadow: none;
+    page-break-after: always;
+    max-width: 100%;
+  }
+
+  .print-section {
+    page-break-inside: avoid;
+  }
+
+  .receipt-section,
+  .receipt-footer {
+    page-break-inside: avoid;
+  }
+
+  body {
+    background: white;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .donation-receipt-container {
+    padding: var(--space-md);
+  }
+
+  .donation-receipt {
+    padding: var(--space-lg);
+  }
+
+  .receipt-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .receipt-field.full-width {
+    grid-column: 1;
+  }
+
+  .receipt-actions {
+    flex-direction: column;
+  }
+
+  .receipt-actions .btn {
+    width: 100%;
+  }
+}

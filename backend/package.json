@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Silver Shield Organisation API",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "seed": "node src/scripts/seed.js"
+  },
+  "keywords": [
+    "silver-shield",
+    "ngo",
+    "express",
+    "mysql"
+  ],
+  "author": "Silver Shield Organisation",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^7.5.1",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.15.3",
+    "nodemailer": "^7.0.10",
+    "socket.io": "^4.8.1"
+  }
+}

@@ -1,0 +1,430 @@
+/* ============================================================================
+   SILVER SHIELD DESIGN SYSTEM GUIDE
+   World-Class Premium Digital Platform
+   ============================================================================
+
+   This file documents the complete design system for Silver Shield.
+   Reference this guide when creating new components or pages.
+
+   ============================================================================
+   TABLE OF CONTENTS
+   ============================================================================
+   
+   1. Core Design Principles
+   2. Color System
+   3. Typography System
+   4. Glassmorphism Components
+   5. Layout & Spacing
+   6. Button System
+   7. Form Elements
+   8. Navigation Patterns
+   9. Card Components
+   10. Animation & Motion
+   11. Responsive Design
+   12. Accessibility
+   13. Component Patterns
+   14. Quality Standards
+   15. Implementation Checklist
+
+   ============================================================================
+   1. CORE DESIGN PRINCIPLES
+   ============================================================================
+
+   • Clarity over decoration - Every element serves a purpose
+   • Hierarchy over noise - Clear visual structure guides attention
+   • Consistency over randomness - Unified patterns across all pages
+   • Space over density - Generous breathing room enhances elegance
+   • Elegance over excess - Refined simplicity creates premium feel
+
+   ============================================================================
+   2. COLOR SYSTEM
+   ============================================================================
+
+   Primary Palette:
+   --primary-purple: #6A0DAD    (Brand primary - 20% usage)
+   --accent-pink: #FF2E93       (Call-to-action - 10% usage)
+   --soft-lavender: #B799FF     (Supporting tones)
+   --background-base: #F9F6FF   (Neutral base - 70% usage)
+   --white: #FFFFFF             (Clean surfaces)
+   --text-primary: #1A1A1A      (Primary text)
+   --text-secondary: #665A80    (Body text)
+   --text-muted: #8B7FA0        (Captions)
+
+   Usage Rules:
+   • 70% soft neutral backgrounds (calm, spacious)
+   • 20% structured purple tones (brand, hierarchy)
+   • 10% accent pink (CTAs, highlights)
+
+   ============================================================================
+   3. TYPOGRAPHY SYSTEM
+   ============================================================================
+
+   Font Families:
+   --font-heading: "Poppins"    (Bold, confident, modern)
+   --font-body: "Inter"         (Clean, readable)
+
+   Type Scale:
+   H1: 60px/32px (desktop/mobile) - weight 800 - Hero titles
+   H2: 44px/28px - weight 700 - Section headers
+   H3: 30px/20px - weight 600 - Subsection titles
+   H4: 24px/18px - weight 600 - Card titles
+   Body: 16px - weight 400 - Paragraph text
+   Lead: 20px/18px - weight 400 - Intro paragraphs
+   Small: 14px - weight 400 - Captions
+
+   Typography Rules:
+   • Line Height: 1.2 for headings, 1.6-1.7 for body
+   • Letter Spacing: -0.02em to -0.03em for large headings
+   • Color: Headings use text-primary, body uses text-secondary
+   • Hierarchy: Clear size jumps between levels
+
+   ============================================================================
+   4. GLASSMORPHISM COMPONENTS
+   ============================================================================
+
+   Glass Card (Primary):
+   background: rgba(255, 255, 255, 0.75)
+   border: 1px solid rgba(255, 255, 255, 0.85)
+   border-radius: 24px
+   box-shadow: 0 16px 40px rgba(84, 34, 129, 0.18)
+   backdrop-filter: blur(16px)
+   padding: 32px
+
+   Glass Panel (Secondary):
+   background: rgba(255, 255, 255, 0.75)
+   border-radius: 20px
+   box-shadow: 0 8px 24px rgba(84, 34, 129, 0.16)
+   backdrop-filter: blur(14px)
+   padding: 24px
+
+   Glass Subtle (Tertiary):
+   background: rgba(255, 255, 255, 0.60)
+   border-radius: 20px
+   box-shadow: 0 4px 16px rgba(84, 34, 129, 0.12)
+   backdrop-filter: blur(12px)
+   padding: 24px
+
+   Usage Guidelines:
+   • Use for: Highlight cards, stat panels, feature blocks, CTAs
+   • Don't use for: Large text blocks, forms, entire sections
+   • Balance: Mix glass with solid white for readability
+   • Consistency: Same blur and border treatment
+
+   ============================================================================
+   5. LAYOUT & SPACING
+   ============================================================================
+
+   Container Widths:
+   --container-max: 1200px      (Standard content)
+   --container-narrow: 800px    (Text-focused)
+   --container-wide: 1400px     (Wide layouts)
+
+   Spacing Scale (8px base unit):
+   --space-xs: 8px      (0.5rem)
+   --space-sm: 12px     (0.75rem)
+   --space-md: 16px     (1rem)
+   --space-lg: 24px     (1.5rem)
+   --space-xl: 32px     (2rem)
+   --space-2xl: 48px    (3rem)
+   --space-3xl: 64px    (4rem)
+   --space-4xl: 96px    (6rem)
+   --space-5xl: 128px   (8rem)
+
+   Section Spacing:
+   • Standard: 96px top/bottom (desktop), 64px (mobile)
+   • Small: 64px top/bottom
+   • Large: 128px top/bottom
+   • Between Elements: 32px minimum, 48px preferred
+
+   Grid System:
+   .grid-2  (2 columns, min 280px)
+   .grid-3  (3 columns, min 260px)
+   .grid-4  (4 columns, min 240px)
+   All responsive, collapse to single column on mobile
+
+   ============================================================================
+   6. BUTTON SYSTEM
+   ============================================================================
+
+   Button Variants:
+
+   Primary Button:
+   • Use: Main actions, form submissions
+   • Style: Purple-to-pink gradient, white text, glow on hover
+   • Hover: Lifts 2px, increases glow
+   • Class: .btn-primary
+
+   Secondary Button:
+   • Use: Alternative actions, cancel
+   • Style: White background, purple border and text
+   • Hover: Subtle purple tint, lifts 2px
+   • Class: .btn-secondary
+
+   Donate Button:
+   • Use: Donation CTAs
+   • Style: Pink-to-purple gradient, strong glow
+   • Hover: Lifts 2px, scales 1.02x, enhanced glow
+   • Class: .btn-donate
+
+   Ghost Button:
+   • Use: Tertiary actions
+   • Style: Transparent, purple text, no border
+   • Hover: Subtle purple background
+   • Class: .btn-ghost
+
+   Button Sizes:
+   .btn-sm   (10px/20px padding, 14px text)
+   .btn      (14px/28px padding, 16px text - default)
+   .btn-lg   (18px/36px padding, 18px text)
+
+   Button Rules:
+   • Always fully rounded (border-radius: 9999px)
+   • Minimum 44px height (accessibility)
+   • Clear hover states with lift
+   • Disabled: 50% opacity, no pointer events
+
+   ============================================================================
+   7. FORM ELEMENTS
+   ============================================================================
+
+   Input Styles:
+   • Padding: 14px 16px
+   • Border: 1.5px solid rgba(106, 13, 173, 0.2)
+   • Border Radius: 12px
+   • Background: white
+   • Font Size: 16px (prevents zoom on iOS)
+
+   Focus State:
+   • Border: primary-purple
+   • Box Shadow: 0 0 0 3px rgba(106, 13, 173, 0.1)
+   • No outline
+
+   Form Structure:
+   .form-group - Wrapper with gap
+   .form-label - 14px, weight 600
+   .form-hint - 14px, muted color
+   .form-error - 14px, red color
+
+   ============================================================================
+   8. NAVIGATION PATTERNS
+   ============================================================================
+
+   Header:
+   • Position: Sticky top
+   • Background: rgba(249, 246, 255, 0.85) with blur
+   • Height: 72px
+   • Border: Subtle bottom border
+   • Shadow: Soft depth shadow
+
+   Navigation Links:
+   • Desktop: Horizontal inline
+   • Mobile: Slide-in drawer from right
+   • Active: Purple background tint, bold
+   • Hover: Purple text, subtle background
+
+   Mobile Menu:
+   • Width: 85vw max, 360px max
+   • Animation: Smooth slide-in (350ms)
+   • Backdrop: Dark overlay with blur
+   • Close: Tap backdrop or button
+
+   ============================================================================
+   9. CARD COMPONENTS
+   ============================================================================
+
+   Standard Card:
+   • Background: white
+   • Border Radius: 24px
+   • Shadow: medium (at rest)
+   • Padding: 32px
+   • Hover: Lift 6px, increase shadow
+
+   Card Structure:
+   .card - Base container
+   .card-image - 16:9 aspect ratio
+   .card-content - Main content area
+   .card-header - Title and meta
+   .card-title - 20px, weight 600
+   .card-description - Body text
+   .card-footer - Actions area
+
+   ============================================================================
+   10. ANIMATION & MOTION
+   ============================================================================
+
+   Timing Functions:
+   --transition-fast: 150ms     (Quick feedback)
+   --transition-base: 250ms     (Standard)
+   --transition-slow: 350ms     (Smooth reveals)
+   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1)
+
+   Allowed Animations:
+   1. Fade In - Opacity 0→1 with upward movement
+   2. Hover Lift - translateY(-4px) with shadow
+   3. Button Glow - Box-shadow expansion
+   4. Image Zoom - scale(1.05) on hover
+   5. Slide In - Drawer/modal entrance
+
+   Animation Rules:
+   • Subtle - No flashy movements
+   • Purposeful - Enhance clarity
+   • Smooth - Use ease-smooth timing
+   • Respectful - Honor prefers-reduced-motion
+
+   ============================================================================
+   11. RESPONSIVE DESIGN
+   ============================================================================
+
+   Breakpoints:
+   Mobile:     < 768px   (base styles)
+   Tablet:     ≥ 768px
+   Desktop:    ≥ 1024px
+   Large:      ≥ 1280px
+
+   Mobile-First:
+   • Base styles target mobile
+   • Progressive enhancement for larger screens
+   • No horizontal scroll
+   • Touch-friendly (44px minimum)
+   • Readable without zoom
+
+   Responsive Patterns:
+   • Navigation: Hamburger → horizontal
+   • Grids: Single column → multi-column
+   • Typography: Smaller → larger scales
+   • Spacing: Tighter → more generous
+   • Images: Stack → side-by-side
+
+   ============================================================================
+   12. ACCESSIBILITY
+   ============================================================================
+
+   Focus States:
+   • Visible: 2px purple outline, 2px offset
+   • Consistent: All interactive elements
+   • Clear: High contrast
+
+   Color Contrast:
+   • Text: Minimum 4.5:1 (WCAG AA)
+   • Large Text: Minimum 3:1
+   • Interactive: Clear distinction
+
+   Keyboard Navigation:
+   • Logical tab order
+   • Skip to content link
+   • Visible focus indicators
+   • No keyboard traps
+
+   Screen Readers:
+   • Semantic HTML
+   • ARIA labels where needed
+   • Alt text for images
+   • Descriptive link text
+
+   ============================================================================
+   13. COMPONENT PATTERNS
+   ============================================================================
+
+   Hero Section:
+   <section class="hero">
+     <div class="container">
+       <span class="eyebrow">EYEBROW TEXT</span>
+       <h1 class="hero-title">Main Headline</h1>
+       <p class="hero-description">Supporting text</p>
+       <div class="hero-actions">
+         <button class="btn btn-primary">Primary</button>
+         <button class="btn btn-secondary">Secondary</button>
+       </div>
+     </div>
+   </section>
+
+   Feature Block:
+   <div class="feature glass-card">
+     <div class="feature-icon">🎯</div>
+     <h3 class="feature-title">Feature Title</h3>
+     <p class="feature-description">Description</p>
+   </div>
+
+   Card Component:
+   <article class="card card-hover">
+     <img src="image.jpg" alt="Alt" class="card-image">
+     <div class="card-content">
+       <div class="card-header">
+         <h3 class="card-title">Title</h3>
+         <p class="card-description">Description</p>
+       </div>
+     </div>
+     <div class="card-footer">
+       <a href="#" class="btn btn-secondary">Action</a>
+     </div>
+   </article>
+
+   Stat Display:
+   <div class="stat-card glass-panel">
+     <div class="stat-value">1,234</div>
+     <div class="stat-label">Lives Impacted</div>
+   </div>
+
+   ============================================================================
+   14. QUALITY STANDARDS
+   ============================================================================
+
+   The design MUST feel like:
+   ✓ Professionally funded international NGO
+   ✓ Tech-forward social impact startup
+   ✓ Polished modern brand
+   ✓ Cohesive digital ecosystem
+
+   The design must NOT feel like:
+   ✗ A template
+   ✗ A school project
+   ✗ A random UI kit
+   ✗ An inconsistent layout
+
+   ============================================================================
+   15. IMPLEMENTATION CHECKLIST
+   ============================================================================
+
+   When creating new pages or components:
+
+   □ Use design tokens (CSS variables) consistently
+   □ Follow typography hierarchy (H1 → H2 → H3 → Body)
+   □ Apply spacing from spacing scale
+   □ Use glass components for highlights only
+   □ Ensure responsive behavior
+   □ Add hover states to interactive elements
+   □ Include focus states for accessibility
+   □ Test with keyboard navigation
+   □ Verify color contrast ratios
+   □ Optimize images for performance
+   □ Add appropriate ARIA labels
+   □ Test on mobile devices
+   □ Ensure no horizontal scroll
+   □ Maintain consistent border radius
+   □ Use shadow system appropriately
+
+   ============================================================================
+   UTILITY CLASSES QUICK REFERENCE
+   ============================================================================
+
+   Spacing:
+   .mt-lg, .mb-xl, .p-md, .gap-lg
+
+   Layout:
+   .container, .section, .grid-3, .flex-between
+
+   Typography:
+   .text-center, .text-primary, .eyebrow, .lead-text
+
+   Components:
+   .glass-card, .btn-primary, .badge, .hover-lift
+
+   ============================================================================
+   END OF DESIGN SYSTEM GUIDE
+   ============================================================================
+
+   Last Updated: February 2026
+   Version: 1.0
+   Maintained by: Silver Shield Development Team
+
+   ============================================================================ */

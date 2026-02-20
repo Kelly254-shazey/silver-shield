@@ -1,0 +1,5 @@
+/* App-level hooks for any cross-page adjustments that are not tokens/utilities. */
+
+main {
+  width: 100%;
+}

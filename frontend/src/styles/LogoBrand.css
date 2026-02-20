@@ -1,0 +1,295 @@
+/* ============================================================================
+   LOGO BRAND STYLES
+   ============================================================================ */
+
+.logo-brand-full,
+.logo-brand-icon,
+.logo-brand-minimal,
+.logo-brand {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.logo-brand:hover {
+  opacity: 0.85;
+}
+
+.logo-brand-full .logo-image,
+.logo-brand-icon .logo-image-icon,
+.logo-brand-minimal .logo-image-small,
+.logo-brand-document .logo-image-document {
+  object-fit: contain;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(94, 45, 121, 0.3);
+  box-shadow: 0 8px 18px rgba(74, 31, 99, 0.22);
+  padding: 0.22rem;
+}
+
+.logo-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-family: var(--font-heading);
+  letter-spacing: 0.02em;
+  color: #5e2d79;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.95), transparent 58%),
+    linear-gradient(135deg, #ead6f7, #f3e8fa);
+}
+
+/* Full Logo Variant */
+.logo-brand-full {
+  gap: var(--space-md);
+}
+
+.logo-brand-full .logo-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.logo-brand-full .logo-image {
+  width: 84px;
+  height: 84px;
+}
+
+.logo-brand-full .logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.logo-brand-full .org-name {
+  font-size: 1.15rem;
+  font-weight: 900;
+  margin: 0;
+  color: var(--primary-purple);
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.logo-brand-full .org-tagline {
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  line-height: 1;
+}
+
+.logo-brand-full .org-slogan {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(135deg, var(--accent-pink), #ff6b8f);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-style: italic;
+  line-height: 1;
+}
+
+/* Icon Variant */
+.logo-brand-icon {
+  width: 64px;
+  height: 64px;
+}
+
+.logo-brand-icon .logo-image-icon {
+  width: 100%;
+  height: 100%;
+}
+
+/* Minimal Variant */
+.logo-brand-minimal {
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.logo-brand-minimal .logo-image-small {
+  width: 58px;
+  height: 58px;
+}
+
+.logo-brand-minimal .logo-text-minimal {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.logo-brand-minimal strong {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--primary-purple);
+  letter-spacing: 0.5px;
+  margin: 0;
+  line-height: 1;
+}
+
+.logo-brand-minimal small {
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+  line-height: 1;
+}
+
+.brand-mark.logo-brand-minimal .logo-image-small {
+  width: 84px;
+  height: 84px;
+}
+
+.brand-mark.logo-brand-minimal strong {
+  font-size: 1.22rem;
+}
+
+.brand-mark.logo-brand-minimal small {
+  font-size: 0.72rem;
+}
+
+.footer-logo.logo-brand-full .logo-image {
+  width: 120px;
+  height: 120px;
+}
+
+.footer-logo.logo-brand-full .org-name {
+  font-size: 1.32rem;
+}
+
+/* Document Variant */
+.logo-brand-document {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  padding: var(--space-xl);
+  border-bottom: 2px solid rgba(106, 13, 173, 0.15);
+  margin-bottom: var(--space-xl);
+  background: linear-gradient(135deg, rgba(106, 13, 173, 0.05) 0%, rgba(255, 46, 147, 0.05) 100%);
+  border-radius: var(--radius-lg);
+}
+
+.logo-brand-document .logo-image-document {
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+}
+
+.logo-brand-document .document-branding {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.logo-brand-document .doc-org-name {
+  font-size: 1.5rem;
+  font-weight: 900;
+  margin: 0;
+  color: var(--primary-purple);
+  letter-spacing: 0.5px;
+}
+
+.logo-brand-document .doc-org-slogan {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(135deg, var(--accent-pink), #ff6b8f);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-style: italic;
+}
+
+.logo-brand-document .doc-org-contact {
+  font-size: 0.875rem;
+  margin: var(--space-sm) 0 0 0;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .logo-brand-full .logo-image {
+    width: 70px;
+    height: 70px;
+  }
+
+  .logo-brand-full .org-name {
+    font-size: 0.98rem;
+  }
+
+  .logo-brand-full .org-slogan {
+    font-size: 0.82rem;
+  }
+
+  .logo-brand-minimal .logo-image-small {
+    width: 52px;
+    height: 52px;
+  }
+
+  .brand-mark.logo-brand-minimal .logo-image-small {
+    width: 70px;
+    height: 70px;
+  }
+
+  .footer-logo.logo-brand-full .logo-image {
+    width: 96px;
+    height: 96px;
+  }
+
+  .logo-brand-document {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-lg);
+  }
+
+  .logo-brand-document .logo-image-document {
+    width: 80px;
+    height: 80px;
+  }
+
+  .logo-brand-document .doc-org-name {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-brand-full {
+    gap: var(--space-sm);
+  }
+
+  .logo-brand-full .logo-image {
+    width: 60px;
+    height: 60px;
+  }
+
+  .logo-brand-full .org-name {
+    font-size: 0.88rem;
+  }
+
+  .logo-brand-full .org-tagline {
+    font-size: 0.56rem;
+  }
+
+  .logo-brand-full .org-slogan {
+    font-size: 0.72rem;
+  }
+
+  .brand-mark.logo-brand-minimal .logo-image-small {
+    width: 62px;
+    height: 62px;
+  }
+
+  .footer-logo.logo-brand-full .logo-image {
+    width: 82px;
+    height: 82px;
+  }
+}
