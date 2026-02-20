@@ -288,8 +288,32 @@
     height: 62px;
   }
 
+  .brand-mark.logo-brand-minimal strong {
+    font-size: 0.9rem;
+    max-width: 12ch;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .brand-mark.logo-brand-minimal small {
+    display: none;
+  }
+
   .footer-logo.logo-brand-full .logo-image {
     width: 82px;
     height: 82px;
+  }
+}
+
+@media (max-width: 360px) {
+  .brand-mark.logo-brand-minimal .logo-image-small {
+    width: 52px;
+    height: 52px;
+  }
+
+  .brand-mark.logo-brand-minimal strong {
+    font-size: 0.82rem;
+    max-width: 9ch;
   }
 }

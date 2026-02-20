@@ -99,7 +99,7 @@ html {
 
 body {
   min-width: 320px;
-  overflow-x: clip;
+  overflow-x: hidden;
   font-family: var(--font-body);
   color: var(--text-strong);
   background:
@@ -110,6 +110,12 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+@supports (overflow: clip) {
+  body {
+    overflow-x: clip;
+  }
 }
 
 #root {
@@ -141,6 +147,14 @@ p {
 img {
   max-width: 100%;
   display: block;
+}
+
+main,
+section,
+article,
+.grid > *,
+.field-grid > * {
+  min-width: 0;
 }
 
 input,
@@ -183,7 +197,7 @@ button {
 }
 
 .page-space {
-  padding-top: 5.5rem;
+  padding-top: 6.25rem;
 }
 
 .grid {
@@ -673,7 +687,7 @@ textarea {
   }
 
   .page-space {
-    padding-top: 5.1rem;
+    padding-top: 5.7rem;
   }
 }
 
@@ -719,7 +733,7 @@ textarea {
   }
 
   .page-space {
-    padding-top: 4.8rem;
+    padding-top: 5.25rem;
   }
 
   .chip-btn {
@@ -731,5 +745,26 @@ textarea {
   .form-actions .btn,
   .inline-actions .btn {
     width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .grid.two,
+  .grid.three,
+  .grid.four,
+  .grid-2,
+  .grid-3,
+  .grid-4,
+  .field-grid.two {
+    grid-template-columns: 1fr;
+  }
+
+  .toast {
+    min-width: 0;
+    width: min(100%, 280px);
+  }
+
+  .page-space {
+    padding-top: 5rem;
   }
 }

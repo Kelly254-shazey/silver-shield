@@ -1034,5 +1034,15 @@
   .admin-topbar p {
     width: 100%;
     text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-link {
+    white-space: normal;
+    line-height: 1.22;
+  }
+
+  .admin-back-link {
+    font-size: 0.76rem;
   }
 }
