@@ -34,6 +34,45 @@ function ensureEventsTable() {
       if (!programSlugColumn[0]) {
         await query("ALTER TABLE events ADD COLUMN programSlug VARCHAR(160) NULL AFTER location");
       }
+
+      // Seed initial events if table is empty
+      const existingEvents = await query("SELECT COUNT(*) as count FROM events");
+      if (existingEvents[0].count === 0) {
+        const futureDate1 = new Date();
+        futureDate1.setDate(futureDate1.getDate() + 7);
+        const futureDate2 = new Date();
+        futureDate2.setDate(futureDate2.getDate() + 14);
+        const futureDate3 = new Date();
+        futureDate3.setDate(futureDate3.getDate() + 21);
+
+        await query(
+          `INSERT INTO events (
+            title, description, eventDate, location, status, coverImage
+          ) VALUES
+          (?, ?, ?, ?, 'upcoming', ?),
+          (?, ?, ?, ?, 'upcoming', ?),
+          (?, ?, ?, ?, 'upcoming', ?)`,
+          [
+            "Women in Enterprise Bootcamp",
+            "Hands-on training for women-led businesses, financial literacy, and networking.",
+            futureDate1.toISOString().slice(0, 19).replace("T", " "),
+            "Nairobi",
+            "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1400&q=80",
+
+            "Youth Innovation and Career Clinic",
+            "Career coaching, CV labs, and innovation showcases for youth participants.",
+            futureDate2.toISOString().slice(0, 19).replace("T", " "),
+            "Nakuru",
+            "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1400&q=80",
+
+            "Community Outreach Health and Legal Camp",
+            "Integrated clinic support with referrals for health, legal, and social protection.",
+            futureDate3.toISOString().slice(0, 19).replace("T", " "),
+            "Mombasa",
+            "https://images.unsplash.com/photo-1576765608866-5b51046452be?auto=format&fit=crop&w=1400&q=80",
+          ],
+        );
+      }
     })().catch((error) => {
       ensureEventsTablePromise = null;
       throw error;
