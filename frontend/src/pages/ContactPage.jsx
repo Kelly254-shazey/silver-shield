@@ -19,11 +19,18 @@ function ContactPage() {
     subject: "",
     message: "",
     website: "",
+    inquiryType: "general", // general, partner, volunteer
+    partnerCompanyName: "",
+    partnerDescription: "",
+    partnerRequirements: null,
+    volunteerSkills: "",
+    volunteerAvailability: "",
   });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [aiDoc, setAiDoc] = useState(null);
   const [aiLoading, setAiLoading] = useState(true);
+  const [fileError, setFileError] = useState("");
   const { pushToast } = useToast();
   const { showConfirm } = useDialog();
 
@@ -70,26 +77,70 @@ function ContactPage() {
       return;
     }
 
+    if (formData.inquiryType === "partner" && !formData.partnerCompanyName) {
+      pushToast("Please provide your company/organization name.", "error");
+      return;
+    }
+
+    if (formData.inquiryType === "volunteer" && !formData.volunteerSkills) {
+      pushToast("Please tell us about your skills and interests.", "error");
+      return;
+    }
+
     // Show confirmation dialog
     showConfirm({
       title: "Send Message",
-      message: `Are you sure you want to send this message to Silver Shield? We'll get back to you shortly.`,
+      message: `Are you sure you want to submit this ${formData.inquiryType} inquiry to Silver Shield? We'll get back to you shortly.`,
       confirmText: "Yes, Send",
       cancelText: "Cancel",
       variant: "primary",
       onConfirm: async () => {
         setLoading(true);
         try {
-          await apiFetch("/messages", {
-            method: "POST",
-            body: {
+          // If there's a file, we need to use FormData
+          if (formData.partnerRequirements && formData.inquiryType === "partner") {
+            const formDataObj = new FormData();
+            formDataObj.append("fullName", formData.fullName);
+            formDataObj.append("email", formData.email);
+            formDataObj.append("phone", formData.phone);
+            formDataObj.append("subject", formData.subject);
+            formDataObj.append("message", formData.message);
+            formDataObj.append("inquiryType", formData.inquiryType);
+            formDataObj.append("partnerCompanyName", formData.partnerCompanyName);
+            formDataObj.append("partnerDescription", formData.partnerDescription);
+            formDataObj.append("file", formData.partnerRequirements);
+
+            await apiFetch("/messages", {
+              method: "POST",
+              body: formDataObj,
+              useFormData: true,
+            });
+          } else {
+            const body = {
               fullName: formData.fullName,
               email: formData.email,
               phone: formData.phone,
               subject: formData.subject,
               message: formData.message,
-            },
-          });
+              inquiryType: formData.inquiryType,
+            };
+
+            if (formData.inquiryType === "partner") {
+              body.partnerCompanyName = formData.partnerCompanyName;
+              body.partnerDescription = formData.partnerDescription;
+            }
+
+            if (formData.inquiryType === "volunteer") {
+              body.volunteerSkills = formData.volunteerSkills;
+              body.volunteerAvailability = formData.volunteerAvailability;
+            }
+
+            await apiFetch("/messages", {
+              method: "POST",
+              body,
+            });
+          }
+
           setSubmitted(true);
           setFormData({
             fullName: "",
@@ -98,6 +149,12 @@ function ContactPage() {
             subject: "",
             message: "",
             website: "",
+            inquiryType: "general",
+            partnerCompanyName: "",
+            partnerDescription: "",
+            partnerRequirements: null,
+            volunteerSkills: "",
+            volunteerAvailability: "",
           });
           pushToast("Message sent successfully.", "success");
         } catch (error) {
@@ -109,6 +166,19 @@ function ContactPage() {
     });
   };
 
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        setFileError("File size must be less than 5MB");
+        return;
+      }
+      setFileError("");
+      setFormData((prev) => ({ ...prev, partnerRequirements: file }));
+    }
+  };
+
   return (
     <PageTransition className="page-space">
       <section className="mini-hero container glass-panel">
@@ -117,6 +187,24 @@ function ContactPage() {
       </section>
 
       <section className="container section contact-layout">
+        <article className="glass-card contact-cta" style={{ marginBottom: "2rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+            <div>
+              <h2>Interested in Partnership Opportunities?</h2>
+              <p>Join us in creating lasting community impact. We're looking for organizations, sponsors, and passionate volunteers.</p>
+            </div>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                setFormData((prev) => ({ ...prev, inquiryType: "partner" }));
+                document.getElementById("contact-form").scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              Partner With Us
+            </button>
+          </div>
+        </article>
+
         <article className="glass-card contact-info-panel">
           <h2>Reach Us</h2>
           <div className="contact-detail-list">
@@ -158,8 +246,24 @@ function ContactPage() {
           </article>
         </article>
 
-        <form className="glass-card contact-form" onSubmit={onSubmit}>
+        <form className="glass-card contact-form" id="contact-form" onSubmit={onSubmit}>
           <h2>Send Us a Message</h2>
+          
+          <div className="form-group">
+            <label htmlFor="inquiryType">Inquiry Type</label>
+            <select
+              id="inquiryType"
+              value={formData.inquiryType}
+              onChange={(event) =>
+                setFormData((prev) => ({ ...prev, inquiryType: event.target.value }))
+              }
+            >
+              <option value="general">General Inquiry</option>
+              <option value="partner">Partner With Us</option>
+              <option value="volunteer">Volunteer With Us</option>
+            </select>
+          </div>
+
           <div className="field-grid two">
             <input
               placeholder="Full name"
@@ -191,6 +295,61 @@ function ContactPage() {
               setFormData((prev) => ({ ...prev, subject: event.target.value }))
             }
           />
+
+          {formData.inquiryType === "partner" && (
+            <>
+              <input
+                placeholder="Company/Organization Name"
+                value={formData.partnerCompanyName}
+                onChange={(event) =>
+                  setFormData((prev) => ({ ...prev, partnerCompanyName: event.target.value }))
+                }
+              />
+              <textarea
+                rows={3}
+                placeholder="Tell us about your organization and how you'd like to partner with us"
+                value={formData.partnerDescription}
+                onChange={(event) =>
+                  setFormData((prev) => ({ ...prev, partnerDescription: event.target.value }))
+                }
+              />
+              <div className="form-group">
+                <label htmlFor="partnerRequirements">Upload Partnership Requirements/Proposal</label>
+                <input
+                  id="partnerRequirements"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt,.xls,.xlsx"
+                  onChange={handleFileChange}
+                />
+                {formData.partnerRequirements && (
+                  <p className="file-info">File selected: {formData.partnerRequirements.name}</p>
+                )}
+                {fileError && <p className="error-text">{fileError}</p>}
+                <small>Accepted formats: PDF, DOC, DOCX, TXT, XLS, XLSX (Max 5MB)</small>
+              </div>
+            </>
+          )}
+
+          {formData.inquiryType === "volunteer" && (
+            <>
+              <textarea
+                rows={3}
+                placeholder="Tell us about your skills and interests"
+                value={formData.volunteerSkills}
+                onChange={(event) =>
+                  setFormData((prev) => ({ ...prev, volunteerSkills: event.target.value }))
+                }
+              />
+              <input
+                placeholder="Your availability (e.g., Weekends, Evenings, Full-time)"
+                value={formData.volunteerAvailability}
+                onChange={(event) =>
+                  setFormData((prev) => ({ ...prev, volunteerAvailability: event.target.value }))
+                }
+              />
+            </>
+          )}
+
           <textarea
             rows={6}
             placeholder="Message"

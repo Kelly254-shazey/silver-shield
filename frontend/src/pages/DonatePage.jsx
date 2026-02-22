@@ -286,8 +286,19 @@ function DonatePage() {
         </form>
 
         <aside className="donate-sidebar">
-          {method === "MPESA" && !pendingDonation && (
-            <MpesaPaymentCard amount={amount} donorPhone={formData.donorPhone} />
+          {!pendingDonation && (
+            <>
+              {method === "MPESA" && (
+                <MpesaPaymentCard amount={amount} donorPhone={formData.donorPhone} />
+              )}
+              {method === "PAYPAL" && (
+                <div className="glass-card donate-status">
+                  <h3>PayPal Payment</h3>
+                  <p>Click "Initiate Donation" above to open PayPal checkout.</p>
+                  <p className="text-muted">Secure payment processing via PayPal.</p>
+                </div>
+              )}
+            </>
           )}
 
           <div className="glass-card donate-status">

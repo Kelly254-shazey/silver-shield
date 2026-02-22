@@ -15,16 +15,26 @@ export function resolveMediaUrl(value) {
   return `${API_ORIGIN}${input.startsWith("/") ? input : `/${input}`}`;
 }
 
-export async function apiFetch(path, { method = "GET", body, token, headers = {} } = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+export async function apiFetch(path, { method = "GET", body, token, headers = {}, useFormData = false } = {}) {
+  const options = {
     method,
     headers: {
-      "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  };
+
+  if (useFormData && body instanceof FormData) {
+    options.body = body;
+    // Don't set Content-Type header, let the browser set it with boundary
+  } else {
+    options.headers["Content-Type"] = "application/json";
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, options);
 
   const text = await response.text();
   let payload = null;

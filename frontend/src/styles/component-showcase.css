@@ -1829,6 +1829,69 @@
   gap: var(--space-md);
 }
 
+.contact-cta {
+  background: linear-gradient(135deg, rgba(94, 45, 121, 0.08), rgba(52, 143, 137, 0.08));
+  border: 1px solid rgba(94, 45, 121, 0.14);
+}
+
+.contact-cta h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.4rem;
+}
+
+.contact-cta p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.form-group {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-strong);
+}
+
+.form-group input[type="file"] {
+  padding: 0.65rem;
+  border: 2px dashed rgba(19, 57, 53, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 0.9rem;
+}
+
+.form-group input[type="file"]:hover {
+  border-color: rgba(19, 57, 53, 0.4);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.file-info {
+  margin: 0;
+  padding: 0.45rem 0;
+  font-size: 0.85rem;
+  color: var(--brand-600);
+  font-weight: 600;
+}
+
+.form-group small {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.error-text {
+  margin: 0;
+  padding: 0.45rem 0;
+  font-size: 0.85rem;
+  color: #d32f2f;
+  font-weight: 600;
+}
+
 .ai-contact-card {
   display: grid;
   gap: 0.45rem;
