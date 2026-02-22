@@ -230,13 +230,6 @@ function ContactPage() {
               >
                 Partner With Us
               </button>
-              <button
-                className="btn btn-outline"
-                type="button"
-                onClick={() => focusContactForm("volunteer")}
-              >
-                Volunteer
-              </button>
             </div>
           </div>
         </article>
