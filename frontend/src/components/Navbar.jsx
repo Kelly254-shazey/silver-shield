@@ -130,6 +130,9 @@ function Navbar() {
           </nav>
 
           <div className="prototype-nav-actions">
+            <Link to="/contact?inquiry=partner#contact-form" className="btn btn-secondary prototype-partner-btn">
+              Partner With Us
+            </Link>
             <Link to="/donate" className="btn btn-donate prototype-donate-btn">
               Donate
             </Link>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import PageTransition from "../components/PageTransition";
 import { apiFetch } from "../app/api";
 import { useToast } from "../context/ToastContext";
@@ -12,6 +13,7 @@ const detailCards = [
 ];
 
 function ContactPage() {
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -64,6 +66,25 @@ function ContactPage() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    const inquiry = String(searchParams.get("inquiry") || "").toLowerCase();
+    if (!["partner", "volunteer"].includes(inquiry)) {
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      inquiryType: inquiry,
+      partnerRequirements: inquiry === "partner" ? prev.partnerRequirements : null,
+    }));
+    setFileError("");
+
+    const formElement = document.getElementById("contact-form");
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [searchParams]);
 
   const focusContactForm = (inquiryType) => {
     setFormData((prev) => ({

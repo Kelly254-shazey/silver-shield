@@ -92,15 +92,18 @@ function AdminDashboardPage() {
 
   return (
     <PageTransition className="admin-page">
-      <section className="admin-section">
+      <section className="admin-section admin-dashboard-section">
         <h1>Dashboard</h1>
-        <div className="grid three">
+        <div className="grid three admin-dashboard-grid">
           {loading
             ? Array.from({ length: 6 }).map((_, index) => (
-                <LoadingSkeleton key={`admin-card-loading-${index}`} className="stat-card" />
+                <LoadingSkeleton
+                  key={`admin-card-loading-${index}`}
+                  className="stat-card admin-stat-card"
+                />
               ))
             : cards.map((card) => (
-                <article key={card.label} className="glass-card stat-card">
+                <article key={card.label} className="glass-card stat-card admin-stat-card">
                   <p className="stat-label">{card.label}</p>
                   <h3>{card.value}</h3>
                 </article>
@@ -108,8 +111,8 @@ function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="admin-section admin-lists">
-        <article className="glass-card">
+      <section className="admin-section admin-lists admin-dashboard-lists">
+        <article className="glass-card admin-dashboard-panel">
           <h2>Recent Inbox Messages</h2>
           <div className="simple-list">
             {recentMessages.map((item) => (
@@ -123,7 +126,7 @@ function AdminDashboardPage() {
           </div>
         </article>
 
-        <article className="glass-card">
+        <article className="glass-card admin-dashboard-panel">
           <h2>Recent Donations</h2>
           <div className="simple-list">
             {recentDonations.map((item) => (
