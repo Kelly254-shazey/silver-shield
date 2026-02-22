@@ -65,6 +65,21 @@ function ContactPage() {
     };
   }, []);
 
+  const focusContactForm = (inquiryType) => {
+    setFormData((prev) => ({
+      ...prev,
+      inquiryType,
+      partnerRequirements:
+        inquiryType === "partner" ? prev.partnerRequirements : null,
+    }));
+    setFileError("");
+
+    const formElement = document.getElementById("contact-form");
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   const onSubmit = async (event) => {
     event.preventDefault();
     if (formData.website) {
@@ -79,6 +94,11 @@ function ContactPage() {
 
     if (formData.inquiryType === "partner" && !formData.partnerCompanyName) {
       pushToast("Please provide your company/organization name.", "error");
+      return;
+    }
+
+    if (formData.inquiryType === "partner" && !formData.partnerRequirements) {
+      pushToast("Please upload your partnership requirements.", "error");
       return;
     }
 
@@ -97,8 +117,7 @@ function ContactPage() {
       onConfirm: async () => {
         setLoading(true);
         try {
-          // If there's a file, we need to use FormData
-          if (formData.partnerRequirements && formData.inquiryType === "partner") {
+          if (formData.inquiryType === "partner") {
             const formDataObj = new FormData();
             formDataObj.append("fullName", formData.fullName);
             formDataObj.append("email", formData.email);
@@ -168,15 +187,22 @@ function ContactPage() {
 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSize) {
-        setFileError("File size must be less than 5MB");
-        return;
-      }
+    if (!file) {
       setFileError("");
-      setFormData((prev) => ({ ...prev, partnerRequirements: file }));
+      setFormData((prev) => ({ ...prev, partnerRequirements: null }));
+      return;
     }
+
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setFileError("File size must be less than 5MB");
+      setFormData((prev) => ({ ...prev, partnerRequirements: null }));
+      event.target.value = "";
+      return;
+    }
+
+    setFileError("");
+    setFormData((prev) => ({ ...prev, partnerRequirements: file }));
   };
 
   return (
@@ -187,21 +213,31 @@ function ContactPage() {
       </section>
 
       <section className="container section contact-layout">
-        <article className="glass-card contact-cta" style={{ marginBottom: "2rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+        <article className="glass-card contact-cta">
+          <div className="contact-cta-row">
             <div>
               <h2>Interested in Partnership Opportunities?</h2>
-              <p>Join us in creating lasting community impact. We're looking for organizations, sponsors, and passionate volunteers.</p>
+              <p>
+                Join us in creating lasting community impact. We are looking for
+                organizations, sponsors, and passionate volunteers.
+              </p>
             </div>
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                setFormData((prev) => ({ ...prev, inquiryType: "partner" }));
-                document.getElementById("contact-form").scrollIntoView({ behavior: "smooth" });
-              }}
-            >
-              Partner With Us
-            </button>
+            <div className="contact-cta-actions">
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => focusContactForm("partner")}
+              >
+                Partner With Us
+              </button>
+              <button
+                className="btn btn-outline"
+                type="button"
+                onClick={() => focusContactForm("volunteer")}
+              >
+                Volunteer
+              </button>
+            </div>
           </div>
         </article>
 
@@ -254,19 +290,31 @@ function ContactPage() {
             <select
               id="inquiryType"
               value={formData.inquiryType}
-              onChange={(event) =>
-                setFormData((prev) => ({ ...prev, inquiryType: event.target.value }))
-              }
+              onChange={(event) => {
+                const nextType = event.target.value;
+                setFormData((prev) => ({
+                  ...prev,
+                  inquiryType: nextType,
+                  partnerRequirements:
+                    nextType === "partner" ? prev.partnerRequirements : null,
+                }));
+                setFileError("");
+              }}
             >
               <option value="general">General Inquiry</option>
               <option value="partner">Partner With Us</option>
               <option value="volunteer">Volunteer With Us</option>
             </select>
+            <small>
+              Choose <strong>Partner With Us</strong> to upload your requirements
+              or <strong>Volunteer With Us</strong> to share your skills.
+            </small>
           </div>
 
           <div className="field-grid two">
             <input
               placeholder="Full name"
+              required
               value={formData.fullName}
               onChange={(event) =>
                 setFormData((prev) => ({ ...prev, fullName: event.target.value }))
@@ -275,6 +323,7 @@ function ContactPage() {
             <input
               type="email"
               placeholder="Email"
+              required
               value={formData.email}
               onChange={(event) =>
                 setFormData((prev) => ({ ...prev, email: event.target.value }))
@@ -290,6 +339,7 @@ function ContactPage() {
           />
           <input
             placeholder="Subject"
+            required
             value={formData.subject}
             onChange={(event) =>
               setFormData((prev) => ({ ...prev, subject: event.target.value }))
@@ -300,6 +350,7 @@ function ContactPage() {
             <>
               <input
                 placeholder="Company/Organization Name"
+                required
                 value={formData.partnerCompanyName}
                 onChange={(event) =>
                   setFormData((prev) => ({ ...prev, partnerCompanyName: event.target.value }))
@@ -319,13 +370,14 @@ function ContactPage() {
                   id="partnerRequirements"
                   type="file"
                   accept=".pdf,.doc,.docx,.txt,.xls,.xlsx"
+                  required={formData.inquiryType === "partner"}
                   onChange={handleFileChange}
                 />
                 {formData.partnerRequirements && (
                   <p className="file-info">File selected: {formData.partnerRequirements.name}</p>
                 )}
                 {fileError && <p className="error-text">{fileError}</p>}
-                <small>Accepted formats: PDF, DOC, DOCX, TXT, XLS, XLSX (Max 5MB)</small>
+                <small>Accepted formats: PDF, DOC, DOCX, TXT, XLS, XLSX (max 5MB)</small>
               </div>
             </>
           )}
@@ -335,6 +387,7 @@ function ContactPage() {
               <textarea
                 rows={3}
                 placeholder="Tell us about your skills and interests"
+                required
                 value={formData.volunteerSkills}
                 onChange={(event) =>
                   setFormData((prev) => ({ ...prev, volunteerSkills: event.target.value }))
@@ -353,6 +406,7 @@ function ContactPage() {
           <textarea
             rows={6}
             placeholder="Message"
+            required
             value={formData.message}
             onChange={(event) =>
               setFormData((prev) => ({ ...prev, message: event.target.value }))

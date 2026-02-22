@@ -1,17 +1,40 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../app/api";
 
+const fallbackDetails = {
+  paybill: "522522",
+  accountNumber: "1342183193",
+  environment: "sandbox",
+  configured: false,
+  warnings: [],
+};
+
 function MpesaPaymentCard({ amount = 0 }) {
-  const [mpesaDetails, setMpesaDetails] = useState(null);
+  const [mpesaDetails, setMpesaDetails] = useState(fallbackDetails);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     const fetchMpesaDetails = async () => {
       try {
         const response = await apiFetch("/donations/mpesa/details");
-        setMpesaDetails(response.data);
+        const data = response?.data || {};
+        setMpesaDetails({
+          paybill: String(data.paybill || fallbackDetails.paybill),
+          accountNumber: String(data.accountNumber || fallbackDetails.accountNumber),
+          environment: String(data.environment || fallbackDetails.environment),
+          configured: Boolean(data.configured),
+          warnings: Array.isArray(data.warnings) ? data.warnings : [],
+        });
+        setLoadError("");
       } catch (error) {
         console.error("Failed to fetch M-Pesa details:", error);
+        setLoadError("Live M-Pesa details are unavailable. Showing fallback paybill details.");
+        setMpesaDetails((prev) => ({
+          ...fallbackDetails,
+          paybill: prev?.paybill || fallbackDetails.paybill,
+          accountNumber: prev?.accountNumber || fallbackDetails.accountNumber,
+        }));
       } finally {
         setLoading(false);
       }
@@ -29,9 +52,8 @@ function MpesaPaymentCard({ amount = 0 }) {
     );
   }
 
-  if (!mpesaDetails) {
-    return null;
-  }
+  const paybill = String(mpesaDetails?.paybill || fallbackDetails.paybill);
+  const accountNumber = String(mpesaDetails?.accountNumber || fallbackDetails.accountNumber);
 
   return (
     <div className="mpesa-card glass-panel premium-gradient">
@@ -44,11 +66,11 @@ function MpesaPaymentCard({ amount = 0 }) {
         <div className="payment-method">
           <label>Pay Bill Number</label>
           <div className="highlight-box">
-            <code className="mono-code">{mpesaDetails.paybill}</code>
+            <code className="mono-code">{paybill}</code>
             <button
               className="copy-btn"
               type="button"
-              onClick={() => navigator.clipboard.writeText(mpesaDetails.paybill)}
+              onClick={() => navigator.clipboard.writeText(paybill)}
               title="Copy paybill"
             >
               Copy
@@ -59,11 +81,11 @@ function MpesaPaymentCard({ amount = 0 }) {
         <div className="payment-method">
           <label>Account Number</label>
           <div className="highlight-box">
-            <code className="mono-code">{mpesaDetails.accountNumber}</code>
+            <code className="mono-code">{accountNumber}</code>
             <button
               className="copy-btn"
               type="button"
-              onClick={() => navigator.clipboard.writeText(mpesaDetails.accountNumber)}
+              onClick={() => navigator.clipboard.writeText(accountNumber)}
               title="Copy account number"
             >
               Copy
@@ -89,10 +111,10 @@ function MpesaPaymentCard({ amount = 0 }) {
               Select <strong>Lipa na M-Pesa</strong>, then <strong>Pay Bill</strong>
             </li>
             <li>
-              Enter Pay Bill Number: <strong>{mpesaDetails.paybill}</strong>
+              Enter Pay Bill Number: <strong>{paybill}</strong>
             </li>
             <li>
-              Enter Account Reference: <strong>{mpesaDetails.accountNumber}</strong>
+              Enter Account Reference: <strong>{accountNumber}</strong>
             </li>
             {amount > 0 && (
               <li>
@@ -111,6 +133,7 @@ function MpesaPaymentCard({ amount = 0 }) {
               Environment: <strong>{mpesaDetails.environment}</strong>
             </p>
           )}
+          {loadError && <p>{loadError}</p>}
         </div>
       </div>
     </div>

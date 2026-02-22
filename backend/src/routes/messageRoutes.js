@@ -94,6 +94,7 @@ router.post(
       volunteerSkills = "",
       volunteerAvailability = "",
     } = req.body;
+    const normalizedInquiryType = String(inquiryType || "general").toLowerCase();
 
     if (!fullName || !email || !subject || !message) {
       return res.status(400).json({
@@ -101,20 +102,32 @@ router.post(
       });
     }
 
-    if (inquiryType === "partner" && !partnerCompanyName) {
+    if (!["general", "partner", "volunteer"].includes(normalizedInquiryType)) {
+      return res.status(400).json({
+        message: "Invalid inquiry type.",
+      });
+    }
+
+    if (normalizedInquiryType === "partner" && !partnerCompanyName) {
       return res.status(400).json({
         message: "Company/Organization name is required for partner inquiries.",
       });
     }
 
-    if (inquiryType === "volunteer" && !volunteerSkills) {
+    if (normalizedInquiryType === "partner" && !req.file) {
+      return res.status(400).json({
+        message: "Please upload partnership requirements for partner inquiries.",
+      });
+    }
+
+    if (normalizedInquiryType === "volunteer" && !volunteerSkills) {
       return res.status(400).json({
         message: "Skills information is required for volunteer inquiries.",
       });
     }
 
     let partnerRequirementsFile = null;
-    if (req.file && inquiryType === "partner") {
+    if (req.file && normalizedInquiryType === "partner") {
       partnerRequirementsFile = `/uploads/partner-documents/${req.file.filename}`;
     }
 
@@ -132,7 +145,7 @@ router.post(
         String(phone || "").trim(),
         String(subject).trim(),
         String(message).trim(),
-        String(inquiryType).toLowerCase(),
+        normalizedInquiryType,
         String(partnerCompanyName || "").trim(),
         String(partnerDescription || "").trim(),
         partnerRequirementsFile,
