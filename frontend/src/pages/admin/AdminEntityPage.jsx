@@ -244,23 +244,40 @@ function AdminEntityPage({ title, endpoint, fields }) {
 
   const onSubmit = async (event) => {
     event.preventDefault();
+    const payload = toPayload(formData);
+
+    if (editingId !== null) {
+      showConfirm({
+        title: `Update ${entityName}?`,
+        message: `Save the changes you made to this ${entityName.toLowerCase()}?`,
+        confirmText: "Update",
+        cancelText: "Cancel",
+        variant: "primary",
+        onConfirm: async () => {
+          try {
+            await apiFetch(`${endpoint}/${editingId}`, {
+              method: "PUT",
+              token,
+              body: payload,
+            });
+            pushToast(`${entityName} updated.`, "success");
+            await load();
+            resetForm();
+          } catch (error) {
+            pushToast(error.message, "error");
+          }
+        },
+      });
+      return;
+    }
+
     try {
-      const payload = toPayload(formData);
-      if (editingId !== null) {
-        await apiFetch(`${endpoint}/${editingId}`, {
-          method: "PUT",
-          token,
-          body: payload,
-        });
-        pushToast(`${entityName} updated.`, "success");
-      } else {
-        await apiFetch(endpoint, {
-          method: "POST",
-          token,
-          body: payload,
-        });
-        pushToast(`${entityName} created.`, "success");
-      }
+      await apiFetch(endpoint, {
+        method: "POST",
+        token,
+        body: payload,
+      });
+      pushToast(`${entityName} created.`, "success");
       await load();
       resetForm();
     } catch (error) {

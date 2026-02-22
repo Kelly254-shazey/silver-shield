@@ -3,6 +3,7 @@ import PageTransition from "../../components/PageTransition";
 import { API_BASE_URL, apiFetch, resolveMediaUrl } from "../../app/api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { useDialog } from "../../context/DialogContext";
 
 const initialForm = {
   title: "About Silver Shield",
@@ -16,6 +17,7 @@ const initialForm = {
 function AdminAboutPage() {
   const { token } = useAuth();
   const { pushToast } = useToast();
+  const { showConfirm } = useDialog();
   const [formData, setFormData] = useState(initialForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -91,20 +93,29 @@ function AdminAboutPage() {
 
   const onSubmit = async (event) => {
     event.preventDefault();
-    setSaving(true);
-    try {
-      const response = await apiFetch("/about", {
-        method: "PUT",
-        token,
-        body: formData,
-      });
-      setFormData((prev) => ({ ...prev, ...(response.data || {}) }));
-      pushToast("About page updated.", "success");
-    } catch (error) {
-      pushToast(error.message || "Unable to save about content.", "error");
-    } finally {
-      setSaving(false);
-    }
+    showConfirm({
+      title: "Update About Page?",
+      message: "Save these About page changes now?",
+      confirmText: "Save Changes",
+      cancelText: "Cancel",
+      variant: "primary",
+      onConfirm: async () => {
+        setSaving(true);
+        try {
+          const response = await apiFetch("/about", {
+            method: "PUT",
+            token,
+            body: formData,
+          });
+          setFormData((prev) => ({ ...prev, ...(response.data || {}) }));
+          pushToast("About page updated.", "success");
+        } catch (error) {
+          pushToast(error.message || "Unable to save about content.", "error");
+        } finally {
+          setSaving(false);
+        }
+      },
+    });
   };
 
   if (loading) {

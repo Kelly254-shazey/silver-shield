@@ -162,18 +162,34 @@ function AdminTeamPage() {
       orderIndex: Number(formData.orderIndex || 0),
     };
 
+    if (editingId !== "new") {
+      showConfirm({
+        title: "Save Changes?",
+        message: `Update this ${isTeam ? "team member" : "board member"} profile with the new details?`,
+        confirmText: "Update",
+        cancelText: "Cancel",
+        variant: "primary",
+        onConfirm: async () => {
+          try {
+            await apiFetch(`${endpoint}/${editingId}`, {
+              method: "PUT",
+              token,
+              body: payload,
+            });
+            pushToast(`${isTeam ? "Team member" : "Board member"} updated successfully.`, "success");
+            handleCancel();
+            await fetchData();
+          } catch (error) {
+            pushToast(error.message || "Failed to save member.", "error");
+          }
+        },
+      });
+      return;
+    }
+
     try {
-      if (editingId === "new") {
-        await apiFetch(endpoint, { method: "POST", token, body: payload });
-        pushToast(`${isTeam ? "Team member" : "Board member"} added successfully.`, "success");
-      } else {
-        await apiFetch(`${endpoint}/${editingId}`, {
-          method: "PUT",
-          token,
-          body: payload,
-        });
-        pushToast(`${isTeam ? "Team member" : "Board member"} updated successfully.`, "success");
-      }
+      await apiFetch(endpoint, { method: "POST", token, body: payload });
+      pushToast(`${isTeam ? "Team member" : "Board member"} added successfully.`, "success");
       handleCancel();
       await fetchData();
     } catch (error) {

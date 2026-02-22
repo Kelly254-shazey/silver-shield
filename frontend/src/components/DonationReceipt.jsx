@@ -103,7 +103,7 @@ function DonationReceipt({
               Your donation is tax-deductible where applicable.
             </p>
             <p className="footer-contact">
-              For inquiries, contact us at hello@silvershield.org or call 0726 836021
+              For inquiries, contact us at hello@silvershield.org or call 0726 836021 / 0115 362421
             </p>
           </div>
         </div>

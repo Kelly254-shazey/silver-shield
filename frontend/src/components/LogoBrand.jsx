@@ -77,7 +77,7 @@ function LogoBrand({ variant = "full", className = "" }) {
           <h2 className="doc-org-name">SILVER SHIELD ORGANISATION</h2>
           <p className="doc-org-slogan">Shaping Lives</p>
           <p className="doc-org-contact">
-            Community Impact Centre, Nairobi, Kenya | hello@silvershield.org | 0726 836021
+            Community Impact Centre, Nairobi, Kenya | hello@silvershield.org | 0726 836021 / 0115 362421
           </p>
         </div>
       </div>

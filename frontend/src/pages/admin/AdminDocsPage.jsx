@@ -39,22 +39,38 @@ function AdminDocsPage() {
 
   const onSubmit = async (event) => {
     event.preventDefault();
+    if (editingId) {
+      showConfirm({
+        title: "Update Document?",
+        message: "Save your changes to this document and re-index it for AI responses?",
+        confirmText: "Update",
+        cancelText: "Cancel",
+        variant: "primary",
+        onConfirm: async () => {
+          try {
+            await apiFetch(`/docs/${editingId}`, {
+              method: "PUT",
+              token,
+              body: formData,
+            });
+            pushToast("Document updated and re-indexed.", "success");
+            await loadDocs();
+            resetForm();
+          } catch (error) {
+            pushToast(error.message, "error");
+          }
+        },
+      });
+      return;
+    }
+
     try {
-      if (editingId) {
-        await apiFetch(`/docs/${editingId}`, {
-          method: "PUT",
-          token,
-          body: formData,
-        });
-        pushToast("Document updated and re-indexed.", "success");
-      } else {
-        await apiFetch("/docs", {
-          method: "POST",
-          token,
-          body: formData,
-        });
-        pushToast("Document created and indexed.", "success");
-      }
+      await apiFetch("/docs", {
+        method: "POST",
+        token,
+        body: formData,
+      });
+      pushToast("Document created and indexed.", "success");
       await loadDocs();
       resetForm();
     } catch (error) {
