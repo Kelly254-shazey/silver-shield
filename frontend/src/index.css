@@ -1,30 +1,30 @@
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap");
 
 :root {
-  --brand-900: #0c4a6e;
-  --brand-800: #0369a1;
-  --brand-700: #0284c7;
-  --brand-600: #0ea5e9;
-  --brand-500: #06b6d4;
-  --brand-300: #67e8f9;
-  --accent-700: #1b87d8;
-  --accent-500: #38bdf8;
-  --accent-300: #e0f2fe;
+  --brand-900: #3d1a53;
+  --brand-800: #52276f;
+  --brand-700: #6d3891;
+  --brand-600: #9260b3;
+  --brand-500: #c3a1dd;
+  --brand-300: #eadcf5;
+  --accent-700: #cc4f94;
+  --accent-500: #e58cb8;
+  --accent-300: #f8e9f2;
 
   --surface-strong: #ffffff;
-  --surface-base: #f0f9ff;
-  --surface-soft: #e0f2fe;
-  --surface-muted: #f8fcfd;
+  --surface-base: #f5edf9;
+  --surface-soft: #efe0f7;
+  --surface-muted: #faf6fd;
 
-  --text-strong: #082f49;
-  --text-base: #164e63;
-  --text-muted: #155e75;
-  --text-subtle: #475569;
+  --text-strong: #2f1c3c;
+  --text-base: #4a355f;
+  --text-muted: #6f5d83;
+  --text-subtle: #9385a5;
 
   --success: #1f8f49;
   --warning: #b67a23;
   --danger: #be3f3f;
-  --info: #0369a1;
+  --info: #6d3891;
 
   --radius-xs: 8px;
   --radius-sm: 12px;
@@ -43,10 +43,10 @@
   --space-3xl: 4rem;
   --space-4xl: 5.5rem;
 
-  --shadow-xs: 0 2px 8px rgba(15, 23, 42, 0.08);
-  --shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.1);
-  --shadow-md: 0 16px 36px rgba(15, 23, 42, 0.12);
-  --shadow-lg: 0 26px 50px rgba(15, 23, 42, 0.16);
+  --shadow-xs: 0 2px 8px rgba(58, 22, 79, 0.08);
+  --shadow-sm: 0 8px 20px rgba(58, 22, 79, 0.1);
+  --shadow-md: 0 16px 36px rgba(58, 22, 79, 0.12);
+  --shadow-lg: 0 26px 50px rgba(58, 22, 79, 0.16);
 
   --container-max: 1180px;
   --container-wide: 1320px;
@@ -63,7 +63,7 @@
   --z-modal: 90;
   --z-toast: 95;
 
-  --hero-gradient: linear-gradient(135deg, #0369a1, #0284c7, #0ea5e9, #06b6d4);
+  --hero-gradient: linear-gradient(135deg, #52276f, #6d3891, #9260b3, #cc4f94);
 
   /* Legacy aliases used by existing components */
   --primary-purple: var(--brand-700);
@@ -77,7 +77,7 @@
   --glass-surface-strong: rgba(255, 255, 255, 0.3);
   --glass-surface-subtle: rgba(255, 255, 255, 0.16);
   --glass-border: rgba(255, 255, 255, 0.32);
-  --glass-border-subtle: rgba(3, 105, 161, 0.22);
+  --glass-border-subtle: rgba(109, 56, 145, 0.22);
 }
 
 *,
@@ -105,9 +105,9 @@ body {
   font-family: var(--font-body);
   color: var(--text-strong);
   background:
-    radial-gradient(circle at 10% 0%, rgba(165, 107, 203, 0.26), transparent 40%),
-    radial-gradient(circle at 92% 12%, rgba(228, 90, 166, 0.22), transparent 38%),
-    linear-gradient(180deg, #f3e8fa 0%, #ead6f7 52%, #f3e8fa 100%);
+    radial-gradient(circle at 10% 0%, rgba(146, 96, 179, 0.24), transparent 40%),
+    radial-gradient(circle at 92% 12%, rgba(204, 79, 148, 0.2), transparent 38%),
+    linear-gradient(180deg, #f5edf9 0%, #efe0f7 52%, #f5edf9 100%);
   background-attachment: fixed;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
