@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { API_BASE_URL, apiFetch } from "../app/api";
 import PageTransition from "../components/PageTransition";
-import MpesaPaymentCard from "../components/MpesaPaymentCard";
 import { useDialog } from "../context/DialogContext";
 import { useToast } from "../context/ToastContext";
 
@@ -30,7 +29,7 @@ function DonatePage() {
 
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [customAmount, setCustomAmount] = useState("");
-  const [method, setMethod] = useState("MPESA");
+  const [method, setMethod] = useState("PAYHERO");
   const [formData, setFormData] = useState({
     donorName: "",
     donorEmail: "",
@@ -41,7 +40,7 @@ function DonatePage() {
 
   const [pendingDonation, setPendingDonation] = useState(null);
   const [processing, setProcessing] = useState(false);
-  const [mpesaDetails, setMpesaDetails] = useState(null);
+  const [payheroDetails, setPayheroDetails] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(true);
 
   const { pushToast } = useToast();
@@ -54,13 +53,14 @@ function DonatePage() {
 
   useEffect(() => {
     let mounted = true;
-    apiFetch("/donations/mpesa/details")
+    apiFetch("/donations/payhero/details")
       .then((response) => {
-        if (mounted) {
-          setMpesaDetails(response.data);
+        if (!mounted) {
+          return;
         }
+
+        setPayheroDetails(response.data);
       })
-      .catch(() => undefined)
       .finally(() => {
         if (mounted) {
           setDetailsLoading(false);
@@ -112,7 +112,7 @@ function DonatePage() {
     }
 
     const normalizedPhone = normalizeKenyanPhone(formData.donorPhone);
-    if (method === "MPESA" && !/^254(7|1)\d{8}$/.test(normalizedPhone)) {
+    if (method === "PAYHERO" && !/^254(7|1)\d{8}$/.test(normalizedPhone)) {
       pushToast("Use a valid Kenyan phone number, for example 07XXXXXXXX.", "error");
       return;
     }
@@ -150,10 +150,10 @@ function DonatePage() {
             window.open(donationData.approvalUrl, "_blank", "noopener,noreferrer");
           }
 
-          if (method === "MPESA") {
+          if (method === "PAYHERO") {
             pushToast(
               donationData.providerMessage ||
-                `STK push sent to ${donationData.normalizedPhone || normalizedPhone}.`,
+                `PayHero STK push sent to ${donationData.normalizedPhone || normalizedPhone}.`,
               "success",
             );
           } else {
@@ -197,8 +197,10 @@ function DonatePage() {
     });
   };
 
-  const mpesaWarnings = mpesaDetails?.warnings || [];
-  const nonSandboxWarnings = mpesaWarnings.filter((item) => !item.toLowerCase().includes("sandbox"));
+  const selectedWarnings = payheroDetails?.warnings || [];
+  const nonSandboxWarnings = selectedWarnings.filter(
+    (item) => !item.toLowerCase().includes("sandbox"),
+  );
 
   return (
     <PageTransition className="page-space">
@@ -236,7 +238,7 @@ function DonatePage() {
 
           <div className="field-grid two">
             <select value={method} onChange={(event) => setMethod(event.target.value)}>
-              <option value="MPESA">M-Pesa</option>
+              <option value="PAYHERO">PayHero STK Push</option>
               <option value="PAYPAL">PayPal</option>
             </select>
             <select
@@ -286,8 +288,14 @@ function DonatePage() {
         </form>
 
         <aside className="donate-sidebar">
-          {method === "MPESA" && (
-            <MpesaPaymentCard amount={amount} />
+          {method === "PAYHERO" && (
+            <div className="glass-card donate-status">
+              <h3>PayHero STK Push</h3>
+              <p>Click "Initiate Donation" to send an STK prompt to your phone.</p>
+              <p className="text-muted">
+                Complete payment on your handset to finalize the donation.
+              </p>
+            </div>
           )}
           {method === "PAYPAL" && (
             <div className="glass-card donate-status">
@@ -323,13 +331,13 @@ function DonatePage() {
             )}
           </div>
 
-          {!detailsLoading && method === "MPESA" && (
+          {!detailsLoading && method === "PAYHERO" && (
             <div className="glass-card donate-status">
-              <h3>M-Pesa Environment</h3>
+              <h3>PayHero Environment</h3>
               <p>
-                <strong>Mode:</strong> {mpesaDetails?.environment || "unknown"}
+                <strong>Mode:</strong> {payheroDetails?.environment || "unknown"}
               </p>
-              {mpesaDetails?.environment === "sandbox" && (
+              {payheroDetails?.environment === "sandbox" && (
                 <p>
                   Sandbox mode may not deliver real handset prompts. Switch to production
                   credentials for live STK popups.

@@ -44,6 +44,15 @@ const env = {
     process.env.PAYPAL_RETURN_URL || "http://localhost:5173/donate",
   paypalCancelUrl:
     process.env.PAYPAL_CANCEL_URL || "http://localhost:5173/donate",
+
+  payheroApiKey: process.env.PAYHERO_API_KEY || "",
+  payheroEnvironment: process.env.PAYHERO_ENVIRONMENT || "sandbox",
+  payheroBaseUrl: process.env.PAYHERO_BASE_URL || "https://backend.payhero.co.ke",
+  payheroCallbackUrl:
+    process.env.PAYHERO_CALLBACK_URL || "https://your-domain.com/api/donations/payhero/callback",
+  payheroAccountNumber: process.env.PAYHERO_ACCOUNT_NUMBER || "1342183193",
+  payheroChannelId: process.env.PAYHERO_CHANNEL_ID || "",
+  payheroAuth: process.env.PAYHERO_AUTH || "",
 };
 
 module.exports = env;

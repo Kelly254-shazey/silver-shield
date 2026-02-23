@@ -3,6 +3,7 @@ const { query } = require("../config/database");
 const asyncHandler = require("../utils/asyncHandler");
 const { requireAuth, requireAdmin } = require("../middleware/auth");
 const mpesaService = require("../services/mpesaService");
+const payHeroService = require("../services/payHeroService");
 const paypalService = require("../services/paypalService");
 const realtime = require("../services/realtimeService");
 
@@ -94,6 +95,34 @@ async function createPendingDonation({
   return result.insertId;
 }
 
+function getPayheroProviderReference(payload, fallback = null) {
+  return (
+    payload?.checkout_id ||
+    payload?.checkoutId ||
+    payload?.CheckoutRequestID ||
+    payload?.request_id ||
+    payload?.requestId ||
+    payload?.reference ||
+    payload?.external_reference ||
+    payload?.externalReference ||
+    payload?.transaction_id ||
+    fallback ||
+    null
+  );
+}
+
+function isPayheroSuccessStatus(callback) {
+  const statusText = String(
+    callback?.status || callback?.payment_status || callback?.result || "",
+  ).toUpperCase();
+
+  return (
+    callback?.status_code === 0 ||
+    callback?.ResultCode === 0 ||
+    ["SUCCESS", "COMPLETED", "PAID", "0"].includes(statusText)
+  );
+}
+
 router.post(
   "/initiate",
   asyncHandler(async (req, res) => {
@@ -107,24 +136,25 @@ router.post(
       programId,
     } = req.body;
 
-    const normalizedMethod = String(method || "").toUpperCase();
+    const requestedMethod = String(method || "").toUpperCase();
+    const normalizedMethod = requestedMethod === "MPESA" ? "PAYHERO" : requestedMethod;
     const donationAmount = Number(amount || 0);
     if (!normalizedMethod || donationAmount <= 0) {
       return res.status(400).json({ message: "Method and valid amount are required." });
     }
 
-    if (!["MPESA", "PAYPAL"].includes(normalizedMethod)) {
+    if (!["PAYHERO", "PAYPAL"].includes(normalizedMethod)) {
       return res.status(400).json({ message: "Unsupported donation method." });
     }
 
-    if (normalizedMethod === "MPESA" && !donorPhone) {
-      return res.status(400).json({ message: "Phone number is required for M-Pesa." });
+    if (normalizedMethod === "PAYHERO" && !donorPhone) {
+      return res.status(400).json({ message: "Phone number is required for mobile money STK push." });
     }
 
     let normalizedPhone = String(donorPhone || "").trim();
-    if (normalizedMethod === "MPESA") {
+    if (normalizedMethod === "PAYHERO") {
       try {
-        normalizedPhone = mpesaService.normalizePhone(normalizedPhone);
+        normalizedPhone = payHeroService.normalizePhone(normalizedPhone);
       } catch (error) {
         return res.status(400).json({ message: error.message });
       }
@@ -140,14 +170,19 @@ router.post(
       programId,
     });
 
-    if (normalizedMethod === "MPESA") {
+    if (normalizedMethod === "PAYHERO") {
+      const fallbackReference = `SILVER-${donationId}`;
+
       try {
-        const mpesa = await mpesaService.initiateStkPush({
+        const payhero = await payHeroService.initiatePayment({
           amount: donationAmount,
           phone: normalizedPhone,
-          accountReference: `SILVER-${donationId}`,
+          accountReference: fallbackReference,
           transactionDesc: "Silver Shield Donation",
+          customerName: String(donorName).trim(),
         });
+
+        const providerReference = getPayheroProviderReference(payhero, fallbackReference);
 
         await query(
           `
@@ -155,7 +190,7 @@ router.post(
           SET providerReference = ?, metadata = ?, updatedAt = CURRENT_TIMESTAMP
           WHERE id = ?
           `,
-          [mpesa.CheckoutRequestID || null, JSON.stringify(mpesa), donationId],
+          [providerReference, JSON.stringify(payhero), donationId],
         );
 
         await emitDonationById(donationId);
@@ -165,11 +200,11 @@ router.post(
             donationId,
             method: normalizedMethod,
             status: "PENDING",
-            providerReference: mpesa.CheckoutRequestID || null,
-            providerMessage: mpesa.ResponseDescription || "STK push sent.",
-            environment: mpesa.environment,
-            normalizedPhone: mpesa.normalizedPhone,
-            providerPayload: mpesa,
+            providerReference,
+            providerMessage: payhero.message || payhero.status_message || "STK push sent.",
+            environment: payhero.environment,
+            normalizedPhone: payhero.normalizedPhone || normalizedPhone,
+            providerPayload: payhero,
           },
         });
       } catch (error) {
@@ -293,6 +328,45 @@ router.post(
   }),
 );
 
+router.post(
+  "/payhero/callback",
+  asyncHandler(async (req, res) => {
+    const callback = req.body?.data || req.body || {};
+    const providerReference = getPayheroProviderReference(callback);
+
+    if (!providerReference) {
+      return res.status(400).json({ message: "Invalid callback payload." });
+    }
+
+    const status = isPayheroSuccessStatus(callback) ? "SUCCESS" : "FAILED";
+    const transactionId =
+      callback.transaction_id ||
+      callback.transactionId ||
+      callback.receipt ||
+      callback.mpesa_receipt ||
+      null;
+
+    await query(
+      `
+      UPDATE donations
+      SET status = ?, transactionId = ?, metadata = ?, updatedAt = CURRENT_TIMESTAMP
+      WHERE providerReference = ?
+      `,
+      [status, transactionId, JSON.stringify(callback), providerReference],
+    );
+
+    const rows = await query(
+      "SELECT id FROM donations WHERE providerReference = ? LIMIT 1",
+      [providerReference],
+    );
+    if (rows[0]?.id) {
+      await emitDonationById(rows[0].id);
+    }
+
+    return res.json({ message: "Callback processed." });
+  }),
+);
+
 router.get(
   "/:id/status",
   asyncHandler(async (req, res) => {
@@ -346,6 +420,14 @@ router.get(
   "/mpesa/details",
   asyncHandler(async (req, res) => {
     const details = mpesaService.getPaymentDetails();
+    return res.json({ data: details });
+  }),
+);
+
+router.get(
+  "/payhero/details",
+  asyncHandler(async (req, res) => {
+    const details = payHeroService.getPaymentDetails();
     return res.json({ data: details });
   }),
 );

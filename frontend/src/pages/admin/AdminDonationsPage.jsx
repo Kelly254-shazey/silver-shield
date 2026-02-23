@@ -79,6 +79,7 @@ function AdminDonationsPage() {
           >
             <option value="">All methods</option>
             <option value="MPESA">MPESA</option>
+            <option value="PAYHERO">PAYHERO</option>
             <option value="PAYPAL">PAYPAL</option>
           </select>
           <button className="btn btn-outline" type="button" onClick={onExport}>
