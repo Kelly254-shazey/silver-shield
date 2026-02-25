@@ -61,6 +61,16 @@ function DonatePage() {
 
         setMpesaDetails(response);
       })
+      .catch((error) => {
+        if (mounted) {
+          // M-Pesa service error - still show the page but with disabled option
+          setMpesaDetails({
+            configured: false,
+            environment: "error",
+            warnings: ["M-Pesa payment is currently unavailable. Please try PayPal instead."],
+          });
+        }
+      })
       .finally(() => {
         if (mounted) {
           setDetailsLoading(false);
@@ -239,8 +249,8 @@ function DonatePage() {
           />
 
           <div className="field-grid two">
-            <select value={method} onChange={(event) => setMethod(event.target.value)}>
-              <option value="MPESA">M-Pesa Daraja STK Push</option>
+            <select value={method} onChange={(event) => setMethod(event.target.value)} disabled={mpesaDetails && !mpesaDetails.configured}>
+              <option value="MPESA" disabled={mpesaDetails && !mpesaDetails.configured}>M-Pesa Daraja STK Push {mpesaDetails && !mpesaDetails.configured ? "(Unavailable)" : ""}</option>
               <option value="PAYPAL">PayPal</option>
             </select>
             <select

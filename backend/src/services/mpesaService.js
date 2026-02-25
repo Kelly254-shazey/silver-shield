@@ -250,6 +250,7 @@ function getPaymentDetails() {
     environment: env.mpesaEnvironment,
     configured: isConfigured(),
     warnings,
+    isProduction: env.mpesaEnvironment === "production" && isConfigured(),
   };
 }
 

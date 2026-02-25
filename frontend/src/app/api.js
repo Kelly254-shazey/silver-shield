@@ -1,4 +1,24 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+// Build API URL with proper protocol handling
+function getApiBaseUrl() {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) {
+    return envUrl;
+  }
+  
+  // Default: auto-detect protocol
+  const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
+  const isHttps = protocol === 'https:';
+  const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+  
+  // For HTTPS pages, use HTTPS API unless on localhost (local dev)
+  if (isHttps && !isLocalhost) {
+    return "https://localhost:5000/api";
+  }
+  
+  return "http://localhost:5000/api";
+}
+
+const API_BASE_URL = getApiBaseUrl();
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
 
 export function resolveMediaUrl(value) {

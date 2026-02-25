@@ -736,6 +736,21 @@ textarea {
   .mini-hero {
     padding: var(--space-xl) var(--space-md);
   }
+
+  /* Responsive layouts for tablet */
+  .donate-layout {
+    flex-direction: column;
+    gap: var(--space-xl) !important;
+  }
+
+  .donate-form,
+  .donate-sidebar {
+    width: 100% !important;
+  }
+
+  .field-grid.two {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 520px) {
@@ -763,6 +778,65 @@ textarea {
   .inline-actions .btn {
     width: 100%;
   }
+
+  /* Mobile form improvements */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+    padding: 0.75rem !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .btn {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .donate-form {
+    padding: var(--space-lg) !important;
+  }
+
+  .donate-sidebar {
+    padding: 0 !important;
+  }
+
+  .donate-sidebar > * {
+    margin-bottom: var(--space-lg);
+  }
+
+  /* Responsive hero */
+  .mini-hero h1,
+  .hero-standard h1,
+  section h1 {
+    font-size: clamp(1.4rem, 6vw, 2rem) !important;
+  }
+
+  section h2 {
+    font-size: clamp(1.2rem, 5vw, 1.8rem) !important;
+  }
+
+  /* Ensure all text fits without overflow */
+  p, span, li {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Responsive images */
+  img {
+    height: auto;
+    width: 100%;
+  }
+
+  /* Better tab/touch targets */
+  button, a[role="button"], input[type="button"], input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1rem;
+  }
 }
 
 @media (max-width: 420px) {
@@ -783,5 +857,44 @@ textarea {
 
   .page-space {
     padding-top: 5rem;
+  }
+
+  /* Extra small screen adjustments */
+  .glass-panel,
+  .glass-card,
+  .glass-premium {
+    padding: var(--space-sm);
+    border-radius: var(--radius-md);
+  }
+
+  .container {
+    padding-inline: 0.5rem;
+  }
+
+  h1 {
+    font-size: clamp(1.2rem, 5.5vw, 1.8rem) !important;
+  }
+
+  h2 {
+    font-size: clamp(1rem, 4.5vw, 1.5rem) !important;
+  }
+
+  /* Ensure navigation doesn't overlap content */
+  .app-shell {
+    padding-top: 0;
+  }
+
+  /* Stack form fields */
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
   }
 }

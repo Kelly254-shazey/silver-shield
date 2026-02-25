@@ -255,7 +255,7 @@ router.post(
     await emitDonationById(donationId);
 
     const rows = await query("SELECT * FROM donations WHERE id = ? LIMIT 1", [donationId]);
-    return res.json({ data: serializeDonation(rows[0]) });
+    return res.json(serializeDonation(rows[0]));
   }),
 );
 
@@ -348,7 +348,7 @@ router.get(
   "/mpesa/details",
   asyncHandler(async (req, res) => {
     const details = mpesaService.getPaymentDetails();
-    return res.json({ data: details });
+    return res.json(details);
   }),
 );
 
