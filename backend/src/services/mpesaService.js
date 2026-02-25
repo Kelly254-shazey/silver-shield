@@ -160,75 +160,86 @@ async function initiateStkPush({
   const hardWarnings = warnings.filter((item) => !item.includes("sandbox"));
   if (hardWarnings.length > 0) {
     const error = new Error(
-      `M-Pesa is not fully configured. ${hardWarnings.join(" ")}`,
+      `M-Pesa configuration incomplete. ${hardWarnings.join(" ")} Contact admin to configure M-Pesa.`,
     );
     error.statusCode = 503;
+    error.configError = true;
     throw error;
   }
 
-  const normalizedPhone = normalizePhone(phone);
-  const token = await getAccessToken();
-  const timestamp = formatTimestamp();
-  const password = Buffer.from(
-    `${env.mpesaShortCode}${env.mpesaPasskey}${timestamp}`,
-  ).toString("base64");
-
-  const requestBody = {
-    BusinessShortCode: env.mpesaShortCode,
-    Password: password,
-    Timestamp: timestamp,
-    TransactionType: "CustomerPayBillOnline",
-    Amount: Math.max(1, Math.round(Number(amount))),
-    PartyA: normalizedPhone,
-    PartyB: env.mpesaShortCode,
-    PhoneNumber: normalizedPhone,
-    CallBackURL: env.mpesaCallbackUrl,
-    AccountReference: accountReference,
-    TransactionDesc: transactionDesc || "Silver Shield Donation",
-  };
-
-  const response = await fetchWithTimeout(
-    `${baseUrl()}/mpesa/stkpush/v1/processrequest`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody),
-    },
-  );
-
-  const text = await response.text();
-  let payload = null;
   try {
-    payload = text ? JSON.parse(text) : null;
-  } catch {
-    payload = { raw: text };
-  }
+    const normalizedPhone = normalizePhone(phone);
+    const token = await getAccessToken();
+    const timestamp = formatTimestamp();
+    const password = Buffer.from(
+      `${env.mpesaShortCode}${env.mpesaPasskey}${timestamp}`,
+    ).toString("base64");
 
-  if (!response.ok) {
-    const error = new Error(
-      `M-Pesa STK request failed: ${payload?.errorMessage || payload?.raw || text}`,
+    const requestBody = {
+      BusinessShortCode: env.mpesaShortCode,
+      Password: password,
+      Timestamp: timestamp,
+      TransactionType: "CustomerPayBillOnline",
+      Amount: Math.max(1, Math.round(Number(amount))),
+      PartyA: normalizedPhone,
+      PartyB: env.mpesaShortCode,
+      PhoneNumber: normalizedPhone,
+      CallBackURL: env.mpesaCallbackUrl,
+      AccountReference: accountReference,
+      TransactionDesc: transactionDesc || "Silver Shield Donation",
+    };
+
+    const response = await fetchWithTimeout(
+      `${baseUrl()}/mpesa/stkpush/v1/processrequest`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      },
     );
-    error.statusCode = 502;
-    throw error;
-  }
 
-  const responseCode = String(payload?.ResponseCode ?? "");
-  if (responseCode !== "0") {
-    const error = new Error(
-      `M-Pesa STK rejected: ${payload?.ResponseDescription || "Unknown provider response."}`,
+    const text = await response.text();
+    let payload = null;
+    try {
+      payload = text ? JSON.parse(text) : null;
+    } catch {
+      payload = { raw: text };
+    }
+
+    if (!response.ok) {
+      const error = new Error(
+        `M-Pesa request failed: ${payload?.errorMessage || payload?.raw || text}`,
+      );
+      error.statusCode = 502;
+      throw error;
+    }
+
+    const responseCode = String(payload?.ResponseCode ?? "");
+    if (responseCode !== "0") {
+      const error = new Error(
+        `M-Pesa rejected request: ${payload?.ResponseDescription || "Unknown error. Check M-Pesa credentials and callback URL."}`,
+      );
+      error.statusCode = 502;
+      throw error;
+    }
+
+    return {
+      ...payload,
+      normalizedPhone,
+      environment: env.mpesaEnvironment,
+    };
+  } catch (error) {
+    if (error.statusCode) throw error;
+    
+    const wrappedError = new Error(
+      `M-Pesa error: ${error.message || "Unable to process STK push. Try again."}`,
     );
-    error.statusCode = 502;
-    throw error;
+    wrappedError.statusCode = 502;
+    throw wrappedError;
   }
-
-  return {
-    ...payload,
-    normalizedPhone,
-    environment: env.mpesaEnvironment,
-  };
 }
 
 function getPaymentDetails() {

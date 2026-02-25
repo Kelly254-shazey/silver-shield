@@ -28,13 +28,15 @@ const env = {
 
   mpesaConsumerKey: process.env.MPESA_CONSUMER_KEY || "",
   mpesaConsumerSecret: process.env.MPESA_CONSUMER_SECRET || "",
-  mpesaShortCode: process.env.MPESA_SHORTCODE || "",
+  mpesaShortCode: process.env.MPESA_SHORTCODE || "522522",
   mpesaPasskey: process.env.MPESA_PASSKEY || "",
   mpesaPaybill: process.env.MPESA_PAYBILL || "522522",
   mpesaAccountNumber: process.env.MPESA_ACCOUNT_NUMBER || "1342183193",
   mpesaCallbackUrl:
     process.env.MPESA_CALLBACK_URL ||
-    "https://example.com/api/donations/mpesa/callback",
+    (process.env.NODE_ENV === "production"
+      ? "https://silver-shield-rho.vercel.app/api/donations/mpesa/callback"
+      : "http://localhost:5000/api/donations/mpesa/callback"),
   mpesaEnvironment: process.env.MPESA_ENVIRONMENT || "sandbox",
 
   paypalClientId: process.env.PAYPAL_CLIENT_ID || "",
@@ -44,15 +46,6 @@ const env = {
     process.env.PAYPAL_RETURN_URL || "http://localhost:5173/donate",
   paypalCancelUrl:
     process.env.PAYPAL_CANCEL_URL || "http://localhost:5173/donate",
-
-  payheroApiKey: process.env.PAYHERO_API_KEY || "",
-  payheroEnvironment: process.env.PAYHERO_ENVIRONMENT || "sandbox",
-  payheroBaseUrl: process.env.PAYHERO_BASE_URL || "https://backend.payhero.co.ke",
-  payheroCallbackUrl:
-    process.env.PAYHERO_CALLBACK_URL || "https://your-domain.com/api/donations/payhero/callback",
-  payheroAccountNumber: process.env.PAYHERO_ACCOUNT_NUMBER || "1342183193",
-  payheroChannelId: process.env.PAYHERO_CHANNEL_ID || "",
-  payheroAuth: process.env.PAYHERO_AUTH || "",
 };
 
 module.exports = env;
