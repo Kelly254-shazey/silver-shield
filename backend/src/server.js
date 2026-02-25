@@ -11,7 +11,11 @@ const { query } = require("./config/database");
 const app = express();
 const server = http.createServer(app);
 
+env.assertProductionConfig();
+
 initSocket(server);
+app.set("trust proxy", 1);
+app.disable("x-powered-by");
 
 app.use(
   cors({

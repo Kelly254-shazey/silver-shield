@@ -1,20 +1,22 @@
 // Build API URL with proper protocol handling
 function getApiBaseUrl() {
-  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  const envUrl = String(import.meta.env.VITE_API_BASE_URL || "").trim();
   if (envUrl) {
-    return envUrl;
+    return envUrl.replace(/\/+$/, "");
   }
-  
-  // Default: auto-detect protocol
-  const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
-  const isHttps = protocol === 'https:';
-  const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-  
-  // For HTTPS pages, use HTTPS API unless on localhost (local dev)
-  if (isHttps && !isLocalhost) {
-    return "https://localhost:5000/api";
+
+  if (typeof window !== "undefined") {
+    const { protocol, hostname, origin } = window.location;
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+
+    if (isLocalhost) {
+      return `${protocol}//${hostname}:5000/api`;
+    }
+
+    // Production default: same host serves API under /api
+    return `${origin}/api`;
   }
-  
+
   return "http://localhost:5000/api";
 }
 
