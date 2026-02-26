@@ -59,9 +59,9 @@ function DonatePage() {
           return;
         }
 
-        setMpesaDetails(response);
+        setMpesaDetails(response.data);
       })
-      .catch((error) => {
+      .catch(() => {
         if (mounted) {
           // M-Pesa service error - still show the page but with disabled option
           setMpesaDetails({
@@ -87,7 +87,7 @@ function DonatePage() {
       return undefined;
     }
 
-    const socket = io(socketBaseUrl, { transports: ["websocket"] });
+    const socket = io(socketBaseUrl, { transports: ["polling"] });
     socket.emit("subscribe:donation", pendingDonation.donationId);
 
     socket.on("donation:update", (payload) => {
@@ -148,7 +148,7 @@ function DonatePage() {
             },
           });
 
-          const donationData = response;
+          const donationData = response.data;
           setPendingDonation({
             id: donationData.donationId,
             donationId: donationData.donationId,

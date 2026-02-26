@@ -168,6 +168,11 @@ function AdminEntityPage({ title, endpoint, fields }) {
   }, [endpoint, token, pushToast]);
 
   useEffect(() => {
+    setEditingId(null);
+    setFormData(toInitialForm(fields));
+  }, [endpoint, fields]);
+
+  useEffect(() => {
     if (!hasProgramSlugField) {
       return;
     }

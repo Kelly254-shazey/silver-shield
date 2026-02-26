@@ -11,6 +11,50 @@ const realtime = require("../services/realtimeService");
 
 const router = express.Router();
 
+let ensureMessageTablesPromise = null;
+
+function ensureMessageTables() {
+  if (!ensureMessageTablesPromise) {
+    ensureMessageTablesPromise = query(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        fullName VARCHAR(191) NOT NULL,
+        email VARCHAR(191) NOT NULL,
+        phone VARCHAR(64) NULL,
+        subject VARCHAR(255) NOT NULL,
+        message LONGTEXT NOT NULL,
+        inquiryType VARCHAR(32) NOT NULL DEFAULT 'general',
+        partnerCompanyName VARCHAR(255) NULL,
+        partnerDescription LONGTEXT NULL,
+        partnerRequirementsFile VARCHAR(512) NULL,
+        volunteerSkills TEXT NULL,
+        volunteerAvailability VARCHAR(255) NULL,
+        status VARCHAR(32) NOT NULL DEFAULT 'UNREAD',
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_messages_status_created (status, createdAt),
+        INDEX idx_messages_email (email)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `).then(() =>
+      query(`
+        CREATE TABLE IF NOT EXISTS message_replies (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          messageId INT NOT NULL,
+          adminUserId INT NULL,
+          replyText LONGTEXT NOT NULL,
+          sentToEmail VARCHAR(191) NOT NULL,
+          sentAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_message_replies_message (messageId),
+          CONSTRAINT fk_message_replies_message
+            FOREIGN KEY (messageId) REFERENCES messages(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `),
+    );
+  }
+  return ensureMessageTablesPromise;
+}
+
 // Setup file upload for partner documents
 const uploadsDir = path.join(__dirname, "../../uploads/partner-documents");
 if (!fs.existsSync(uploadsDir)) {
@@ -59,12 +103,20 @@ const documentUpload = multer({
 });
 
 async function emitMessageUpdate(messageId) {
+  await ensureMessageTables();
   const rows = await query("SELECT * FROM messages WHERE id = ? LIMIT 1", [messageId]);
   if (!rows[0]) {
     return;
   }
   realtime.emitToAdmins("message:update", rows[0]);
 }
+
+router.use(
+  asyncHandler(async (_req, _res, next) => {
+    await ensureMessageTables();
+    next();
+  }),
+);
 
 router.post(
   "/",

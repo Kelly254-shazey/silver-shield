@@ -59,7 +59,7 @@ function AdminDashboardPage() {
 
     const socket = io(socketBaseUrl, {
       auth: { token: `Bearer ${token}` },
-      transports: ["websocket"],
+      transports: ["polling"],
     });
 
     socket.emit("subscribe:admin");

@@ -453,64 +453,6 @@ function HomePage() {
     }
   };
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return undefined;
-    }
-
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reducedMotion) {
-      return undefined;
-    }
-
-    const rails = [programsRailRef.current, storiesRailRef.current, eventsRailRef.current].filter(
-      Boolean,
-    );
-    if (!rails.length) {
-      return undefined;
-    }
-
-    const listeners = [];
-    const timers = rails.map((rail) => {
-      let paused = false;
-      const onEnter = () => {
-        paused = true;
-      };
-      const onLeave = () => {
-        paused = false;
-      };
-
-      rail.addEventListener("mouseenter", onEnter);
-      rail.addEventListener("mouseleave", onLeave);
-      listeners.push({ rail, onEnter, onLeave });
-
-      return window.setInterval(() => {
-        if (paused) {
-          return;
-        }
-
-        const maxScroll = rail.scrollWidth - rail.clientWidth;
-        if (maxScroll <= 0) {
-          return;
-        }
-
-        if (rail.scrollLeft >= maxScroll - 2) {
-          rail.scrollLeft = 0;
-        } else {
-          rail.scrollLeft += 1;
-        }
-      }, 24);
-    });
-
-    return () => {
-      timers.forEach((timer) => window.clearInterval(timer));
-      listeners.forEach(({ rail, onEnter, onLeave }) => {
-        rail.removeEventListener("mouseenter", onEnter);
-        rail.removeEventListener("mouseleave", onLeave);
-      });
-    };
-  }, [programItems.length, storyItems.length, eventItems.length]);
-
   const scrollRailBy = (railRef, direction) => {
     const rail = railRef.current;
     if (!rail) {

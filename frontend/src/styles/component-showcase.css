@@ -451,7 +451,9 @@
   display: flex;
   gap: var(--space-lg);
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
   padding-bottom: 0.35rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(122, 62, 157, 0.44) rgba(243, 232, 250, 0.8);
