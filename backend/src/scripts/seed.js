@@ -175,7 +175,7 @@ async function runSeed() {
 
         "Contact and Volunteering",
         "contact",
-        "For partnerships, volunteering, and general support, reach Silver Shield by email at hello@silvershield.org or call +254 700 123 456 during working hours Monday to Friday, 8:00 AM to 5:00 PM. Our office is at Community Impact Centre, Nairobi, Kenya.",
+        "For partnerships, volunteering, and general support, reach Silver Shield by email at Shieldsilver105@gmail.com or call +254 700 123 456 during working hours Monday to Friday, 8:00 AM to 5:00 PM. Our office is at Community Impact Centre, Nairobi, Kenya.",
       ],
     );
   }

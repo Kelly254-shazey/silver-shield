@@ -8,7 +8,7 @@ import LogoBrand from "./LogoBrand";
 function DocumentHeader({ variant = "standard", customContact = null }) {
   const contactInfo = customContact || {
     address: "Community Impact Centre, Nairobi, Kenya",
-    email: "hello@silvershield.org",
+    email: "Shieldsilver105@gmail.com",
     phone: "0726 836021 / 0115 362421",
     website: "www.silvershield.org",
   };

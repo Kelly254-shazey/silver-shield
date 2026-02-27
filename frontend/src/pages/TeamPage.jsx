@@ -212,8 +212,8 @@ function TeamPage() {
               <a href="/contact" className="btn btn-primary btn-lg">
                 Get in Touch
               </a>
-              <a href="mailto:careers@silvershield.org" className="btn btn-secondary btn-lg">
-                careers@silvershield.org
+              <a href="mailto:Shieldsilver105@gmail.com" className="btn btn-secondary btn-lg">
+                Shieldsilver105@gmail.com
               </a>
             </div>
           </div>

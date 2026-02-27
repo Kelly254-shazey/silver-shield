@@ -4,6 +4,7 @@ import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { apiFetch, resolveMediaUrl } from "../app/api";
 import { FALLBACK_STORIES } from "../app/fallbackContent";
+import { truncateText } from "../app/text";
 import { useToast } from "../context/ToastContext";
 
 function StoriesPage() {
@@ -44,7 +45,7 @@ function StoriesPage() {
     <PageTransition className="page-space">
       <section className="mini-hero container glass-panel">
         <p className="eyebrow">Stories</p>
-        <h1>Narratives from communities driving meaningful transformation.</h1>
+        <h1>Stories from communities creating change.</h1>
       </section>
 
       <section className="container section">
@@ -65,7 +66,9 @@ function StoriesPage() {
                   <div className="media-content">
                     <p className="chip">{story.category || "Story"}</p>
                     <h3>{story.title}</h3>
-                    <p>{story.excerpt || story.summary || "Story details coming soon."}</p>
+                    <p>
+                      {truncateText(story.excerpt || story.summary || "Story details coming soon.", 120)}
+                    </p>
                     <small>
                       {story.author || "Silver Shield"} -{" "}
                       {story.publishedAt

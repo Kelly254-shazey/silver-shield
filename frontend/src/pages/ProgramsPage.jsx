@@ -5,6 +5,7 @@ import LoadingSkeleton from "../components/LoadingSkeleton";
 import { apiFetch, resolveMediaUrl } from "../app/api";
 import { getProgramPath, PROGRAM_NAV_ITEMS } from "../app/programCatalog";
 import { FALLBACK_PROGRAMS } from "../app/fallbackContent";
+import { truncateText } from "../app/text";
 import { useToast } from "../context/ToastContext";
 
 function ProgramsPage() {
@@ -56,7 +57,7 @@ function ProgramsPage() {
     <PageTransition className="page-space">
       <section className="mini-hero container glass-panel">
         <p className="eyebrow">Programs</p>
-        <h1>High-impact programs with transparent goals and outcomes.</h1>
+        <h1>Programs with clear goals and measurable outcomes.</h1>
       </section>
 
       <section className="container section">
@@ -98,7 +99,7 @@ function ProgramsPage() {
                   <div className="media-content">
                     <p className="chip">{program.category}</p>
                     <h3>{program.title}</h3>
-                    <p>{program.summary}</p>
+                    <p>{truncateText(program.summary || "Program details coming soon.", 120)}</p>
                     <div className="inline-meta">
                       <small>Goal: ${Number(program.goalAmount || 0).toLocaleString()}</small>
                       <small>Raised: ${Number(program.raisedAmount || 0).toLocaleString()}</small>

@@ -1,79 +1,43 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { io } from "socket.io-client";
-import { API_BASE_URL, apiFetch } from "../app/api";
+import { apiFetch } from "../app/api";
 import PageTransition from "../components/PageTransition";
-import { useDialog } from "../context/DialogContext";
-import { useToast } from "../context/ToastContext";
 
-const presetAmounts = [1000, 2500, 5000];
-const socketBaseUrl = API_BASE_URL.replace(/\/api$/, "");
+const FALLBACK_MPESA_DETAILS = {
+  paybill: "522522",
+  accountNumber: "1342183193",
+  warnings: [],
+};
 
-function normalizeKenyanPhone(phone) {
-  const digits = String(phone || "").replace(/\D/g, "");
-  if (/^254(7|1)\d{8}$/.test(digits)) {
-    return digits;
-  }
-  if (/^0(7|1)\d{8}$/.test(digits)) {
-    return `254${digits.slice(1)}`;
-  }
-  if (/^(7|1)\d{8}$/.test(digits)) {
-    return `254${digits}`;
-  }
-  return digits;
-}
+const PAYPAL_EMAIL = "Shieldsilver105@gmail.com";
 
 function DonatePage() {
-  const [searchParams] = useSearchParams();
-  const initialProgramId = searchParams.get("programId") || "";
-
-  const [selectedAmount, setSelectedAmount] = useState(null);
-  const [customAmount, setCustomAmount] = useState("");
-  const [method, setMethod] = useState("MPESA");
-  const [formData, setFormData] = useState({
-    donorName: "",
-    donorEmail: "",
-    donorPhone: "",
-    currency: "KES",
-    programId: initialProgramId,
-  });
-
-  const [pendingDonation, setPendingDonation] = useState(null);
-  const [processing, setProcessing] = useState(false);
-  const [mpesaDetails, setMpesaDetails] = useState(null);
-  const [detailsLoading, setDetailsLoading] = useState(true);
-
-  const { pushToast } = useToast();
-  const { showConfirm } = useDialog();
-
-  const amount = useMemo(
-    () => Number(customAmount || selectedAmount || 0),
-    [customAmount, selectedAmount],
-  );
+  const [mpesaDetails, setMpesaDetails] = useState(FALLBACK_MPESA_DETAILS);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
+
     apiFetch("/donations/mpesa/details")
       .then((response) => {
         if (!mounted) {
           return;
         }
 
-        setMpesaDetails(response.data);
+        const data = response?.data || {};
+        setMpesaDetails({
+          paybill: String(data.paybill || FALLBACK_MPESA_DETAILS.paybill),
+          accountNumber: String(data.accountNumber || FALLBACK_MPESA_DETAILS.accountNumber),
+          warnings: Array.isArray(data.warnings) ? data.warnings : [],
+        });
       })
       .catch(() => {
         if (mounted) {
-          // M-Pesa service error - still show the page but with disabled option
-          setMpesaDetails({
-            configured: false,
-            environment: "error",
-            warnings: ["M-Pesa payment is currently unavailable. Please try PayPal instead."],
-          });
+          setMpesaDetails(FALLBACK_MPESA_DETAILS);
         }
       })
       .finally(() => {
         if (mounted) {
-          setDetailsLoading(false);
+          setLoading(false);
         }
       });
 
@@ -82,289 +46,109 @@ function DonatePage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!pendingDonation?.donationId) {
-      return undefined;
-    }
+  const nonSandboxWarnings = useMemo(() => {
+    return (mpesaDetails.warnings || []).filter(
+      (item) => !String(item).toLowerCase().includes("sandbox"),
+    );
+  }, [mpesaDetails.warnings]);
 
-    const socket = io(socketBaseUrl, { transports: ["polling"] });
-    socket.emit("subscribe:donation", pendingDonation.donationId);
-
-    socket.on("donation:update", (payload) => {
-      if (Number(payload.id) === Number(pendingDonation.donationId)) {
-        setPendingDonation(payload);
-      }
-    });
-
-    return () => socket.disconnect();
-  }, [pendingDonation?.donationId]);
-
-  useEffect(() => {
-    if (!pendingDonation?.donationId || pendingDonation?.status !== "PENDING") {
-      return undefined;
-    }
-
-    const timer = setInterval(() => {
-      apiFetch(`/donations/${pendingDonation.donationId}/status`, {
-        method: "POST",
-      })
-        .then((response) => setPendingDonation(response.data))
-        .catch(() => undefined);
-    }, 8000);
-
-    return () => clearInterval(timer);
-  }, [pendingDonation]);
-  
-  const onInitiateDonation = async (event) => {
-    event.preventDefault();
-
-    if (amount <= 0) {
-      pushToast("Please choose a valid amount.", "error");
+  const copyValue = async (value) => {
+    if (typeof navigator === "undefined" || !navigator.clipboard) {
       return;
     }
 
-    const normalizedPhone = normalizeKenyanPhone(formData.donorPhone);
-    if (method === "MPESA" && !/^254(7|1)\d{8}$/.test(normalizedPhone)) {
-      pushToast("Use a valid Kenyan phone number, for example 07XXXXXXXX.", "error");
-      return;
+    try {
+      await navigator.clipboard.writeText(String(value || ""));
+    } catch {
+      // Ignore clipboard failures.
     }
-
-    showConfirm({
-      title: "Confirm Donation",
-      message: `You are donating ${formData.currency} ${amount.toLocaleString()} via ${method}. Continue?`,
-      confirmText: "Proceed",
-      cancelText: "Cancel",
-      variant: "primary",
-      onConfirm: async () => {
-        setProcessing(true);
-        try {
-          const response = await apiFetch("/donations/initiate", {
-            method: "POST",
-            body: {
-              ...formData,
-              donorPhone: normalizedPhone,
-              amount,
-              method,
-            },
-          });
-
-          const donationData = response.data;
-          setPendingDonation({
-            id: donationData.donationId,
-            donationId: donationData.donationId,
-            status: donationData.status,
-            method: donationData.method,
-            providerReference: donationData.providerReference,
-            environment: donationData.environment,
-          });
-
-          if (donationData.approvalUrl) {
-            window.open(donationData.approvalUrl, "_blank", "noopener,noreferrer");
-          }
-
-          if (method === "MPESA") {
-            pushToast(
-              donationData.providerMessage ||
-                `M-Pesa STK push sent to ${donationData.normalizedPhone || normalizedPhone}.`,
-              "success",
-            );
-          } else {
-            pushToast("Donation initiated successfully.", "success");
-          }
-        } catch (error) {
-          pushToast(error.message, "error");
-        } finally {
-          setProcessing(false);
-        }
-      },
-    });
   };
 
-  const onConfirmPaypal = async () => {
-    if (!pendingDonation?.donationId || !pendingDonation?.providerReference) {
-      return;
-    }
-
-    showConfirm({
-      title: "Confirm PayPal Payment",
-      message: "Confirm this PayPal payment now?",
-      confirmText: "Confirm",
-      cancelText: "Cancel",
-      variant: "success",
-      onConfirm: async () => {
-        try {
-          const response = await apiFetch("/donations/paypal/confirm", {
-            method: "POST",
-            body: {
-              donationId: pendingDonation.donationId || pendingDonation.id,
-              orderId: pendingDonation.providerReference,
-            },
-          });
-          setPendingDonation(response.data);
-          pushToast("PayPal donation confirmed.", "success");
-        } catch (error) {
-          pushToast(error.message, "error");
-        }
-      },
-    });
-  };
-
-  const selectedWarnings = mpesaDetails?.warnings || [];
-  const nonSandboxWarnings = selectedWarnings.filter(
-    (item) => !item.toLowerCase().includes("sandbox"),
-  );
+  const paybill = String(mpesaDetails.paybill || FALLBACK_MPESA_DETAILS.paybill);
+  const accountNumber = String(mpesaDetails.accountNumber || FALLBACK_MPESA_DETAILS.accountNumber);
 
   return (
     <PageTransition className="page-space">
       <section className="mini-hero container glass-panel">
         <p className="eyebrow">Donate</p>
-        <h1>Support community programs with secure and transparent giving.</h1>
+        <h1>Donation Procedures</h1>
       </section>
 
-      <section className="container section donate-layout">
-        <form className="glass-card donate-form" onSubmit={onInitiateDonation}>
-          <h2>Donation Details</h2>
-          <div className="amount-presets">
-            {presetAmounts.map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                className={Number(selectedAmount) === preset ? "chip-btn active" : "chip-btn"}
-                onClick={() => {
-                  setSelectedAmount(preset);
-                  setCustomAmount("");
-                }}
-              >
-                KES {preset.toLocaleString()}
+      <section className="container section donate-layout donate-guide-layout">
+        <article className="glass-card donate-status">
+          <h2>M-Pesa Paybill</h2>
+          <p>Use these details to complete your donation manually.</p>
+
+          <div className="payment-method">
+            <label>Paybill Number</label>
+            <div className="highlight-box">
+              <code className="mono-code">{paybill}</code>
+              <button type="button" className="copy-btn" onClick={() => copyValue(paybill)}>
+                Copy
               </button>
-            ))}
+            </div>
           </div>
 
-          <input
-            type="number"
-            min="1"
-            placeholder="Custom amount"
-            value={customAmount}
-            onChange={(event) => setCustomAmount(event.target.value)}
-          />
-
-          <div className="field-grid two">
-            <select value={method} onChange={(event) => setMethod(event.target.value)} disabled={mpesaDetails && !mpesaDetails.configured}>
-              <option value="MPESA" disabled={mpesaDetails && !mpesaDetails.configured}>M-Pesa Daraja STK Push {mpesaDetails && !mpesaDetails.configured ? "(Unavailable)" : ""}</option>
-              <option value="PAYPAL">PayPal</option>
-            </select>
-            <select
-              value={formData.currency}
-              onChange={(event) =>
-                setFormData((prev) => ({ ...prev, currency: event.target.value }))
-              }
-            >
-              <option value="KES">KES</option>
-              <option value="USD">USD</option>
-            </select>
+          <div className="payment-method">
+            <label>Account Number</label>
+            <div className="highlight-box">
+              <code className="mono-code">{accountNumber}</code>
+              <button
+                type="button"
+                className="copy-btn"
+                onClick={() => copyValue(accountNumber)}
+              >
+                Copy
+              </button>
+            </div>
           </div>
 
-          <input
-            placeholder="Full name"
-            value={formData.donorName}
-            onChange={(event) =>
-              setFormData((prev) => ({ ...prev, donorName: event.target.value }))
-            }
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={formData.donorEmail}
-            onChange={(event) =>
-              setFormData((prev) => ({ ...prev, donorEmail: event.target.value }))
-            }
-          />
-          <input
-            placeholder="Phone number (e.g. 07XXXXXXXX)"
-            value={formData.donorPhone}
-            onChange={(event) =>
-              setFormData((prev) => ({ ...prev, donorPhone: event.target.value }))
-            }
-          />
-          <input
-            placeholder="Program ID (optional)"
-            value={formData.programId}
-            onChange={(event) =>
-              setFormData((prev) => ({ ...prev, programId: event.target.value }))
-            }
-          />
-
-          <button className="btn btn-primary" type="submit" disabled={processing}>
-            {processing ? "Processing..." : "Initiate Donation"}
-          </button>
-        </form>
-
-        <aside className="donate-sidebar">
-          {method === "MPESA" && (
-            <div className="glass-card donate-status">
-              <h3>M-Pesa Daraja STK Push</h3>
-              <p>Click "Initiate Donation" to send an STK prompt to your phone.</p>
-              <p className="text-muted">
-                Complete payment on your handset to finalize the donation.
-              </p>
-            </div>
-          )}
-          {method === "PAYPAL" && (
-            <div className="glass-card donate-status">
-              <h3>PayPal Payment</h3>
-              <p>Click "Initiate Donation" above to open PayPal checkout.</p>
-              <p className="text-muted">Secure payment processing via PayPal.</p>
-            </div>
-          )}
-
-          <div className="glass-card donate-status">
-            <h3>Live Donation Status</h3>
-            {!pendingDonation && <p>Your donation status will appear here after initiation.</p>}
-            {pendingDonation && (
-              <>
-                <p>
-                  <strong>Donation ID:</strong> {pendingDonation.donationId || pendingDonation.id}
-                </p>
-                <p>
-                  <strong>Method:</strong> {pendingDonation.method}
-                </p>
-                <p>
-                  <strong>Status:</strong>{" "}
-                  <span className={`status-pill ${String(pendingDonation.status).toLowerCase()}`}>
-                    {pendingDonation.status}
-                  </span>
-                </p>
-                {method === "PAYPAL" && pendingDonation.status === "PENDING" && (
-                  <button className="btn btn-outline" type="button" onClick={onConfirmPaypal}>
-                    Confirm PayPal Payment
-                  </button>
-                )}
-              </>
-            )}
+          <div className="mpesa-instructions">
+            <h4>Procedure</h4>
+            <ol className="instruction-list">
+              <li>Open M-Pesa on your phone.</li>
+              <li>Select Lipa na M-Pesa, then select Pay Bill.</li>
+              <li>Enter Paybill Number: {paybill}.</li>
+              <li>Enter Account Number: {accountNumber}.</li>
+              <li>Enter amount, enter PIN, then confirm payment.</li>
+            </ol>
           </div>
 
-          {!detailsLoading && method === "MPESA" && (
-            <div className="glass-card donate-status">
-              <h3>M-Pesa Environment</h3>
-              <p>
-                <strong>Mode:</strong> {mpesaDetails?.environment || "unknown"}
-              </p>
-              {mpesaDetails?.environment === "sandbox" && (
-                <p>
-                  Sandbox mode may not deliver real handset prompts. Switch to production
-                  credentials for live STK popups.
-                </p>
-              )}
-              {nonSandboxWarnings.length > 0 && (
-                <ul className="map-list">
-                  {nonSandboxWarnings.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
+          {loading && <p className="text-sm">Loading latest M-Pesa details...</p>}
+          {!loading && nonSandboxWarnings.length > 0 && (
+            <ul className="instruction-list">
+              {nonSandboxWarnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
           )}
-        </aside>
+        </article>
+
+        <article className="glass-card donate-status">
+          <h2>PayPal</h2>
+          <p>Use this PayPal email for donations.</p>
+
+          <div className="payment-method">
+            <label>PayPal Email</label>
+            <div className="highlight-box">
+              <code className="mono-code">{PAYPAL_EMAIL}</code>
+              <button type="button" className="copy-btn" onClick={() => copyValue(PAYPAL_EMAIL)}>
+                Copy
+              </button>
+            </div>
+          </div>
+
+          <div className="mpesa-instructions">
+            <h4>Procedure</h4>
+            <ol className="instruction-list">
+              <li>Log in to your PayPal account.</li>
+              <li>Select Send or Transfer Money.</li>
+              <li>Enter recipient email: {PAYPAL_EMAIL}.</li>
+              <li>Enter donation amount and currency.</li>
+              <li>Add note: Silver Shield Donation, then confirm payment.</li>
+            </ol>
+          </div>
+        </article>
       </section>
     </PageTransition>
   );

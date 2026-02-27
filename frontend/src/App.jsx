@@ -10,7 +10,6 @@ import LoadingSkeleton from "./components/LoadingSkeleton";
 const HomePage = React.lazy(() => import("./pages/HomePage"));
 const ProgramsPage = React.lazy(() => import("./pages/ProgramsPage"));
 const ProgramDetailsPage = React.lazy(() => import("./pages/ProgramDetailsPage"));
-const ImpactPage = React.lazy(() => import("./pages/ImpactPage"));
 const StoriesPage = React.lazy(() => import("./pages/StoriesPage"));
 const StoryDetailsPage = React.lazy(() => import("./pages/StoryDetailsPage"));
 const DonatePage = React.lazy(() => import("./pages/DonatePage"));
@@ -37,7 +36,6 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/programs" element={<ProgramsPage />} />
           <Route path="/programs/:id" element={<ProgramDetailsPage />} />
-          <Route path="/impact" element={<ImpactPage />} />
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/stories/:id" element={<StoryDetailsPage />} />
           <Route path="/donate" element={<DonatePage />} />

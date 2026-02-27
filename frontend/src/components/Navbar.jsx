@@ -8,7 +8,6 @@ const navLinks = [
   { to: "/about", label: "About" },
   { type: "programs", label: "Programs" },
   { to: "/events", label: "Events" },
-  { to: "/impact", label: "Impact" },
   { to: "/stories", label: "Stories" },
   { to: "/team", label: "Team" },
   { to: "/donate", label: "Donate" },

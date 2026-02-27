@@ -4,7 +4,7 @@ import { apiFetch } from "../app/api";
 
 const welcomeMessage = {
   role: "assistant",
-  text: "Welcome to Silver Shield. I answer using approved Documentation Center content on programs, impact, donations, and volunteering.",
+  text: "Welcome to Silver Shield. I answer using approved Documentation Center content on programs, donations, and volunteering.",
 };
 
 function AssistantWidget() {
@@ -139,7 +139,7 @@ function AssistantWidget() {
                     onSend();
                   }
                 }}
-                placeholder="Ask about programs, impact, donations..."
+                placeholder="Ask about programs, donations, volunteering..."
                 disabled={loading}
               />
               <motion.button

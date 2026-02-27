@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch, resolveMediaUrl } from "../app/api";
+import { truncateText } from "../app/text";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import PageTransition from "../components/PageTransition";
 import { useToast } from "../context/ToastContext";
@@ -59,6 +60,10 @@ function AboutPage() {
   const heroImage = useMemo(() => resolveMediaUrl(about.heroImage), [about.heroImage]);
   const videoUrl = useMemo(() => resolveMediaUrl(about.videoUrl), [about.videoUrl]);
   const youtubeEmbed = useMemo(() => toYoutubeEmbed(about.videoUrl), [about.videoUrl]);
+  const storyContent = useMemo(
+    () => truncateText(about.storyContent || "", 420),
+    [about.storyContent],
+  );
 
   return (
     <PageTransition className="page-space">
@@ -70,16 +75,20 @@ function AboutPage() {
       <section className="container section about-layout">
         <article className="glass-card about-story-card">
           <h2>Our Story</h2>
-          {loading ? <LoadingSkeleton className="story-skeleton" /> : <p>{about.storyContent || "Our story is coming soon."}</p>}
+          {loading ? (
+            <LoadingSkeleton className="story-skeleton" />
+          ) : (
+            <p>{storyContent || "Our story is coming soon."}</p>
+          )}
 
           <div className="about-pillars">
             <article className="about-pillar">
               <h3>Mission</h3>
-              <p>{about.mission || "Mission details will be updated soon."}</p>
+              <p>{truncateText(about.mission || "Mission details will be updated soon.", 170)}</p>
             </article>
             <article className="about-pillar">
               <h3>Vision</h3>
-              <p>{about.vision || "Vision details will be updated soon."}</p>
+              <p>{truncateText(about.vision || "Vision details will be updated soon.", 170)}</p>
             </article>
           </div>
 

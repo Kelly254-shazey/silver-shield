@@ -6,7 +6,7 @@ import { useToast } from "../context/ToastContext";
 import { useDialog } from "../context/DialogContext";
 
 const detailCards = [
-  { title: "Email", value: "hello@silvershield.org" },
+  { title: "Email", value: "Shieldsilver105@gmail.com" },
   { title: "Phone", value: "0726 836021 / 0115 362421" },
   { title: "Location", value: "Community Impact Centre, Nairobi, Kenya" },
   { title: "Working Hours", value: "Mon - Fri, 8:00 AM - 5:00 PM" },

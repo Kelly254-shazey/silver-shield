@@ -45,9 +45,9 @@ function ImpactPage() {
     <PageTransition className="page-space impact-dashboard-page">
       <section className="container impact-dashboard-hero glass-panel">
         <p className="eyebrow">Impact Dashboard</p>
-        <h1>Real-time impact indicators and downloadable accountability reports.</h1>
+        <h1>Live impact indicators with downloadable reports.</h1>
         <p className="impact-dashboard-subtitle">
-          Live snapshots of community outcomes, progress trends, and verified reporting links.
+          Track outcomes, trend shifts, and reporting links in one place.
         </p>
         <div className="impact-dashboard-hero-meta">
           <span>{stats.length || 0} indicators</span>

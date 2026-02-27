@@ -3,6 +3,7 @@ import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { apiFetch, resolveMediaUrl } from "../app/api";
 import { FALLBACK_EVENTS } from "../app/fallbackContent";
+import { truncateText } from "../app/text";
 import { useToast } from "../context/ToastContext";
 
 function formatDate(value) {
@@ -67,7 +68,7 @@ function EventsPage() {
     <PageTransition className="page-space">
       <section className="mini-hero container glass-panel">
         <p className="eyebrow">Events</p>
-        <h1>Upcoming and recent community events</h1>
+        <h1>Upcoming and recent community events.</h1>
       </section>
 
       <section className="container section">
@@ -101,7 +102,7 @@ function EventsPage() {
                   <div className="media-content">
                     <p className="chip">{String(event.status || "upcoming").toLowerCase()}</p>
                     <h3>{event.title}</h3>
-                    <p>{event.description || "Event details coming soon."}</p>
+                    <p>{truncateText(event.description || "Event details coming soon.", 120)}</p>
                     <div className="inline-meta">
                       <small>{formatDate(event.eventDate)}</small>
                       <small>{event.location || "Location TBA"}</small>

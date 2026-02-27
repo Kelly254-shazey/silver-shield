@@ -9,7 +9,6 @@ const quickLinks = [
   { to: "/about", label: "About" },
   { to: "/programs", label: "Programs" },
   { to: "/events", label: "Events" },
-  { to: "/impact", label: "Impact" },
   { to: "/stories", label: "Stories" },
   { to: "/donate", label: "Donate" },
 ];
@@ -93,7 +92,7 @@ function Footer() {
         <section>
           <LogoBrand variant="full" className="footer-logo" />
           <p>Community Impact Centre, Nairobi, Kenya</p>
-          <p>hello@silvershield.org</p>
+          <p>Shieldsilver105@gmail.com</p>
           <p>0726 836021 / 0115 362421</p>
         </section>
 

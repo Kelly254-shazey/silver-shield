@@ -1629,6 +1629,10 @@
   align-items: start;
 }
 
+.donate-guide-layout {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .donate-form {
   display: grid;
   gap: var(--space-md);

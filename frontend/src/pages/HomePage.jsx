@@ -1,20 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { apiFetch, resolveMediaUrl } from "../app/api";
 import { getProgramPath } from "../app/programCatalog";
+import { truncateText } from "../app/text";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import PageTransition from "../components/PageTransition";
 import { useToast } from "../context/ToastContext";
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-});
 
 const purposeCards = [
   {
@@ -32,7 +24,7 @@ const purposeCards = [
 ];
 
 const contactCards = [
-  { label: "Email", value: "hello@silvershield.org", icon: "E" },
+  { label: "Email", value: "Shieldsilver105@gmail.com", icon: "E" },
   { label: "Phone", value: "0726 836021 / 0115 362421", icon: "T" },
   { label: "Location", value: "Community Impact Centre, Nairobi", icon: "L" },
 ];
@@ -228,29 +220,12 @@ function formatEventDate(value) {
   });
 }
 
-function formatCompactValue(value) {
-  const numericValue = Number(value || 0);
-  if (Number.isNaN(numericValue)) {
-    return String(value || "-");
-  }
-  if (numericValue >= 1000000) {
-    return `${(numericValue / 1000000).toFixed(1)}M`;
-  }
-  if (numericValue >= 1000) {
-    return `${(numericValue / 1000).toFixed(1)}K`;
-  }
-  return numericValue.toLocaleString();
-}
-
 function HomePage() {
-  const mapRef = useRef(null);
-  const mapInstance = useRef(null);
   const programsRailRef = useRef(null);
   const storiesRailRef = useRef(null);
   const eventsRailRef = useRef(null);
   const [programs, setPrograms] = useState([]);
   const [stories, setStories] = useState([]);
-  const [stats, setStats] = useState([]);
   const [events, setEvents] = useState([]);
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -312,10 +287,6 @@ function HomePage() {
     }
     return FALLBACK_EVENTS;
   }, [comingEvents, publishedEvents]);
-  const locationCards = useMemo(
-    () => (programItems.slice(0, 2).length ? programItems.slice(0, 2) : storyItems.slice(0, 2)),
-    [programItems, storyItems],
-  );
   const topPrograms = useMemo(() => {
     const getScore = (program) => {
       const goal = Number(program.goalAmount || 0);
@@ -328,67 +299,14 @@ function HomePage() {
   }, [programItems]);
   const topStories = useMemo(() => storyItems.slice(0, 3), [storyItems]);
   const topEvents = useMemo(() => eventItems.slice(0, 3), [eventItems]);
-  const heroStatCards = useMemo(() => {
-    if (stats.length > 0) {
-      return stats.slice(0, 3).map((item) => ({
-        label: item.label,
-        value: `${formatCompactValue(item.value)}${item.unit ? ` ${item.unit}` : ""}`,
-      }));
-    }
-
-    return [
+  const heroStatCards = useMemo(
+    () => [
       { label: "Active Programs", value: String(programItems.length || 0) },
       { label: "Published Stories", value: String(storyItems.length || 0) },
       { label: "Upcoming Events", value: String(eventItems.length || 0) },
-    ];
-  }, [stats, programItems.length, storyItems.length, eventItems.length]);
-
-  useEffect(() => {
-    if (!mapRef.current || mapInstance.current) {
-      return;
-    }
-
-    mapInstance.current = L.map(mapRef.current).setView([-1.2921, 36.8219], 6);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "(c) OpenStreetMap contributors",
-      maxZoom: 19,
-    }).addTo(mapInstance.current);
-
-    const locations = [
-      { name: "Nairobi HQ", coords: [-1.2921, 36.8219], markerLabel: "N" },
-      { name: "Narok", coords: [-1.4119, 35.4707], markerLabel: "R" },
-      { name: "Mombasa", coords: [-4.0435, 39.6682], markerLabel: "M" },
-      { name: "Nakuru", coords: [-0.2833, 36.0667], markerLabel: "K" },
-      { name: "Kakamega", coords: [0.2833, 34.7667], markerLabel: "G" },
-    ];
-
-    locations.forEach((location) => {
-      const icon = L.divIcon({
-        html: `<div class="home-map-marker">${location.markerLabel}</div>`,
-        iconSize: [32, 32],
-        className: "home-map-marker-wrap",
-      });
-
-      L.marker(location.coords, { icon })
-        .bindPopup(`<strong>${location.name}</strong><br/>Silver Shield operations`)
-        .addTo(mapInstance.current);
-    });
-
-    const refreshMapSize = () => {
-      mapInstance.current?.invalidateSize();
-    };
-    const mapResizeTimer = window.setTimeout(refreshMapSize, 220);
-    window.addEventListener("resize", refreshMapSize);
-
-    return () => {
-      window.clearTimeout(mapResizeTimer);
-      window.removeEventListener("resize", refreshMapSize);
-      mapInstance.current?.off();
-      mapInstance.current?.remove();
-      mapInstance.current = null;
-    };
-  }, []);
+    ],
+    [programItems.length, storyItems.length, eventItems.length],
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -396,17 +314,15 @@ function HomePage() {
     Promise.all([
       apiFetch("/programs"),
       apiFetch("/stories"),
-      apiFetch("/impact/stats"),
       apiFetch("/events"),
       apiFetch("/partners"),
     ])
-      .then(([programRes, storyRes, statRes, eventRes, partnerRes]) => {
+      .then(([programRes, storyRes, eventRes, partnerRes]) => {
         if (!mounted) {
           return;
         }
         setPrograms((programRes.data || []).slice(0, 12));
         setStories((storyRes.data || []).slice(0, 12));
-        setStats((statRes.data || []).slice(0, 4));
         setEvents((eventRes.data || []).slice(0, 12));
         setPartners((partnerRes.data || []).slice(0, 10));
       })
@@ -499,8 +415,7 @@ function HomePage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.55, delay: 0.08 }}
                 >
-                  Join us in making a difference. Your support helps empower women, youth, and
-                  entire communities to rise and thrive.
+                  Practical programs helping women, youth, and families build stable futures.
                 </motion.p>
                 <motion.div
                   className="hero-actions"
@@ -565,91 +480,6 @@ function HomePage() {
             </section>
 
             <section className="prototype-section compact-top">
-              <div className="section-head split">
-                <h2>Top Highlights</h2>
-                <Link className="text-link" to="/programs">
-                  Open all impact areas
-                </Link>
-              </div>
-
-              <div className="home-top-grid">
-                <article className="glass-card home-top-card">
-                  <h3>Top Programs</h3>
-                  <div className="home-top-list">
-                    {loading
-                      ? Array.from({ length: 3 }).map((_, index) => (
-                          <LoadingSkeleton
-                            key={`top-program-skeleton-${index}`}
-                            className="home-top-skeleton"
-                          />
-                        ))
-                      : topPrograms.map((program, index) => (
-                          <Link
-                            key={program.id}
-                            to={getProgramLink(program)}
-                            className="home-top-item"
-                          >
-                            <span className="home-top-rank">{index + 1}</span>
-                            <span className="home-top-copy">
-                              <strong>{program.title}</strong>
-                              <small>{program.category || "Program"}</small>
-                            </span>
-                          </Link>
-                        ))}
-                  </div>
-                </article>
-
-                <article className="glass-card home-top-card">
-                  <h3>Top Stories</h3>
-                  <div className="home-top-list">
-                    {loading
-                      ? Array.from({ length: 3 }).map((_, index) => (
-                          <LoadingSkeleton
-                            key={`top-story-skeleton-${index}`}
-                            className="home-top-skeleton"
-                          />
-                        ))
-                      : topStories.map((story, index) => (
-                          <Link
-                            key={story.id}
-                            to={getStoryLink(story)}
-                            className="home-top-item"
-                          >
-                            <span className="home-top-rank">{index + 1}</span>
-                            <span className="home-top-copy">
-                              <strong>{story.title}</strong>
-                              <small>{story.author || "Silver Shield"}</small>
-                            </span>
-                          </Link>
-                        ))}
-                  </div>
-                </article>
-
-                <article className="glass-card home-top-card">
-                  <h3>Top Events</h3>
-                  <div className="home-top-list">
-                    {loading
-                      ? Array.from({ length: 3 }).map((_, index) => (
-                          <LoadingSkeleton
-                            key={`top-event-skeleton-${index}`}
-                            className="home-top-skeleton"
-                          />
-                        ))
-                      : topEvents.map((event, index) => (
-                          <Link key={event.id} to="/events" className="home-top-item">
-                            <span className="home-top-rank">{index + 1}</span>
-                            <span className="home-top-copy">
-                              <strong>{event.title}</strong>
-                              <small>{formatEventDate(event.eventDate)}</small>
-                            </span>
-                          </Link>
-                        ))}
-                  </div>
-                </article>
-              </div>
-            </section>
-
-            <section className="prototype-section compact-top">
               <div className="section-head prototype-centered-head">
                 <p className="section-kicker">Live Updates</p>
                 <h2>Our Programs</h2>
@@ -675,10 +505,10 @@ function HomePage() {
               <div className="home-horizontal-row-shell">
                 <div className="home-horizontal-row" ref={programsRailRef}>
                 {loading
-                  ? Array.from({ length: 8 }).map((_, index) => (
+                  ? Array.from({ length: 3 }).map((_, index) => (
                       <LoadingSkeleton key={`program-skeleton-${index}`} className="media-card" />
                     ))
-                  : programItems.map((program) => (
+                  : topPrograms.map((program) => (
                       <article key={program.id} className="prototype-media-card hover-lift">
                         <Link to={getProgramLink(program)} className="media-wrap">
                           <img
@@ -690,7 +520,10 @@ function HomePage() {
                         <div className="media-content">
                           <h3 className="home-rail-card-title">{program.title}</h3>
                           <p className="home-rail-card-copy">
-                            {program.summary || program.description || "Program details coming soon."}
+                            {truncateText(
+                              program.summary || program.description || "Program details coming soon.",
+                              120,
+                            )}
                           </p>
                           <Link to={getProgramLink(program)} className="text-link">
                             Read More
@@ -733,10 +566,10 @@ function HomePage() {
               <div className="home-horizontal-row-shell">
                 <div className="home-horizontal-row" ref={storiesRailRef}>
                 {loading
-                  ? Array.from({ length: 8 }).map((_, index) => (
+                  ? Array.from({ length: 3 }).map((_, index) => (
                       <LoadingSkeleton key={`story-skeleton-${index}`} className="media-card" />
                     ))
-                  : storyItems.map((story) => (
+                  : topStories.map((story) => (
                       <article key={story.id} className="prototype-media-card hover-lift">
                         <Link to={getStoryLink(story)} className="media-wrap">
                           <img
@@ -748,7 +581,7 @@ function HomePage() {
                         <div className="media-content">
                           <h3 className="home-rail-card-title">{story.title}</h3>
                           <p className="home-rail-card-copy">
-                            {story.excerpt || story.summary || "Story details coming soon."}
+                            {truncateText(story.excerpt || story.summary || "Story details coming soon.", 120)}
                           </p>
                           <Link to={getStoryLink(story)} className="text-link">
                             Read More
@@ -791,10 +624,10 @@ function HomePage() {
               <div className="home-horizontal-row-shell">
                 <div className="home-horizontal-row" ref={eventsRailRef}>
                 {loading
-                  ? Array.from({ length: 8 }).map((_, index) => (
+                  ? Array.from({ length: 3 }).map((_, index) => (
                       <LoadingSkeleton key={`event-loading-${index}`} className="media-card" />
                     ))
-                  : eventItems.map((event) => (
+                  : topEvents.map((event) => (
                       <article key={event.id} className="prototype-media-card hover-lift event-card">
                         <div className="media-wrap">
                           <img
@@ -807,7 +640,7 @@ function HomePage() {
                           <p className="chip">{event.status || "upcoming"}</p>
                           <h3 className="home-rail-card-title">{event.title}</h3>
                           <p className="home-rail-card-copy">
-                            {event.description || "Event details coming soon."}
+                            {truncateText(event.description || "Event details coming soon.", 120)}
                           </p>
                           <div className="inline-meta">
                             <small>
@@ -833,47 +666,6 @@ function HomePage() {
                       </article>
                     ))}
                 </div>
-              </div>
-            </section>
-
-            <section className="prototype-section compact-top">
-              <div className="section-head prototype-centered-head">
-                <p className="eyebrow">Our Presence</p>
-                <h2>Where We Work Across Kenya</h2>
-                <p>Regional hubs and field teams delivering consistent support.</p>
-              </div>
-              <div className="prototype-where-grid">
-                {locationCards.map((item) => (
-                  <article key={item.id} className="prototype-media-card hover-lift where-highlight-card">
-                    <div className="media-wrap">
-                      <img
-                        src={resolveMediaUrl(item.heroImage || item.coverImage)}
-                        alt={item.title}
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className="media-content">
-                      <h3>{item.title}</h3>
-                      <p>{item.summary || item.excerpt}</p>
-                      <Link to="/impact" className="text-link">
-                        View impact overview
-                      </Link>
-                    </div>
-                  </article>
-                ))}
-                <article className="prototype-map-card hover-lift">
-                  <div ref={mapRef} className="leaflet-map-container" />
-                  <div className="map-locations">
-                    <p className="map-title">Operations</p>
-                    <ul className="map-list">
-                      <li>Nairobi HQ</li>
-                      <li>Narok Region</li>
-                      <li>Mombasa Coast</li>
-                      <li>Nakuru Area</li>
-                      <li>Kakamega Region</li>
-                    </ul>
-                  </div>
-                </article>
               </div>
             </section>
 
@@ -941,16 +733,15 @@ function HomePage() {
                   <p className="eyebrow">Take Action</p>
                   <h2>Support community programs that create lasting change</h2>
                   <p>
-                    Fund education, health, and resilience projects with transparent impact
-                    tracking.
+                    Fund education, health, and resilience projects in local communities.
                   </p>
                 </div>
                 <div className="cta-banner-actions">
                   <Link to="/donate" className="btn btn-primary">
                     Donate Now
                   </Link>
-                  <Link to="/impact" className="btn btn-secondary">
-                    View Impact Data
+                  <Link to="/contact?inquiry=partner#contact-form" className="btn btn-secondary">
+                    Partner With Us
                   </Link>
                 </div>
               </div>
@@ -1069,28 +860,6 @@ function HomePage() {
               </section>
             )}
 
-            {stats.length > 0 && (
-              <section className="prototype-section compact-top home-impact-section">
-                <div className="section-head split">
-                  <h2>Live Impact Snapshot</h2>
-                  <Link to="/impact" className="text-link">
-                    Open full impact dashboard
-                  </Link>
-                </div>
-                <div className="grid four">
-                  {stats.map((item) => (
-                    <article key={item.id} className="stat-card glass-card hover-lift home-impact-card">
-                      <p className="stat-label">{item.label}</p>
-                      <h3>{Number(item.value || 0).toLocaleString()}</h3>
-                      <small className={Number(item.trend) >= 0 ? "positive" : "negative"}>
-                        {Number(item.trend) >= 0 ? "+" : ""}
-                        {item.trend}% trend
-                      </small>
-                    </article>
-                  ))}
-                </div>
-              </section>
-            )}
           </div>
         </section>
       </div>

@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { apiFetch, resolveMediaUrl } from "../app/api";
+import { truncateText } from "../app/text";
 import { useToast } from "../context/ToastContext";
 
 function formatDate(value) {
@@ -146,14 +147,14 @@ function ProgramDetailsPage() {
         <div className="container program-hero-content">
           <p className="chip">{program.category}</p>
           <h1>{program.title}</h1>
-          <p>{program.summary}</p>
+          <p>{truncateText(program.summary || "Program summary coming soon.", 150)}</p>
         </div>
       </section>
 
       <section className="container section program-detail-grid">
         <article className="glass-card">
           <h2>Program Overview</h2>
-          <p>{program.description}</p>
+          <p>{program.description || "Program details coming soon."}</p>
           <p>
             <strong>Location:</strong> {program.location || "Multiple regions"}
           </p>
@@ -179,8 +180,7 @@ function ProgramDetailsPage() {
           <p className="eyebrow">Take Action</p>
           <h2>Support {program.title}</h2>
           <p>
-            Your support keeps this initiative active and helps us serve more families,
-            schools, and communities.
+            Your support helps this initiative reach more families, schools, and communities.
           </p>
           <div className="cta-banner-actions">
             <Link to={`/donate?programId=${program.id}`} className="btn btn-primary">
@@ -217,7 +217,7 @@ function ProgramDetailsPage() {
                   <div className="media-content">
                     <p className="chip">{event.status || "upcoming"}</p>
                     <h3>{event.title}</h3>
-                    <p>{event.description}</p>
+                    <p>{truncateText(event.description || "Event details coming soon.", 120)}</p>
                     <div className="inline-meta">
                       <small>{formatDate(event.eventDate)}</small>
                       <small>{event.location || "Location TBA"}</small>
@@ -269,7 +269,7 @@ function ProgramDetailsPage() {
                   <div className="media-content">
                     <p className="chip">{story.category || "Story"}</p>
                     <h3>{story.title}</h3>
-                    <p>{story.excerpt}</p>
+                    <p>{truncateText(story.excerpt || story.summary || "Story details coming soon.", 120)}</p>
                     <Link to={`/stories/${story.slug || story.id}`} className="text-link">
                       Read full story
                     </Link>
