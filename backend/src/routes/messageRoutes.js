@@ -55,29 +55,10 @@ function ensureMessageTables() {
   return ensureMessageTablesPromise;
 }
 
-// Setup file upload for partner documents
-const uploadsDir = path.join(__dirname, "../../uploads/partner-documents");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const documentStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname || "").toLowerCase();
-    const baseName = path
-      .basename(file.originalname || "document", ext)
-      .replace(/[^\w-]+/g, "-")
-      .slice(0, 60);
-    cb(null, `${baseName || "doc"}-${uniqueSuffix}${ext || ".pdf"}`);
-  },
-});
-
+// File uploads disabled for serverless environment
+// Use memory storage temporarily (files won't persist)
 const documentUpload = multer({
-  storage: documentStorage,
+  storage: multer.memoryStorage(),
   fileFilter: (_req, file, cb) => {
     const allowedExtensions = [".pdf", ".doc", ".docx", ".txt", ".xls", ".xlsx"];
     const ext = path.extname(file.originalname || "").toLowerCase();
@@ -166,11 +147,12 @@ router.post(
       });
     }
 
-    if (normalizedInquiryType === "partner" && !req.file) {
-      return res.status(400).json({
-        message: "Please upload partnership requirements for partner inquiries.",
-      });
-    }
+    // File upload optional for now (serverless limitation)
+    // if (normalizedInquiryType === "partner" && !req.file) {
+    //   return res.status(400).json({
+    //     message: "Please upload partnership requirements for partner inquiries.",
+    //   });
+    // }
 
     if (normalizedInquiryType === "volunteer" && !volunteerSkills) {
       return res.status(400).json({
@@ -180,7 +162,8 @@ router.post(
 
     let partnerRequirementsFile = null;
     if (req.file && normalizedInquiryType === "partner") {
-      partnerRequirementsFile = `/uploads/partner-documents/${req.file.filename}`;
+      // Store filename only (file in memory, not persisted in serverless)
+      partnerRequirementsFile = req.file.originalname;
     }
 
     const result = await query(
