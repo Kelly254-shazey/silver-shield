@@ -28,6 +28,10 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(globalLimiter);
 
+app.get("/", (req, res) => {
+  res.json({ message: "Silver Shield API", status: "running" });
+});
+
 app.get("/api/health", async (req, res) => {
   try {
     await query("SELECT 1");
