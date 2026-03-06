@@ -7,28 +7,9 @@ const { requireAuth, requireAdmin } = require("../middleware/auth");
 
 const router = express.Router();
 
-const uploadsDir = path.join(__dirname, "../../uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname || "").toLowerCase();
-    const baseName = path
-      .basename(file.originalname || "upload", ext)
-      .replace(/[^\w-]+/g, "-")
-      .slice(0, 60);
-    cb(null, `${baseName || "image"}-${uniqueSuffix}${ext || ".jpg"}`);
-  },
-});
-
+// File uploads disabled for serverless - use memory storage
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter: (_req, file, cb) => {
     const mime = String(file.mimetype || "");
     if (mime.startsWith("image/") || mime.startsWith("video/")) {
@@ -71,13 +52,14 @@ router.post(
       return res.status(400).json({ message: "No file uploaded." });
     }
 
-    const relativeUrl = `/uploads/${req.file.filename}`;
+    // File stored in memory (not persisted in serverless)
+    const relativeUrl = `/uploads/${req.file.originalname}`;
     const absoluteUrl = `${getPublicBase(req)}${relativeUrl}`;
 
     return res.json({
       url: absoluteUrl,
       relativeUrl,
-      filename: req.file.filename,
+      filename: req.file.originalname,
       size: req.file.size,
       mimetype: req.file.mimetype,
     });
