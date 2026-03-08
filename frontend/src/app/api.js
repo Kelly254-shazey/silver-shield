@@ -5,19 +5,8 @@ function getApiBaseUrl() {
     return envUrl.replace(/\/+$/, "");
   }
 
-  if (typeof window !== "undefined") {
-    const { protocol, hostname, origin } = window.location;
-    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
-
-    if (isLocalhost) {
-      return `${protocol}//${hostname}:5000/api`;
-    }
-
-    // Production default: same host serves API under /api
-    return `${origin}/api`;
-  }
-
-  return "http://localhost:5000/api";
+  // Default to live backend
+  return "https://silver-shield-ducn.vercel.app/api";
 }
 
 const API_BASE_URL = getApiBaseUrl();
