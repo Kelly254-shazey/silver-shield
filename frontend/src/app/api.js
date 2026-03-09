@@ -1,12 +1,39 @@
 // Build API URL with proper protocol handling
+const LIVE_API_BASE_URL = "https://silver-shield-ducn.vercel.app/api";
+
+function isLocalHost(value) {
+  return value === "localhost" || value === "127.0.0.1";
+}
+
+function isLocalApiUrl(value) {
+  try {
+    const parsed = new URL(value);
+    return isLocalHost(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 function getApiBaseUrl() {
   const envUrl = String(import.meta.env.VITE_API_BASE_URL || "").trim();
   if (envUrl) {
-    return envUrl.replace(/\/+$/, "");
+    const normalizedEnvUrl = envUrl.replace(/\/+$/, "");
+
+    if (typeof window !== "undefined") {
+      const appHost = String(window.location.hostname || "").trim();
+      const appIsLocal = isLocalHost(appHost);
+
+      // Prevent production builds from accidentally using localhost API.
+      if (!appIsLocal && isLocalApiUrl(normalizedEnvUrl)) {
+        return LIVE_API_BASE_URL;
+      }
+    }
+
+    return normalizedEnvUrl;
   }
 
-  // Default to live backend
-  return "https://silver-shield-ducn.vercel.app/api";
+  // Production default: always use the live deployed backend
+  return LIVE_API_BASE_URL;
 }
 
 const API_BASE_URL = getApiBaseUrl();
