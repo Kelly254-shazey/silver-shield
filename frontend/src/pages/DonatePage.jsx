@@ -49,7 +49,7 @@ function DonatePage() {
     try {
       const res = await apiFetch("/donations/initiate", {
         method: "POST",
-        body: { method: "MPESA", amount: amountNum, donorName: name, donorEmail: email, donorPhone: phone, currency: "KES" },
+        body: { method: "PAYHERO", amount: amountNum, donorName: name, donorEmail: email, donorPhone: phone, currency: "KES" },
       });
       setResponse({ success: true, message: res.providerMessage || "STK Push sent! Check your phone.", phone: res.normalizedPhone || phone });
       pushToast("Payment prompt sent to your phone.", "success");
