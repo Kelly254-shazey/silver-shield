@@ -1,5 +1,5 @@
 // Build API URL with proper protocol handling
-const LIVE_API_BASE_URL = "https://edumin.co.ke/silver/silver/backend/api";
+const LIVE_API_BASE_URL = "https://edumin.co.ke/backend/api";
 
 function trimTrailingSlash(value) {
   return String(value || "").replace(/\/+$/, "");

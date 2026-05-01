@@ -15,7 +15,7 @@ const ABOUT_FALLBACK = {
   vision: "Empowering communities to rise, lead, and sustain change.",
 };
 
-const BASE = "https://edumin.co.ke/silver/silver/backend/uploads";
+const BASE = "https://edumin.co.ke/backend/uploads";
 
 const FALLBACK_PROGRAMS = [
   {
