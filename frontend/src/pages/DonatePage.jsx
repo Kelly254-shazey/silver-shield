@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { apiFetch } from "../app/api";
 import PageTransition from "../components/PageTransition";
 import { useToast } from "../context/ToastContext";
@@ -106,7 +106,7 @@ function DonatePage() {
           <h2>Quick Pay (STK Push)</h2>
           <p>Enter your M-Pesa number and receive a payment prompt instantly.</p>
           <form onSubmit={handleSubmit} className="stk-push-form">
-            <div className="stk-push-form form-row">
+            <div className="form-row">
               <div className="form-group">
                 <label>Amount (KES) *</label>
                 <input type="number" placeholder="e.g. 500" value={amount}
