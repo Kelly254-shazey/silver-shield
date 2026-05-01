@@ -8,11 +8,12 @@ import LoadingSkeleton from "../components/LoadingSkeleton";
 import PageTransition from "../components/PageTransition";
 
 const ABOUT_FALLBACK = {
-  title: "About Silver Shield",
+  title: "Silver Shield Organisation",
   storyContent:
-    "Silver Shield Organisation is a community-centred nonprofit shaping lives through women empowerment, youth leadership, school mentorship, outreach, and talent development.",
-  mission: "To serve communities with integrity, impact, and excellence.",
-  vision: "Empowering communities to rise, lead, and sustain change.",
+    "Building dignity, opportunity, and resilience across Bungoma. We partner with women, youth, schools, and families to unlock potential through mentorship, skills training, and community leadership.",
+  mission: "To empower communities with integrity, impact, and excellence.",
+  vision: "Communities of confident, skilled leaders driving sustainable change.",
+  tagline: "DIGNITY • OPPORTUNITY • MOMENTUM"
 };
 
 const BASE = "https://edumin.co.ke/backend/uploads";
@@ -130,6 +131,7 @@ function formatEventDate(value) {
 
 function HomePage() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [about, setAbout] = useState(ABOUT_FALLBACK);
   const [programs, setPrograms] = useState([]);
   const [stories, setStories] = useState([]);
@@ -138,54 +140,56 @@ function HomePage() {
   useEffect(() => {
     let mounted = true;
 
-    Promise.allSettled([
-      apiFetch("/about"),
-      apiFetch("/programs"),
-      apiFetch("/stories"),
-      apiFetch("/events"),
-    ])
-      .then(([aboutRes, programsRes, storiesRes, eventsRes]) => {
-        if (!mounted) {
-          return;
-        }
+    const fetchData = async () => {
+      try {
+        const results = await Promise.allSettled([
+          apiFetch("/about"),
+          apiFetch("/programs"),
+          apiFetch("/stories"),
+          apiFetch("/events"),
+        ]);
 
-        if (aboutRes.status === "fulfilled" && aboutRes.value?.data) {
-          setAbout((prev) => ({ ...prev, ...aboutRes.value.data }));
+        if (!mounted) return;
+
+        // Process results with better error handling
+        if (results[0].status === "fulfilled" && results[0].value?.data) {
+          setAbout((prev) => ({ ...prev, ...results[0].value.data }));
         }
-        if (programsRes.status === "fulfilled") {
-          setPrograms(programsRes.value?.data || []);
-        }
-        if (storiesRes.status === "fulfilled") {
-          setStories(storiesRes.value?.data || []);
-        }
-        if (eventsRes.status === "fulfilled") {
-          setEvents(eventsRes.value?.data || []);
-        }
-      })
-      .finally(() => {
+        
+        setPrograms(results[1].status === "fulfilled" ? (results[1].value?.data || []) : []);
+        setStories(results[2].status === "fulfilled" ? (results[2].value?.data || []) : []);
+        setEvents(results[3].status === "fulfilled" ? (results[3].value?.data || []) : []);
+        
+        setError(null);
+      } catch (err) {
         if (mounted) {
-          setLoading(false);
+          setError("Failed to load content. Using fallback data.");
+          console.error("HomePage data fetch error:", err);
         }
-      });
-
-    return () => {
-      mounted = false;
+      } finally {
+        if (mounted) setLoading(false);
+      }
     };
+
+    fetchData();
+    return () => { mounted = false; };
   }, []);
 
   const livePrograms = useMemo(
     () => programs.filter((item) => String(item.status || "").toLowerCase() !== "draft"),
     [programs],
   );
+  
   const liveStories = useMemo(
     () => stories.filter((item) => String(item.status || "").toLowerCase() !== "draft"),
     [stories],
   );
+  
   const upcomingEvents = useMemo(
-    () =>
-      events.filter((item) =>
-        ["upcoming", "ongoing"].includes(String(item.status || "").toLowerCase()),
-      ),
+    () => events.filter((item) => {
+      const status = String(item.status || "").toLowerCase();
+      return status === "upcoming" || status === "ongoing";
+    }),
     [events],
   );
 
@@ -193,11 +197,14 @@ function HomePage() {
     () => (livePrograms.length ? livePrograms : FALLBACK_PROGRAMS),
     [livePrograms],
   );
+  
   const featuredPrograms = useMemo(() => allProgramItems.slice(0, 3), [allProgramItems]);
+  
   const allStoryItems = useMemo(
     () => (liveStories.length ? liveStories : FALLBACK_STORIES),
     [liveStories],
   );
+  
   const storyItems = useMemo(() => allStoryItems.slice(0, 2), [allStoryItems]);
 
   const getProgramLink = (program) => (program.isFallback ? "/programs" : getProgramPath(program));
@@ -218,31 +225,34 @@ function HomePage() {
       link: getProgramLink(program),
     }));
 
-    if (mapped.length >= 4) {
-      return mapped;
+    // Fill remaining slots with fallback pillars if needed
+    if (mapped.length < 4) {
+      const usedTitles = new Set(mapped.map((item) => item.title));
+      const fillers = DEFAULT_PILLARS
+        .filter((item) => !usedTitles.has(item.title))
+        .slice(0, 4 - mapped.length)
+        .map((item) => ({
+          id: item.key,
+          initial: item.initial,
+          label: item.label,
+          title: item.title,
+          desc: item.desc,
+          image: item.image,
+          link: "/programs",
+        }));
+      return [...mapped, ...fillers];
     }
 
-    const usedTitles = new Set(mapped.map((item) => item.title));
-    const fillers = DEFAULT_PILLARS.filter((item) => !usedTitles.has(item.title))
-      .slice(0, 4 - mapped.length)
-      .map((item) => ({
-        id: item.key,
-        initial: item.initial,
-        label: item.label,
-        title: item.title,
-        desc: item.desc,
-        image: item.image,
-        link: "/programs",
-      }));
-
-    return [...mapped, ...fillers];
+    return mapped;
   }, [allProgramItems]);
 
   const heroImage = useMemo(
-    () =>
-      resolveMediaUrl(about.heroImage) ||
-      resolveMediaUrl(featuredPrograms[0]?.heroImage) ||
-      HERO_IMAGE_FALLBACK,
+    () => {
+      const aboutHero = resolveMediaUrl(about.heroImage);
+      const programHero = 
+        featuredPrograms.length > 0 ? resolveMediaUrl(featuredPrograms[0]?.heroImage) : null;
+      return aboutHero || programHero || HERO_IMAGE_FALLBACK;
+    },
     [about.heroImage, featuredPrograms],
   );
 
@@ -259,22 +269,22 @@ function HomePage() {
     () => [
       {
         value: String(allProgramItems.length).padStart(2, "0"),
-        label: "Active Programs",
-        copy: "Community tracks built around mentorship, empowerment, and practical opportunity.",
+        label: "Live Programs",
+        copy: "Mentorship, empowerment, and practical opportunity built for real community needs.",
       },
       {
         value: "04",
         label: "Strategic Pillars",
-        copy: "Women, youth, schools, and outreach remain at the center of delivery.",
+        copy: "Women, youth, schools, and outreach. Four focused areas. Unlimited impact.",
       },
       {
         value: String(allStoryItems.length).padStart(2, "0"),
-        label: "Stories and Proof",
-        copy: "Real field stories showing how support translates into confidence and progress.",
+        label: "Stories of Change",
+        copy: "Real transformations. Real voices. Proof that change happens when we show up.",
       },
       {
-        value: "01",
-        label: "Shared Mission",
+        value: "100%",
+        label: "Community-Led",
         copy: truncateText(about.mission || ABOUT_FALLBACK.mission, 88),
       },
     ],
@@ -286,7 +296,8 @@ function HomePage() {
   return (
     <PageTransition>
       <div className="hp-root">
-        <section className="hp-hero">
+        {/* Hero Section */}
+        <section className="hp-hero" role="region" aria-label="Hero section">
           <div className="hp-hero-bg" style={{ backgroundImage: `url(${heroImage})` }} />
           <div className="hp-hero-overlay" />
           <div className="container hp-hero-inner">
@@ -296,11 +307,11 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7 }}
             >
-              <p className="hp-hero-eyebrow">Silver Shield Organisation | Shaping Lives</p>
-              <h1>Shaping Lives Through Mentorship, Dignity, and Opportunity</h1>
+              <p className="hp-hero-eyebrow">{about.tagline || "DIGNITY • OPPORTUNITY • MOMENTUM"}</p>
+              <h1>Building Confident Leaders & Thriving Communities Across Bungoma</h1>
               <p className="hp-hero-sub">
-                We work with women, young people, schools, and families to build confidence,
-                practical skills, and long-term progress in the communities we serve.
+                We unlock potential through mentorship, skills training, and community-led change.
+                Partner with us to shape lives and drive real progress.
               </p>
               <div className="hp-hero-btns">
                 <Link to="/donate" className="btn btn-primary btn-lg">
@@ -310,10 +321,10 @@ function HomePage() {
                   Explore Programs
                 </Link>
               </div>
-              <div className="hp-hero-proof">
+              <div className="hp-hero-proof" aria-label="Key statistics">
                 {heroProofCards.map((item) => (
                   <article key={item.label} className="hp-hero-proof-card">
-                    <strong>{item.value}</strong>
+                    <strong aria-label={`${item.value} ${item.label}`}>{item.value}</strong>
                     <span>{item.label}</span>
                   </article>
                 ))}
@@ -325,15 +336,16 @@ function HomePage() {
           </div>
         </section>
 
-        <section className="hp-section hp-commitments-section">
+        {/* Strategic Commitments Section */}
+        <section className="hp-section hp-commitments-section" role="region" aria-label="Strategic commitments">
           <div className="container">
             <motion.div className="hp-section-head" {...fadeUp}>
               <div>
-                <p className="hp-label">Strategic Commitments</p>
-                <h2>Clear priorities, practical delivery, and a stronger community footprint.</h2>
+                <p className="hp-label">STRATEGIC COMMITMENTS</p>
+                <h2>Clear Priorities. Measurable Impact. Community-Led Change.</h2>
               </div>
             </motion.div>
-            <div className="hp-commitments-grid">
+            <div className="hp-commitments-grid" role="list">
               {commitmentCards.map((item, index) => (
                 <motion.article
                   key={item.label}
@@ -342,8 +354,9 @@ function HomePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.45, delay: index * 0.08 }}
+                  role="listitem"
                 >
-                  <span className="hp-commitment-value">{item.value}</span>
+                  <span className="hp-commitment-value" aria-label={item.label}>{item.value}</span>
                   <h3>{item.label}</h3>
                   <p>{item.copy}</p>
                 </motion.article>
@@ -352,18 +365,19 @@ function HomePage() {
           </div>
         </section>
 
-        <section className="hp-section hp-pillars-section">
+        {/* Pillars Section */}
+        <section className="hp-section hp-pillars-section" role="region" aria-label="Four pillars">
           <div className="container">
             <motion.div className="hp-section-head" {...fadeUp}>
               <div>
-                <p className="hp-label">The 4 Pillars</p>
-                <h2>Where Silver Shield focuses its energy, service, and community presence.</h2>
+                <p className="hp-label">THE 4 PILLARS</p>
+                <h2>Our Strategic Blueprint for Community Transformation</h2>
               </div>
               <Link to="/programs" className="btn btn-secondary">
-                Explore the Pillars
+                Explore All
               </Link>
             </motion.div>
-            <div className="hp-pillars-grid">
+            <div className="hp-pillars-grid" role="list">
               {pillarPrograms.map((pillar, index) => (
                 <motion.article
                   key={pillar.id}
@@ -372,11 +386,12 @@ function HomePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.15 }}
                   transition={{ duration: 0.5, delay: index * 0.08 }}
+                  role="listitem"
                 >
                   <div className="hp-pillar-media">
                     <img src={pillar.image} alt={pillar.title} loading="lazy" />
                     <div className="hp-pillar-overlay" />
-                    <span className="hp-pillar-index">{pillar.initial}</span>
+                    <span className="hp-pillar-index" aria-label={`Pillar ${pillar.initial}`}>{pillar.initial}</span>
                   </div>
                   <div className="hp-pillar-body">
                     <small>{pillar.label}</small>
@@ -392,18 +407,19 @@ function HomePage() {
           </div>
         </section>
 
-        <section className="hp-about">
+        {/* About Section */}
+        <section className="hp-about" role="region" aria-label="About Silver Shield">
           <div className="container hp-about-grid">
             <motion.div className="hp-about-copy" {...fadeUp}>
-              <p className="hp-label">Who We Are</p>
+              <p className="hp-label">OUR STORY</p>
               <h2>{about.title || ABOUT_FALLBACK.title}</h2>
-              <p>{truncateText(about.storyContent || ABOUT_FALLBACK.storyContent, 400)}</p>
+              <p>{truncateText(about.storyContent || ABOUT_FALLBACK.storyContent, 380)}</p>
               <div className="hp-about-actions">
                 <Link to="/about" className="btn btn-primary">
-                  Our Story
+                  Our Full Story
                 </Link>
                 <Link to="/volunteer" className="btn btn-secondary">
-                  Volunteer With Us
+                  Join Our Team
                 </Link>
               </div>
             </motion.div>
@@ -413,36 +429,39 @@ function HomePage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
+              role="region"
+              aria-label="Mission and vision"
             >
               <div className="hp-mission-card hp-mission-primary">
-                <p className="hp-label">Mission</p>
-                <p>{about.mission || ABOUT_FALLBACK.mission}</p>
+                <p className="hp-label">MISSION</p>
+                <p><strong>{about.mission || ABOUT_FALLBACK.mission}</strong></p>
               </div>
               <div className="hp-mission-card">
-                <p className="hp-label">Vision</p>
-                <p>{about.vision || ABOUT_FALLBACK.vision}</p>
+                <p className="hp-label">VISION</p>
+                <p><strong>{about.vision || ABOUT_FALLBACK.vision}</strong></p>
               </div>
               <Link to={getStoryLink(highlightedStory)} className="hp-mission-card hp-story-highlight">
-                <p className="hp-label">Impact in Action</p>
+                <p className="hp-label">SPOTLIGHT</p>
                 <strong>{highlightedStory.title}</strong>
-                <p>{truncateText(highlightedStory.excerpt || "", 115)}</p>
+                <p>{truncateText(highlightedStory.excerpt || "", 110)}</p>
               </Link>
             </motion.div>
           </div>
         </section>
 
-        <section className="hp-section hp-programs-section">
+        {/* Programs Section */}
+        <section className="hp-section hp-programs-section" role="region" aria-label="Featured programs">
           <div className="container">
             <motion.div className="hp-section-head" {...fadeUp}>
               <div>
-                <p className="hp-label">Impact in Action</p>
-                <h2>Focused Programmes Designed for Real Community Needs</h2>
+                <p className="hp-label">IMPACT IN ACTION</p>
+                <h2>How We Drive Results Across Bungoma</h2>
               </div>
               <Link to="/programs" className="btn btn-secondary">
-                View All Programs
+                See All Impact
               </Link>
             </motion.div>
-            <div className="hp-programs-grid">
+            <div className="hp-programs-grid" role="list">
               {loading
                 ? Array.from({ length: 3 }).map((_, index) => (
                     <LoadingSkeleton
@@ -459,6 +478,7 @@ function HomePage() {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.15 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
+                      role="listitem"
                     >
                       <Link to={getProgramLink(program)} className="hp-card-img-wrap">
                         <img src={resolveMediaUrl(program.heroImage)} alt={program.title} loading="lazy" />
@@ -477,19 +497,20 @@ function HomePage() {
           </div>
         </section>
 
+        {/* Events Section */}
         {(loading || upcomingEvents.length > 0) && (
-          <section className="hp-section hp-events-section">
+          <section className="hp-section hp-events-section" role="region" aria-label="Upcoming events">
             <div className="container">
               <motion.div className="hp-section-head" {...fadeUp}>
                 <div>
-                  <p className="hp-label">Upcoming Events</p>
-                  <h2>Stay Close to the Work Through Community Events and Gatherings</h2>
+                  <p className="hp-label">UPCOMING ACTIVATIONS</p>
+                  <h2>Where Change Happens: Our Community Calendar</h2>
                 </div>
                 <Link to="/events" className="btn btn-secondary">
-                  All Events
+                  See All Events
                 </Link>
               </motion.div>
-              <div className="hp-events-grid">
+              <div className="hp-events-grid" role="list">
                 {loading
                   ? Array.from({ length: 3 }).map((_, index) => (
                       <LoadingSkeleton
@@ -508,11 +529,12 @@ function HomePage() {
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true }}
                           transition={{ duration: 0.45, delay: index * 0.08 }}
+                          role="listitem"
                         >
-                          <div className="hp-event-date">
+                          <time dateTime={event.eventDate} className="hp-event-date">
                             <strong>{date.day}</strong>
                             <small>{date.month}</small>
-                          </div>
+                          </time>
                           <div className="hp-event-body">
                             <span className="chip">{event.status || "upcoming"}</span>
                             <h3>{event.title}</h3>
@@ -530,18 +552,19 @@ function HomePage() {
           </section>
         )}
 
-        <section className="hp-section hp-stories-section">
+        {/* Stories Section */}
+        <section className="hp-section hp-stories-section" role="region" aria-label="Stories of change">
           <div className="container">
             <motion.div className="hp-section-head" {...fadeUp}>
               <div>
-                <p className="hp-label">Stories of Change</p>
-                <h2>Moments That Show the Work Beyond the Headline</h2>
+                <p className="hp-label">PROVEN RESULTS</p>
+                <h2>Real Stories. Real Progress. Real Impact.</h2>
               </div>
               <Link to="/stories" className="btn btn-secondary">
-                See All Stories
+                Read All Stories
               </Link>
             </motion.div>
-            <div className="hp-stories-grid">
+            <div className="hp-stories-grid" role="list">
               {loading
                 ? Array.from({ length: 2 }).map((_, index) => (
                     <LoadingSkeleton
@@ -558,6 +581,7 @@ function HomePage() {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.15 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
+                      role="listitem"
                     >
                       <Link to={getStoryLink(story)} className="hp-card-img-wrap hp-story-img">
                         <img src={resolveMediaUrl(story.coverImage)} alt={story.title} loading="lazy" />
@@ -576,41 +600,42 @@ function HomePage() {
           </div>
         </section>
 
-        <section className="hp-cta-section">
+        {/* Call to Action Section */}
+        <section className="hp-cta-section" role="region" aria-label="Call to action">
           <div className="hp-cta-bg" />
           <div className="container hp-cta-inner">
             <motion.div className="hp-cta-content" {...fadeUp}>
-              <p className="hp-label hp-label-light">Get Involved</p>
-              <h2>Partner With Silver Shield and Help Shape Lives</h2>
+              <p className="hp-label hp-label-light">GET INVOLVED NOW</p>
+              <h2>Join the Movement. Build Community Momentum.</h2>
               <p>
-                Donate, volunteer, collaborate, or simply reach out. We are ready to connect and
-                guide the next step.
+                Donate to amplify programs. Volunteer your skills. Partner with us strategically.
+                Every contribution transforms lives across Bungoma.
               </p>
               <div className="hp-cta-btns">
                 <Link to="/donate" className="btn btn-primary btn-lg">
-                  Make a Donation
+                  Support Our Work
                 </Link>
                 <Link to="/contact?inquiry=partner#contact-form" className="btn hp-btn-ghost btn-lg">
-                  Start a Partnership
+                  Become a Partner
                 </Link>
               </div>
             </motion.div>
-            <div className="hp-cta-contacts">
-              <a href="mailto:Shieldsilver105@gmail.com" className="hp-cta-contact">
-                <span className="hp-cta-contact-icon">@</span>
+            <div className="hp-cta-contacts" role="list" aria-label="Contact methods">
+              <a href="mailto:Shieldsilver105@gmail.com" className="hp-cta-contact" role="listitem">
+                <span className="hp-cta-contact-icon">✉</span>
                 <div>
                   <strong>Email Us</strong>
                   <span>Shieldsilver105@gmail.com</span>
                 </div>
               </a>
-              <a href="tel:+254726836021" className="hp-cta-contact">
+              <a href="tel:+254726836021" className="hp-cta-contact" role="listitem">
                 <span className="hp-cta-contact-icon">TEL</span>
                 <div>
                   <strong>Call Us</strong>
                   <span>0726 836021 / 0115 362421</span>
                 </div>
               </a>
-              <Link to="/contact" className="hp-cta-contact">
+              <Link to="/contact" className="hp-cta-contact" role="listitem">
                 <span className="hp-cta-contact-icon">FORM</span>
                 <div>
                   <strong>Contact Form</strong>
