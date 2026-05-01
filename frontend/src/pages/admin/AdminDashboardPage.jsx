@@ -1,8 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { io } from "socket.io-client";
 import PageTransition from "../../components/PageTransition";
 import LoadingSkeleton from "../../components/LoadingSkeleton";
-import { apiFetch, SOCKET_BASE_URL, SOCKET_PATH } from "../../app/api";
+import { apiFetch } from "../../app/api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 
@@ -55,25 +54,14 @@ function AdminDashboardPage() {
         if (mounted) setLoading(false);
       });
 
-    const socket = io(SOCKET_BASE_URL, {
-      path: SOCKET_PATH,
-      auth: { token: `Bearer ${token}` },
-      transports: ["polling"],
-    });
-
-    socket.emit("subscribe:admin");
-
-    const refresh = () => {
+    // Socket.IO not supported on cPanel - use polling instead
+    const interval = setInterval(() => {
       loadDashboard().catch(() => undefined);
-    };
-
-    socket.on("message:new", refresh);
-    socket.on("message:update", refresh);
-    socket.on("donation:update", refresh);
+    }, 30000);
 
     return () => {
       mounted = false;
-      socket.disconnect();
+      clearInterval(interval);
     };
   }, [token, pushToast]);
 
