@@ -2,14 +2,39 @@ const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const env = require("../config/env");
 const asyncHandler = require("../utils/asyncHandler");
 const { requireAuth, requireAdmin } = require("../middleware/auth");
 
 const router = express.Router();
+const uploadDir = path.resolve(process.cwd(), "uploads");
 
-// File uploads disabled for serverless - use memory storage
+fs.mkdirSync(uploadDir, { recursive: true });
+
+function sanitizeBaseName(value) {
+  const name = String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9-_]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+  return name || "upload";
+}
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    const base = sanitizeBaseName(path.basename(file.originalname || "upload", ext));
+    const unique = `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+    cb(null, `${base}-${unique}${ext}`);
+  },
+});
+
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage,
   fileFilter: (_req, file, cb) => {
     const mime = String(file.mimetype || "");
     if (mime.startsWith("image/") || mime.startsWith("video/")) {
@@ -23,11 +48,11 @@ const upload = multer({
   },
 });
 
-function getPublicBase(req) {
-  const forwardedProto = req.get("x-forwarded-proto");
-  const forwardedHost = req.get("x-forwarded-host");
-  const protocol = forwardedProto || req.protocol;
-  const host = forwardedHost || req.get("host");
+function getPublicOrigin(req) {
+  const forwardedProto = String(req.get("x-forwarded-proto") || req.protocol || "https");
+  const forwardedHost = String(req.get("x-forwarded-host") || req.get("host") || "");
+  const protocol = forwardedProto.split(",")[0].trim() || "https";
+  const host = forwardedHost.split(",")[0].trim();
   return `${protocol}://${host}`;
 }
 
@@ -52,14 +77,14 @@ router.post(
       return res.status(400).json({ message: "No file uploaded." });
     }
 
-    // File stored in memory (not persisted in serverless)
-    const relativeUrl = `/uploads/${req.file.originalname}`;
-    const absoluteUrl = `${getPublicBase(req)}${relativeUrl}`;
+    const filename = req.file.filename;
+    const relativeUrl = `${env.uploadsBasePath}/${filename}`;
+    const publicUrl = `${getPublicOrigin(req)}${relativeUrl}`;
 
     return res.json({
-      url: absoluteUrl,
+      url: publicUrl,
       relativeUrl,
-      filename: req.file.originalname,
+      filename,
       size: req.file.size,
       mimetype: req.file.mimetype,
     });

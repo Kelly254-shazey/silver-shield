@@ -4,6 +4,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const { requireAuth, requireAdmin } = require("../middleware/auth");
 const mpesaService = require("../services/mpesaService");
 const paypalService = require("../services/paypalService");
+const payheroService = require("../services/payheroService");
 const realtime = require("../services/realtimeService");
 
 const router = express.Router();
@@ -113,11 +114,11 @@ router.post(
       return res.status(400).json({ message: "Method and valid amount are required." });
     }
 
-    if (!["MPESA", "PAYPAL"].includes(normalizedMethod)) {
+    if (!["MPESA", "PAYPAL", "PAYHERO"].includes(normalizedMethod)) {
       return res.status(400).json({ message: "Unsupported donation method." });
     }
 
-    if (normalizedMethod === "MPESA" && !donorPhone) {
+    if ((normalizedMethod === "MPESA" || normalizedMethod === "PAYHERO") && !donorPhone) {
       return res.status(400).json({ message: "Phone number is required for mobile money STK push." });
     }
 
@@ -125,6 +126,14 @@ router.post(
     if (normalizedMethod === "MPESA") {
       try {
         normalizedPhone = mpesaService.normalizePhone(normalizedPhone);
+      } catch (error) {
+        return res.status(400).json({ message: error.message });
+      }
+    }
+
+    if (normalizedMethod === "PAYHERO") {
+      try {
+        normalizedPhone = payheroService.normalizePhone(normalizedPhone);
       } catch (error) {
         return res.status(400).json({ message: error.message });
       }
@@ -221,6 +230,55 @@ router.post(
       });
     }
 
+    if (normalizedMethod === "PAYHERO") {
+      const fallbackReference = `SILVER-${donationId}`;
+
+      try {
+        const payhero = await payheroService.initiateStkPush({
+          amount: donationAmount,
+          phone: normalizedPhone,
+          accountReference: fallbackReference,
+          transactionDesc: "Silver Shield Donation",
+        });
+
+        const providerReference = payhero.id || payhero.transactionId || fallbackReference;
+
+        await query(
+          `
+          UPDATE donations
+          SET providerReference = ?, metadata = ?, updatedAt = CURRENT_TIMESTAMP
+          WHERE id = ?
+          `,
+          [providerReference, JSON.stringify(payhero), donationId],
+        );
+
+        await emitDonationById(donationId);
+
+        return res.status(201).json({
+          donationId,
+          method: normalizedMethod,
+          status: "PENDING",
+          providerReference,
+          providerMessage:
+            payhero.customerMessage || payhero.ResponseDescription || "STK push sent.",
+          environment: payhero.environment,
+          normalizedPhone: payhero.normalizedPhone || normalizedPhone,
+          providerPayload: payhero,
+        });
+      } catch (error) {
+        await query(
+          `
+          UPDATE donations
+          SET status = 'FAILED', metadata = ?, updatedAt = CURRENT_TIMESTAMP
+          WHERE id = ?
+          `,
+          [JSON.stringify({ error: error.message }), donationId],
+        );
+        await emitDonationById(donationId);
+        throw error;
+      }
+    }
+
     return res.status(400).json({ message: "Unsupported donation method." });
   }),
 );
@@ -286,6 +344,39 @@ router.post(
     const rows = await query(
       "SELECT id FROM donations WHERE providerReference = ? LIMIT 1",
       [checkoutRequestId],
+    );
+    if (rows[0]?.id) {
+      await emitDonationById(rows[0].id);
+    }
+
+    return res.json({ message: "Callback processed." });
+  }),
+);
+
+router.post(
+  "/payhero/callback",
+  asyncHandler(async (req, res) => {
+    const callback = req.body || {};
+    const transactionId = callback.transaction_id || callback.id;
+    const normalizedStatus = String(callback.status || "").toLowerCase();
+    const status = normalizedStatus === "completed" || normalizedStatus === "successful" || normalizedStatus === "succeeded" ? "SUCCESS" : "FAILED";
+
+    if (!transactionId) {
+      return res.status(400).json({ message: "Invalid PayHero callback payload." });
+    }
+
+    await query(
+      `
+      UPDATE donations
+      SET status = ?, transactionId = ?, metadata = ?, updatedAt = CURRENT_TIMESTAMP
+      WHERE providerReference = ? OR transactionId = ?
+      `,
+      [status, transactionId, JSON.stringify(callback), transactionId, transactionId],
+    );
+
+    const rows = await query(
+      "SELECT id FROM donations WHERE providerReference = ? OR transactionId = ? LIMIT 1",
+      [transactionId, transactionId],
     );
     if (rows[0]?.id) {
       await emitDonationById(rows[0].id);

@@ -3,43 +3,29 @@ import { Link } from "react-router-dom";
 import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { apiFetch, resolveMediaUrl } from "../app/api";
-import { FALLBACK_STORIES } from "../app/fallbackContent";
 import { truncateText } from "../app/text";
-import { useToast } from "../context/ToastContext";
+
+const FALLBACK_STORIES = [
+  { id: "fs1", title: "From idea to income: A women-led business circle", author: "Silver Shield Team", excerpt: "How peer support and micro-grants helped mothers launch sustainable ventures.", coverImage: "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?auto=format&fit=crop&w=800&q=80" },
+  { id: "fs2", title: "Mentorship in schools: Building confidence one session at a time", author: "Education Team", excerpt: "Mentors and teachers partnered to improve attendance, confidence, and goal setting.", coverImage: "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=800&q=80" },
+];
 
 function StoriesPage() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { pushToast } = useToast();
 
   useEffect(() => {
     let mounted = true;
-
     apiFetch("/stories")
-      .then((response) => {
-        if (mounted) {
-          setStories(response.data || []);
-        }
-      })
-      .catch((error) => pushToast(error.message, "error"))
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
+      .then((res) => { if (mounted) setStories(res.data || []); })
+      .finally(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, []);
 
-    return () => {
-      mounted = false;
-    };
-  }, [pushToast]);
-
-  const publishedStories = useMemo(
-    () => stories.filter((story) => String(story.status || "").toLowerCase() !== "draft"),
-    [stories],
-  );
-
-  const storyItems = useMemo(
-    () => (publishedStories.length ? publishedStories : FALLBACK_STORIES),
-    [publishedStories],
-  );
+  const items = useMemo(() => {
+    const live = stories.filter((s) => String(s.status || "").toLowerCase() !== "draft");
+    return live.length ? live : FALLBACK_STORIES;
+  }, [stories]);
 
   return (
     <PageTransition className="page-space">
@@ -51,36 +37,20 @@ function StoriesPage() {
       <section className="container section">
         <div className="grid three">
           {loading
-            ? Array.from({ length: 6 }).map((_, index) => (
-                <LoadingSkeleton key={`stories-loading-${index}`} className="media-card" />
-              ))
-            : storyItems.map((story) => (
-                <article key={story.id} className="media-card glass-premium hover-lift">
-                  <Link to={`/stories/${story.slug || story.id}`} className="media-wrap">
-                    <img
-                      src={resolveMediaUrl(story.coverImage)}
-                      alt={story.title}
-                      loading="lazy"
-                    />
-                  </Link>
-                  <div className="media-content">
-                    <p className="chip">{story.category || "Story"}</p>
-                    <h3>{story.title}</h3>
-                    <p>
-                      {truncateText(story.excerpt || story.summary || "Story details coming soon.", 120)}
-                    </p>
-                    <small>
-                      {story.author || "Silver Shield"} -{" "}
-                      {story.publishedAt
-                        ? new Date(story.publishedAt).toLocaleDateString()
-                        : "Latest"}
-                    </small>
-                    <Link className="text-link" to={`/stories/${story.slug || story.id}`}>
-                      Read full story
-                    </Link>
-                  </div>
-                </article>
-              ))}
+            ? Array.from({ length: 6 }).map((_, i) => <LoadingSkeleton key={i} className="media-card" />)
+            : items.map((story) => (
+              <article key={story.id} className="media-card hover-lift">
+                <Link to={`/stories/${story.slug || story.id}`} className="media-wrap">
+                  <img src={resolveMediaUrl(story.coverImage)} alt={story.title} loading="lazy" />
+                </Link>
+                <div className="media-content">
+                  <small className="story-meta">{story.author || "Silver Shield"}</small>
+                  <h3>{story.title}</h3>
+                  <p>{truncateText(story.excerpt || story.summary || "", 110)}</p>
+                  <Link className="text-link" to={`/stories/${story.slug || story.id}`}>Read story</Link>
+                </div>
+              </article>
+            ))}
         </div>
       </section>
     </PageTransition>

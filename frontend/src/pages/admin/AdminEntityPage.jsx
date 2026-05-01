@@ -402,6 +402,7 @@ function AdminEntityPage({ title, endpoint, fields }) {
                   .split(",")
                   .map((item) => item.trim())
                   .filter(Boolean);
+                const resolvedUrls = currentUrls.map((url) => resolveMediaUrl(url));
 
                 return (
                   <div key={field} className="form-group">
@@ -419,7 +420,7 @@ function AdminEntityPage({ title, endpoint, fields }) {
                     </div>
                     {isGallery ? (
                       <div className="image-gallery-preview">
-                        {currentUrls.map((url, index) => (
+                        {resolvedUrls.map((url, index) => (
                           <div key={url || index} className="image-preview-item">
                             <img src={url} alt={`Gallery ${index + 1}`} />
                             <button
@@ -438,9 +439,9 @@ function AdminEntityPage({ title, endpoint, fields }) {
                     ) : currentUrls.length > 0 ? (
                       <div className="image-preview-single">
                         {isVideo ? (
-                          <video controls src={currentUrls[0]} style={{ width: "100%", borderRadius: "8px" }} />
+                          <video controls src={resolvedUrls[0]} style={{ width: "100%", borderRadius: "8px" }} />
                         ) : (
-                          <img src={currentUrls[0]} alt={fieldLabel} />
+                          <img src={resolvedUrls[0]} alt={fieldLabel} />
                         )}
                         <small>{currentUrls[0]}</small>
                       </div>

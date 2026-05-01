@@ -17,6 +17,7 @@ const ContactPage = React.lazy(() => import("./pages/ContactPage"));
 const TeamPage = React.lazy(() => import("./pages/TeamPage"));
 const AboutPage = React.lazy(() => import("./pages/AboutPage"));
 const EventsPage = React.lazy(() => import("./pages/EventsPage"));
+const VolunteerPage = React.lazy(() => import("./pages/VolunteerPage"));
 
 // Lazy load admin pages
 const AdminLoginPage = React.lazy(() => import("./pages/admin/AdminLoginPage"));
@@ -39,6 +40,7 @@ function App() {
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/stories/:id" element={<StoryDetailsPage />} />
           <Route path="/donate" element={<DonatePage />} />
+          <Route path="/volunteer" element={<VolunteerPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/team" element={<TeamPage />} />
           <Route path="/about" element={<AboutPage />} />

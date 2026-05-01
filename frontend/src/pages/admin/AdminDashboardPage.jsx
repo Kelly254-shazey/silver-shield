@@ -2,11 +2,9 @@
 import { io } from "socket.io-client";
 import PageTransition from "../../components/PageTransition";
 import LoadingSkeleton from "../../components/LoadingSkeleton";
-import { API_BASE_URL, apiFetch } from "../../app/api";
+import { apiFetch, SOCKET_BASE_URL, SOCKET_PATH } from "../../app/api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-
-const socketBaseUrl = API_BASE_URL.replace(/\/api$/, "");
 
 function AdminDashboardPage() {
   const { token } = useAuth();
@@ -57,7 +55,8 @@ function AdminDashboardPage() {
         if (mounted) setLoading(false);
       });
 
-    const socket = io(socketBaseUrl, {
+    const socket = io(SOCKET_BASE_URL, {
+      path: SOCKET_PATH,
       auth: { token: `Bearer ${token}` },
       transports: ["polling"],
     });

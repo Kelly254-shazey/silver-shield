@@ -1,7 +1,18 @@
 const path = require("path");
+const fs = require("fs");
 const dotenv = require("dotenv");
 
-dotenv.config({ path: path.resolve(process.cwd(), ".env"), quiet: true });
+const envPathCandidates = [
+  path.resolve(process.cwd(), ".env"),
+  path.resolve(__dirname, "../../.env"),
+];
+
+const resolvedEnvPath = envPathCandidates.find((candidate) => fs.existsSync(candidate));
+dotenv.config(
+  resolvedEnvPath
+    ? { path: resolvedEnvPath, quiet: true }
+    : { quiet: true },
+);
 
 function splitCsv(value) {
   return String(value || "")
@@ -14,22 +25,52 @@ function trimTrailingSlash(value) {
   return String(value || "").replace(/\/+$/, "");
 }
 
+function normalizePathPrefix(value) {
+  const raw = String(value || "").trim();
+  if (!raw || raw === "/") {
+    return "";
+  }
+  const withLeadingSlash = raw.startsWith("/") ? raw : `/${raw}`;
+  return trimTrailingSlash(withLeadingSlash);
+}
+
+function normalizeOrigin(value) {
+  return trimTrailingSlash(value).toLowerCase();
+}
+
+function unique(values) {
+  return [...new Set(values)];
+}
+
 const isProduction = (process.env.NODE_ENV || "development") === "production";
-const defaultFrontendUrl = isProduction ? "" : "http://localhost:5173";
-const frontendUrl = trimTrailingSlash(process.env.FRONTEND_URL || defaultFrontendUrl);
-const allowedOrigins = splitCsv(process.env.ALLOWED_ORIGINS);
+const defaultFrontendUrl = isProduction ? "https://edumin.co.ke" : "http://localhost:5173";
+const frontendUrl = normalizeOrigin(process.env.FRONTEND_URL || defaultFrontendUrl);
+const allowedOrigins = splitCsv(process.env.ALLOWED_ORIGINS).map(normalizeOrigin);
+const fallbackOrigins = isProduction
+  ? ["https://edumin.co.ke", "https://www.edumin.co.ke"]
+  : ["http://localhost:5173"];
 const resolvedAllowedOrigins =
   allowedOrigins.length > 0
-    ? allowedOrigins.map(trimTrailingSlash)
-    : frontendUrl
-      ? [frontendUrl]
-      : [];
+    ? unique(allowedOrigins)
+    : unique([frontendUrl, ...fallbackOrigins].filter(Boolean).map(normalizeOrigin));
+const appBasePath = normalizePathPrefix(
+  process.env.APP_BASE_PATH || (isProduction ? "/backend" : ""),
+);
+const apiBasePath = appBasePath ? `${appBasePath}/api` : "/api";
+const uploadsBasePath = appBasePath ? `${appBasePath}/uploads` : "/uploads";
+const socketPath = normalizePathPrefix(
+  process.env.SOCKET_PATH || (appBasePath ? `${appBasePath}/socket.io` : "/socket.io"),
+) || "/socket.io";
 
 const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: Number(process.env.PORT || 5000),
   frontendUrl,
   allowedOrigins: resolvedAllowedOrigins,
+  appBasePath,
+  apiBasePath,
+  uploadsBasePath,
+  socketPath,
 
   dbHost: process.env.DB_HOST || "127.0.0.1",
   dbPort: Number(process.env.DB_PORT || 3306),
@@ -68,6 +109,16 @@ const env = {
     process.env.PAYPAL_RETURN_URL || (frontendUrl ? `${frontendUrl}/donate` : ""),
   paypalCancelUrl:
     process.env.PAYPAL_CANCEL_URL || (frontendUrl ? `${frontendUrl}/donate` : ""),
+
+  payheroEnvironment: process.env.PAYHERO_ENVIRONMENT || "sandbox",
+  payheroAuth: process.env.PAYHERO_AUTH || "",
+  payheroAccountNumber: process.env.PAYHERO_ACCOUNT_NUMBER || "",
+  payheroChannelId: process.env.PAYHERO_CHANNEL_ID || "",
+  payheroCallbackUrl:
+    process.env.PAYHERO_CALLBACK_URL ||
+    (isProduction
+      ? "https://your-domain.com/api/donations/payhero/callback"
+      : "http://localhost:5000/api/donations/payhero/callback"),
 };
 
 function assertProductionConfig() {

@@ -19,6 +19,7 @@ const getInvolvedLinks = [
   { to: "/volunteer", label: "Volunteer" },
   { to: "/contact?inquiry=partner#contact-form", label: "Partner With Us" },
   { to: "/team", label: "Our Team" },
+  { to: "/admin/login", label: "Admin Login" },
 ];
 
 function Footer() {
@@ -29,35 +30,25 @@ function Footer() {
 
   useEffect(() => {
     let mounted = true;
-
     apiFetch("/docs/public?category=newsletter&limit=1")
       .then((response) => {
-        if (mounted) {
-          setNewsletterDoc((response.data || [])[0] || null);
-        }
+        if (mounted) setNewsletterDoc((response.data || [])[0] || null);
       })
       .catch(() => undefined);
-
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
   const newsletterDownloadUrl = useMemo(() => {
-    if (!newsletterDoc?.id) {
-      return "";
-    }
+    if (!newsletterDoc?.id) return "";
     return `${API_BASE_URL}/docs/public/${newsletterDoc.id}/download`;
   }, [newsletterDoc]);
 
   const onSubscribe = async (event) => {
     event.preventDefault();
-
     if (!subscriberEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(subscriberEmail)) {
       pushToast("Please enter a valid email to subscribe.", "error");
       return;
     }
-
     setSubscribing(true);
     try {
       await apiFetch("/messages", {
@@ -67,8 +58,7 @@ function Footer() {
           email: subscriberEmail.trim().toLowerCase(),
           phone: "",
           subject: `Newsletter Subscription${newsletterDoc?.title ? ` - ${newsletterDoc.title}` : ""}`,
-          message:
-            "Please subscribe this email to Silver Shield newsletter and update notifications.",
+          message: "Please subscribe this email to Silver Shield newsletter and update notifications.",
         },
       });
       setSubscriberEmail("");
@@ -82,77 +72,78 @@ function Footer() {
 
   return (
     <footer className="site-footer">
-      <div className="container prototype-footer-grid">
-        <section className="footer-brand-column">
+      <div className="container footer-grid">
+
+        {/* Brand + Contact */}
+        <section className="footer-brand-col">
           <LogoBrand variant="full" className="footer-logo" />
-          <p className="footer-intro">
-            Silver Shield Organisation is a community-led nonprofit shaping lives through
-            mentorship, outreach, empowerment, and practical opportunity.
+          <p className="footer-tagline">
+            Shaping lives through mentorship, outreach, and practical opportunity.
           </p>
-          <div className="footer-contact-stack">
-            <a href="mailto:Shieldsilver105@gmail.com">Shieldsilver105@gmail.com</a>
-            <a href="tel:+254726836021">0726 836021 / 0115 362421</a>
-            <span>Kanduyi, Bungoma, Kenya</span>
-          </div>
+          <ul className="footer-contact-list">
+            <li><a href="mailto:Shieldsilver105@gmail.com">Shieldsilver105@gmail.com</a></li>
+            <li><a href="tel:+254726836021">0726 836021 / 0115 362421</a></li>
+            <li>Kanduyi, Bungoma, Kenya</li>
+          </ul>
+          <SocialLinks className="footer-socials" />
         </section>
 
-        <section>
+        {/* Quick Links */}
+        <section className="footer-links-col">
           <h4>Quick Links</h4>
-          {quickLinks.map((item) => (
-            <Link key={item.to} to={item.to} className="footer-link">
-              {item.label}
-            </Link>
-          ))}
+          <nav>
+            {quickLinks.map((item) => (
+              <Link key={item.to} to={item.to} className="footer-link">{item.label}</Link>
+            ))}
+          </nav>
         </section>
 
-        <section>
+        {/* Get Involved */}
+        <section className="footer-links-col">
           <h4>Get Involved</h4>
-          {getInvolvedLinks.map((item) => (
-            <Link key={`${item.to}-${item.label}`} to={item.to} className="footer-link">
-              {item.label}
-            </Link>
-          ))}
+          <nav>
+            {getInvolvedLinks.map((item) => (
+              <Link key={`${item.to}-${item.label}`} to={item.to} className="footer-link">
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </section>
 
-        <section>
-          <h4>Connect</h4>
-          <SocialLinks className="prototype-socials footer-socials" />
-          <p className="footer-connect-copy">
-            Reach out to volunteer, partner, or support the next chapter of our community work.
+        {/* Newsletter */}
+        <section className="footer-newsletter-col">
+          <h4>Newsletter</h4>
+          <p className="footer-newsletter-meta">
+            {newsletterDoc?.title || "Stay updated with our latest news and programs."}
           </p>
-
-          <article className="footer-newsletter">
-            <h5>Newsletter</h5>
-            <p className="footer-newsletter-meta">
-              {newsletterDoc?.title || "Newsletter will appear here once published from Admin Docs."}
-            </p>
-            {newsletterDoc ? (
-              <a href={newsletterDownloadUrl} className="btn btn-secondary btn-sm" download>
-                Download Newsletter
-              </a>
-            ) : (
-              <p className="text-sm">No published newsletter document yet.</p>
-            )}
-
-            <form className="footer-newsletter-form" onSubmit={onSubscribe}>
-              <input
-                type="email"
-                placeholder="Enter email"
-                value={subscriberEmail}
-                onChange={(event) => setSubscriberEmail(event.target.value)}
-              />
-              <button type="submit" className="btn btn-primary btn-sm" disabled={subscribing}>
-                {subscribing ? "Subscribing..." : "Subscribe"}
-              </button>
-            </form>
-          </article>
+          {newsletterDoc && (
+            <a href={newsletterDownloadUrl} className="btn btn-secondary btn-sm" download>
+              Download Newsletter
+            </a>
+          )}
+          <form className="footer-newsletter-form" onSubmit={onSubscribe}>
+            <input
+              type="email"
+              placeholder="Your email address"
+              value={subscriberEmail}
+              onChange={(e) => setSubscriberEmail(e.target.value)}
+            />
+            <button type="submit" className="btn btn-primary btn-sm" disabled={subscribing}>
+              {subscribing ? "..." : "Subscribe"}
+            </button>
+          </form>
         </section>
+
       </div>
-      <div className="container footer-bottom">
-        <p>{new Date().getFullYear()} Silver Shield Organisation. All rights reserved.</p>
-        <p className="footer-credit">
-          Built by <a href="mailto:kelly123simiyu@gmail.com">Kelly123simiyu@gmail.com</a>
-        </p>
+
+      <div className="footer-bottom">
+        <div className="container footer-bottom-inner">
+          <p>&copy; {new Date().getFullYear()} Silver Shield Organisation. All rights reserved.</p>
+          <p>
+            Built by{" "}
+            <a href="mailto:kelly123simiyu@gmail.com">KellyFloTech</a>
+          </p>
+        </div>
       </div>
     </footer>
   );

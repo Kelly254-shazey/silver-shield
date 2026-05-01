@@ -66,7 +66,7 @@ function Navbar() {
             <span className="navbar-contact-separator">/</span>
             <span className="navbar-contact-location">
               <span className="navbar-meta-label">Based in</span>
-              <span>Nairobi, Kenya</span>
+              <span>Kanduyi, Bungoma, Kenya</span>
             </span>
           </div>
           <SocialLinks className="navbar-socials" linkClassName="social-link-minimal" />
@@ -76,14 +76,6 @@ function Navbar() {
         <div className="prototype-nav-shell">
           <div className="brand-mark-wrap">
             <LogoBrand variant="minimal" className="brand-mark" />
-            <Link
-              to="/admin/login"
-              className="admin-dot-link"
-              aria-label="Admin login"
-              title="Admin login"
-            >
-              .
-            </Link>
           </div>
 
           <nav className="nav-links" id="site-navigation" aria-label="Primary navigation">

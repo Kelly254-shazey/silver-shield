@@ -5,8 +5,9 @@ const realtime = require("../services/realtimeService");
 
 function initSocket(httpServer) {
   const io = new Server(httpServer, {
+    path: env.socketPath,
     cors: {
-      origin: env.frontendUrl,
+      origin: env.allowedOrigins,
       credentials: true,
     },
   });
