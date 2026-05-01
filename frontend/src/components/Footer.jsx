@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { API_BASE_URL, apiFetch } from "../app/api";
 import { useToast } from "../context/ToastContext";
 import LogoBrand from "./LogoBrand";
+import SocialLinks from "./SocialLinks";
 
 const quickLinks = [
   { to: "/", label: "Home" },
@@ -10,21 +11,14 @@ const quickLinks = [
   { to: "/programs", label: "Programs" },
   { to: "/events", label: "Events" },
   { to: "/stories", label: "Stories" },
-  { to: "/donate", label: "Donate" },
+  { to: "/contact", label: "Contact" },
 ];
 
 const getInvolvedLinks = [
   { to: "/donate", label: "Make a Donation" },
-  { to: "/contact", label: "Volunteer" },
-  { to: "/contact", label: "Partner With Us" },
+  { to: "/volunteer", label: "Volunteer" },
+  { to: "/contact?inquiry=partner#contact-form", label: "Partner With Us" },
   { to: "/team", label: "Our Team" },
-];
-
-const socialLinks = [
-  { href: "https://facebook.com", label: "Facebook", short: "FB" },
-  { href: "https://x.com", label: "X", short: "X" },
-  { href: "https://instagram.com", label: "Instagram", short: "IG" },
-  { href: "https://linkedin.com", label: "LinkedIn", short: "IN" },
 ];
 
 function Footer() {
@@ -89,11 +83,17 @@ function Footer() {
   return (
     <footer className="site-footer">
       <div className="container prototype-footer-grid">
-        <section>
+        <section className="footer-brand-column">
           <LogoBrand variant="full" className="footer-logo" />
-          <p>Community Impact Centre, Nairobi, Kenya</p>
-          <p>Shieldsilver105@gmail.com</p>
-          <p>0726 836021 / 0115 362421</p>
+          <p className="footer-intro">
+            Silver Shield Organisation is a community-led nonprofit shaping lives through
+            mentorship, outreach, empowerment, and practical opportunity.
+          </p>
+          <div className="footer-contact-stack">
+            <a href="mailto:Shieldsilver105@gmail.com">Shieldsilver105@gmail.com</a>
+            <a href="tel:+254726836021">0726 836021 / 0115 362421</a>
+            <span>Kanduyi, Bungoma, Kenya</span>
+          </div>
         </section>
 
         <section>
@@ -116,20 +116,10 @@ function Footer() {
 
         <section>
           <h4>Connect</h4>
-          <div className="prototype-socials">
-            {socialLinks.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={item.label}
-              >
-                {item.short}
-              </a>
-            ))}
-          </div>
-          <p>Partner with us for sustainable social impact.</p>
+          <SocialLinks className="prototype-socials footer-socials" />
+          <p className="footer-connect-copy">
+            Reach out to volunteer, partner, or support the next chapter of our community work.
+          </p>
 
           <article className="footer-newsletter">
             <h5>Newsletter</h5>
@@ -137,11 +127,7 @@ function Footer() {
               {newsletterDoc?.title || "Newsletter will appear here once published from Admin Docs."}
             </p>
             {newsletterDoc ? (
-              <a
-                href={newsletterDownloadUrl}
-                className="btn btn-secondary btn-sm"
-                download
-              >
+              <a href={newsletterDownloadUrl} className="btn btn-secondary btn-sm" download>
                 Download Newsletter
               </a>
             ) : (
@@ -164,8 +150,8 @@ function Footer() {
       </div>
       <div className="container footer-bottom">
         <p>{new Date().getFullYear()} Silver Shield Organisation. All rights reserved.</p>
-        <p style={{ fontSize: "0.8125rem", marginTop: "0.5rem", opacity: 0.7 }}>
-          Built by <a href="mailto:kelly123simiyu@gmail.com" style={{ color: "var(--primary-purple)", fontWeight: 600 }}>Kelly123simiyu@gmail.com</a>
+        <p className="footer-credit">
+          Built by <a href="mailto:kelly123simiyu@gmail.com">Kelly123simiyu@gmail.com</a>
         </p>
       </div>
     </footer>

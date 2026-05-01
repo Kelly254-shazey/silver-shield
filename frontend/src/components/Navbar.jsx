@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { PROGRAM_NAV_ITEMS } from "../app/programCatalog";
 import LogoBrand from "./LogoBrand";
+import SocialLinks from "./SocialLinks";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -10,6 +11,7 @@ const navLinks = [
   { to: "/events", label: "Events" },
   { to: "/stories", label: "Stories" },
   { to: "/team", label: "Team" },
+  { to: "/volunteer", label: "Volunteer" },
   { to: "/donate", label: "Donate" },
 ];
 
@@ -49,6 +51,27 @@ function Navbar() {
 
   return (
     <header className={menuOpen ? "site-header menu-open" : "site-header"}>
+      <div className="navbar-top-bar">
+        <div className="container navbar-top-container">
+          <div className="navbar-contact-info">
+            <a href="mailto:Shieldsilver105@gmail.com" className="navbar-contact-link">
+              <span className="navbar-meta-label">Email</span>
+              <span>Shieldsilver105@gmail.com</span>
+            </a>
+            <span className="navbar-contact-separator">/</span>
+            <a href="tel:+254726836021" className="navbar-contact-link">
+              <span className="navbar-meta-label">Call</span>
+              <span>0726 836021</span>
+            </a>
+            <span className="navbar-contact-separator">/</span>
+            <span className="navbar-contact-location">
+              <span className="navbar-meta-label">Based in</span>
+              <span>Nairobi, Kenya</span>
+            </span>
+          </div>
+          <SocialLinks className="navbar-socials" linkClassName="social-link-minimal" />
+        </div>
+      </div>
       <div className="container">
         <div className="prototype-nav-shell">
           <div className="brand-mark-wrap">
@@ -64,7 +87,7 @@ function Navbar() {
           </div>
 
           <nav className="nav-links" id="site-navigation" aria-label="Primary navigation">
-            {navLinks.map((item) => (
+            {navLinks.map((item) =>
               item.type === "programs" ? (
                 <div
                   key="programs-menu"
@@ -98,9 +121,7 @@ function Navbar() {
                         key={program.slug}
                         to={`/programs/${program.slug}`}
                         className={({ isActive }) =>
-                          isActive
-                            ? "nav-dropdown-item active"
-                            : "nav-dropdown-item"
+                          isActive ? "nav-dropdown-item active" : "nav-dropdown-item"
                         }
                         onClick={() => {
                           setMenuOpen(false);
@@ -124,12 +145,15 @@ function Navbar() {
                 >
                   {item.label}
                 </NavLink>
-              )
-            ))}
+              ),
+            )}
           </nav>
 
           <div className="prototype-nav-actions">
-            <Link to="/contact?inquiry=partner#contact-form" className="btn btn-secondary prototype-partner-btn">
+            <Link
+              to="/contact?inquiry=partner#contact-form"
+              className="btn btn-secondary prototype-partner-btn"
+            >
               Partner With Us
             </Link>
             <Link to="/donate" className="btn btn-donate prototype-donate-btn">
