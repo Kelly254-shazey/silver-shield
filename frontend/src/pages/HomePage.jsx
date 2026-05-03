@@ -291,7 +291,6 @@ function HomePage() {
     [about.mission, allProgramItems.length, allStoryItems.length],
   );
 
-  const highlightedStory = storyItems[0] || FALLBACK_STORIES[0];
 
   return (
     <PageTransition>
