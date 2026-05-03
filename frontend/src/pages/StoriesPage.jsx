@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { apiFetch, resolveMediaUrl } from "../app/api";
@@ -38,18 +39,25 @@ function StoriesPage() {
         <div className="grid grid-2 stories-grid">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => <LoadingSkeleton key={i} className="media-card" />)
-            : items.map((story) => (
-              <article key={story.id} className="media-card hover-lift">
-                <Link to={`/stories/${story.slug || story.id}`} className="media-wrap">
+            : items.map((story, index) => (
+              <motion.article
+                key={story.id}
+                className="hp-story-card glass-card hover-lift"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+              >
+                <Link to={`/stories/${story.slug || story.id}`} className="hp-card-img-wrap">
                   <img src={resolveMediaUrl(story.coverImage)} alt={story.title} loading="lazy" />
                 </Link>
-                <div className="media-content">
-                  <small className="story-meta">{story.author || "Silver Shield"}</small>
+                <div className="hp-card-body">
+                  <small className="hp-story-author">{story.author || "Silver Shield"}</small>
                   <h3>{story.title}</h3>
                   <p>{truncateText(story.excerpt || story.summary || "", 110)}</p>
-                  <Link className="text-link" to={`/stories/${story.slug || story.id}`}>Read story</Link>
+                  <Link className="hp-card-link" to={`/stories/${story.slug || story.id}`}>Read story {"->"}</Link>
                 </div>
-              </article>
+              </motion.article>
             ))}
         </div>
       </section>

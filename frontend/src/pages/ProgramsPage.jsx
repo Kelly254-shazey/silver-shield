@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { apiFetch, resolveMediaUrl } from "../app/api";
@@ -82,47 +83,54 @@ function ProgramsPage() {
           ))}
         </div>
 
-        <div className="grid grid-2 programs-grid">
+        <div className="grid grid-2">
           {loading
             ? Array.from({ length: 6 }).map((_, index) => (
-                <LoadingSkeleton key={`program-loading-${index}`} className="media-card" />
+                <LoadingSkeleton key={`program-loading-${index}`} className="hp-program-card" />
               ))
-            : filtered.map((program) => (
-                <article key={program.id} className="media-card glass-premium hover-lift">
-                  <Link to={getProgramPath(program)} className="media-wrap">
+            : filtered.map((program, index) => (
+                <motion.article
+                  key={program.id}
+                  className="hp-program-card glass-card hover-lift"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.08 }}
+                >
+                  <Link to={getProgramPath(program)} className="hp-card-img-wrap">
                     <img
                       src={resolveMediaUrl(program.heroImage)}
                       alt={program.title}
                       loading="lazy"
                     />
+                    <span className="hp-card-badge">{program.category || "Programme"}</span>
                   </Link>
-                  <div className="media-content">
-                    <p className="chip">{program.category}</p>
+                  <div className="hp-card-body">
                     <h3>{program.title}</h3>
                     <p>{truncateText(program.summary || "Program details coming soon.", 120)}</p>
                     <div className="inline-meta">
                       <small>Goal: ${Number(program.goalAmount || 0).toLocaleString()}</small>
                       <small>Raised: ${Number(program.raisedAmount || 0).toLocaleString()}</small>
                     </div>
-                    <Link to={getProgramPath(program)} className="text-link">
-                      Program details
-                    </Link>
                     <div className="program-card-actions">
                       <Link
                         to={program.isFallback ? "/donate" : `/donate?programId=${program.id}`}
-                        className="btn btn-primary"
+                        className="btn btn-primary btn-sm"
                       >
                         Donate
                       </Link>
                       <Link
                         to={`/contact?subject=${encodeURIComponent(program.title)}`}
-                        className="btn btn-secondary"
+                        className="btn btn-secondary btn-sm"
                       >
-                        Send Your View
+                        Enquire
                       </Link>
                     </div>
+                    <Link to={getProgramPath(program)} className="hp-card-link">
+                      Full details {"->"}
+                    </Link>
                   </div>
-                </article>
+                </motion.article>
               ))}
         </div>
       </section>

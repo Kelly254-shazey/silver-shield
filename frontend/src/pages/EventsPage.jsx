@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { apiFetch, resolveMediaUrl } from "../app/api";
@@ -62,15 +63,20 @@ function EventsPage() {
           </div>
         ) : (
           <div className="grid grid-2 events-grid">
-            {filtered.map((event) => (
-              <article key={event.id} className="media-card hover-lift event-card">
-                {event.coverImage && (
-                  <div className="media-wrap">
-                    <img src={resolveMediaUrl(event.coverImage)} alt={event.title} loading="lazy" />
-                  </div>
-                )}
-                <div className="media-content">
-                  <p className="chip">{String(event.status || "upcoming")}</p>
+            {filtered.map((event, index) => (
+              <motion.article
+                key={event.id}
+                className="hp-program-card glass-card hover-lift"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+              >
+                <div className="hp-card-img-wrap">
+                  <img src={resolveMediaUrl(event.coverImage)} alt={event.title} loading="lazy" />
+                  <span className="hp-card-badge">{String(event.status || "upcoming")}</span>
+                </div>
+                <div className="hp-card-body">
                   <h3>{event.title}</h3>
                   <p>{truncateText(event.description || "", 110)}</p>
                   <div className="inline-meta">
@@ -83,7 +89,7 @@ function EventsPage() {
                     </a>
                   )}
                 </div>
-              </article>
+              </motion.article>
             ))}
           </div>
         )}

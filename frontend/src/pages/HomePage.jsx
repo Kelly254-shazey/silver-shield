@@ -308,7 +308,7 @@ function HomePage() {
               transition={{ duration: 0.7 }}
             >
               <p className="hp-hero-eyebrow">{about.tagline || "DIGNITY • OPPORTUNITY • MOMENTUM"}</p>
-              <h1>Building Confident Leaders & Thriving Communities Across Bungoma</h1>
+              <h1>Building Confident Leaders & Thriving Communities</h1>
               <p className="hp-hero-sub">
                 We unlock potential through mentorship, skills training, and community-led change.
                 Partner with us to shape lives and drive real progress.
