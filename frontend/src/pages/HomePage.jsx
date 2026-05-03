@@ -113,7 +113,7 @@ const fadeUp = {
   initial: { opacity: 0, y: 32 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, amount: 0.15 },
-  transition: { duration: 0.6 },
+  transition: { duration: 0.5 }, // Slightly faster transition for a snappier feel
 };
 
 function formatEventDate(value) {
@@ -342,7 +342,7 @@ function HomePage() {
             <motion.div className="hp-section-head" {...fadeUp}>
               <div>
                 <p className="hp-label">STRATEGIC COMMITMENTS</p>
-                <h2>Clear Priorities. Measurable Impact. Community-Led Change.</h2>
+                <h2>Impact by Design. Results by Choice.</h2>
               </div>
             </motion.div>
             <div className="hp-commitments-grid" role="list">
@@ -371,7 +371,7 @@ function HomePage() {
             <motion.div className="hp-section-head" {...fadeUp}>
               <div>
                 <p className="hp-label">THE 4 PILLARS</p>
-                <h2>Our Strategic Blueprint for Community Transformation</h2>
+                <h2>Four Pathways. Unlimited Potential.</h2>
               </div>
               <Link to="/programs" className="btn btn-secondary">
                 Explore All
@@ -455,7 +455,7 @@ function HomePage() {
             <motion.div className="hp-section-head" {...fadeUp}>
               <div>
                 <p className="hp-label">IMPACT IN ACTION</p>
-                <h2>How We Drive Results Across Bungoma</h2>
+                <h2>Programmes Making Real Progress</h2>
               </div>
               <Link to="/programs" className="btn btn-secondary">
                 See All Impact
@@ -504,7 +504,7 @@ function HomePage() {
               <motion.div className="hp-section-head" {...fadeUp}>
                 <div>
                   <p className="hp-label">UPCOMING ACTIVATIONS</p>
-                  <h2>Where Change Happens: Our Community Calendar</h2>
+                  <h2>Community Events & Opportunities</h2>
                 </div>
                 <Link to="/events" className="btn btn-secondary">
                   See All Events
@@ -558,7 +558,7 @@ function HomePage() {
             <motion.div className="hp-section-head" {...fadeUp}>
               <div>
                 <p className="hp-label">PROVEN RESULTS</p>
-                <h2>Real Stories. Real Progress. Real Impact.</h2>
+                <h2>Stories That Inspire Change</h2>
               </div>
               <Link to="/stories" className="btn btn-secondary">
                 Read All Stories
@@ -606,10 +606,10 @@ function HomePage() {
           <div className="container hp-cta-inner">
             <motion.div className="hp-cta-content" {...fadeUp}>
               <p className="hp-label hp-label-light">GET INVOLVED NOW</p>
-              <h2>Join the Movement. Build Community Momentum.</h2>
+              <h2>Ready to Create Change? Join Us.</h2>
               <p>
-                Donate to amplify programs. Volunteer your skills. Partner with us strategically.
-                Every contribution transforms lives across Bungoma.
+                Donate to fuel impact. Volunteer your expertise. Partner with us to scale change.
+                Together, we're building thriving communities with real opportunities.
               </p>
               <div className="hp-cta-btns">
                 <Link to="/donate" className="btn btn-primary btn-lg">

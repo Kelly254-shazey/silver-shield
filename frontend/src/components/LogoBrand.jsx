@@ -8,7 +8,7 @@ import { useState } from "react";
  */
 function LogoBrand({ variant = "full", className = "" }) {
   const [imageError, setImageError] = useState(false);
-  const logoUrl = `${import.meta.env.BASE_URL}logo.png`;
+  const logoUrl = "/logo.png";
 
   const renderLogo = (imageClass, altText) => {
     if (imageError) {
