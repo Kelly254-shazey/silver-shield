@@ -324,11 +324,29 @@ function HomePage() {
               <div className="hp-hero-proof" aria-label="Key statistics">
                 {heroProofCards.map((item) => (
                   <article key={item.label} className="hp-hero-proof-card">
-                    <strong aria-label={`${item.value} ${item.label}`}>{item.value}</strong>
+                    <strong>{item.value}</strong>
                     <span>{item.label}</span>
                   </article>
                 ))}
               </div>
+              {upcomingEvents.length > 0 && (
+                <div className="hp-hero-events">
+                  <p className="hp-hero-events-label">Upcoming Events</p>
+                  <div className="hp-hero-events-strip">
+                    {upcomingEvents.slice(0, 3).map((event) => {
+                      const d = new Date(event.eventDate);
+                      return (
+                        <div key={event.id} className="hp-hero-event-chip">
+                          <span className="hp-hero-event-date">
+                            {Number.isNaN(d.getTime()) ? "TBA" : d.toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+                          </span>
+                          <span className="hp-hero-event-title">{truncateText(event.title, 40)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </motion.div>
           </div>
         </section>
@@ -420,36 +438,45 @@ function HomePage() {
               <h2>{about.title || ABOUT_FALLBACK.title}</h2>
               <p>{truncateText(about.storyContent || ABOUT_FALLBACK.storyContent, 380)}</p>
               <div className="hp-about-actions">
-                <Link to="/about" className="btn btn-primary">
-                  Our Full Story
-                </Link>
-                <Link to="/volunteer" className="btn btn-secondary">
-                  Join Our Team
-                </Link>
+                <Link to="/about" className="btn btn-primary">Our Full Story</Link>
+                <Link to="/volunteer" className="btn btn-secondary">Join Our Team</Link>
               </div>
             </motion.div>
             <motion.div
-              className="hp-mission-cards"
               initial={{ opacity: 0, x: 32 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              role="region"
-              aria-label="Mission and vision"
             >
-              <div className="hp-mission-card hp-mission-primary">
-                <p className="hp-label">MISSION</p>
-                <p><strong>{about.mission || ABOUT_FALLBACK.mission}</strong></p>
+              <div className="hp-mission-cards">
+                <div className="hp-mission-card hp-mission-primary">
+                  <p className="hp-label">MISSION</p>
+                  <p><strong>{about.mission || ABOUT_FALLBACK.mission}</strong></p>
+                </div>
+                <div className="hp-mission-card">
+                  <p className="hp-label">VISION</p>
+                  <p><strong>{about.vision || ABOUT_FALLBACK.vision}</strong></p>
+                </div>
               </div>
-              <div className="hp-mission-card">
-                <p className="hp-label">VISION</p>
-                <p><strong>{about.vision || ABOUT_FALLBACK.vision}</strong></p>
+              <p className="hp-values-title">Core Values</p>
+              <div className="hp-values-grid">
+                {[
+                  { icon: "G", label: "Godliness", desc: "Faith-driven service with integrity." },
+                  { icon: "I", label: "Integrity", desc: "Transparent and accountable operations." },
+                  { icon: "E", label: "Excellence", desc: "High standards in every programme." },
+                  { icon: "A", label: "Accountability", desc: "Responsible stewardship of trust." },
+                  { icon: "EI", label: "Equity & Inclusivity", desc: "Equal dignity for all communities." },
+                  { icon: "C", label: "Compassion", desc: "Empathy at the center of our mission." },
+                ].map((v) => (
+                  <div key={v.label} className="hp-value-card">
+                    <span className="hp-value-icon">{v.icon}</span>
+                    <div className="hp-value-text">
+                      <strong>{v.label}</strong>
+                      <span>{v.desc}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <Link to={getStoryLink(highlightedStory)} className="hp-mission-card hp-story-highlight">
-                <p className="hp-label">SPOTLIGHT</p>
-                <strong>{highlightedStory.title}</strong>
-                <p>{truncateText(highlightedStory.excerpt || "", 110)}</p>
-              </Link>
             </motion.div>
           </div>
         </section>
