@@ -29,7 +29,7 @@
   gap: 1.2rem;
   position: relative;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.52);
   backdrop-filter: blur(18px) saturate(180%);
   -webkit-backdrop-filter: blur(18px) saturate(180%);
@@ -51,7 +51,7 @@
     rgba(255, 255, 255, 0.52) 0%,
     rgba(255, 255, 255, 0.28) 28%,
     rgba(106, 13, 173, 0.06) 100%
-  );
+  ); /* Keep original gradient */
   z-index: 0;
 }
 
@@ -68,7 +68,7 @@
 
 .confirm-dialog-header h3 {
   margin: 0;
-  color: #2d1b4e;
+  color: var(--color-dark-purple-800);
   font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -80,7 +80,7 @@
   border: 0;
   border-radius: 999px;
   background: rgba(106, 13, 173, 0.1);
-  color: var(--primary-purple);
+  color: var(--primary-purple); /* Use variable */
   cursor: pointer;
   font-weight: 700;
   font-size: 1rem;
@@ -99,7 +99,7 @@
   position: relative;
   z-index: 1;
   margin: 0;
-  color: rgba(26, 26, 26, 0.78);
+  color: var(--text-secondary);
   font-size: 0.98rem;
   line-height: 1.6;
 }
@@ -122,7 +122,7 @@
   transition: all 0.2s ease;
 }
 
-.confirm-dialog .btn-outline {
+.confirm-dialog .btn-outline { /* Keep original styles */
   background: rgba(255, 255, 255, 0.6);
   border: 1.5px solid rgba(106, 13, 173, 0.28);
   color: var(--primary-purple);
@@ -136,7 +136,7 @@
 }
 
 .confirm-dialog .btn-primary {
-  background: linear-gradient(120deg, var(--primary-purple), var(--accent-pink));
+  background: linear-gradient(120deg, var(--primary-purple), var(--accent-pink)); /* Use variables */
   border: 0;
   color: #fff;
 }

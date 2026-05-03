@@ -53,7 +53,7 @@ function EventsPage() {
         </div>
 
         {loading ? (
-          <div className="grid three">
+          <div className="grid grid-2">
             {Array.from({ length: 3 }).map((_, i) => <LoadingSkeleton key={i} className="media-card" />)}
           </div>
         ) : filtered.length === 0 ? (
@@ -61,7 +61,7 @@ function EventsPage() {
             <p>No {filter === "all" ? "" : filter} events at the moment. Check back soon.</p>
           </div>
         ) : (
-          <div className="grid three">
+          <div className="grid grid-2 events-grid">
             {filtered.map((event) => (
               <article key={event.id} className="media-card hover-lift event-card">
                 {event.coverImage && (

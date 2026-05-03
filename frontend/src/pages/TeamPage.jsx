@@ -55,7 +55,7 @@ function TeamPage() {
       <section className="mini-hero container glass-panel">
         <p className="eyebrow">Our Team</p>
         <h1>The people behind the impact.</h1>
-        <p>Dedicated professionals and leaders driving positive change across communities in Kenya.</p>
+        <p className="lead-text">Dedicated professionals and leaders driving positive change across communities in Kenya.</p>
       </section>
 
       {/* Leadership */}
@@ -64,14 +64,14 @@ function TeamPage() {
           <p className="section-kicker">Leadership</p>
           <h2>Our Team</h2>
         </div>
-        {loading ? (
-          <div className="grid three">
+        {loading ? ( /* Use team-members-grid for specific styling */
+          <div className="grid grid-2 team-members-grid">
             {Array.from({ length: 3 }).map((_, i) => <LoadingSkeleton key={i} className="media-card" />)}
           </div>
         ) : teamMembers.length === 0 ? (
           <p style={{ color: "var(--text-muted)" }}>Team members will be listed here soon.</p>
         ) : (
-          <div className="grid three">
+          <div className="grid grid-2 team-members-grid">
             {teamMembers.map((m, i) => <MemberCard key={m.id} member={m} index={i} />)}
           </div>
         )}
@@ -85,11 +85,11 @@ function TeamPage() {
             <h2>Board of Directors</h2>
           </div>
           {loading ? (
-            <div className="grid four">
+            <div className="grid grid-2 board-members-grid">
               {Array.from({ length: 4 }).map((_, i) => <LoadingSkeleton key={i} className="media-card" />)}
             </div>
           ) : (
-            <div className="grid four">
+            <div className="grid grid-2 board-members-grid">
               {boardMembers.map((m, i) => <MemberCard key={m.id} member={m} index={i} />)}
             </div>
           )}
@@ -101,8 +101,8 @@ function TeamPage() {
         <div className="section-head">
           <p className="section-kicker">Our Values</p>
           <h2>What drives us.</h2>
-        </div>
-        <div className="grid three">
+        </div> /* Use values-grid for specific styling */
+        <div className="grid three values-grid">
           {VALUES.map((v, i) => (
             <motion.article key={v.title + i} className="feature"
               initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}

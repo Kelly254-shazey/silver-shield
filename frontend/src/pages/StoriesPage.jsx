@@ -35,7 +35,7 @@ function StoriesPage() {
       </section>
 
       <section className="container section">
-        <div className="grid three">
+        <div className="grid grid-2 stories-grid">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => <LoadingSkeleton key={i} className="media-card" />)
             : items.map((story) => (

@@ -14,7 +14,7 @@
   font-size: 2rem;
   font-weight: 900;
   margin: var(--space-lg) 0 var(--space-sm) 0;
-  color: var(--primary-purple);
+  color: var(--color-dark-purple-800);
   letter-spacing: -0.5px;
 }
 
@@ -36,7 +36,7 @@
 
 .document-receipt-header .receipt-tagline {
   font-size: 1rem;
-  font-style: italic;
+  font-style: italic; /* Keep italic */
   color: var(--accent-pink);
   margin-top: var(--space-sm);
 }
@@ -54,7 +54,7 @@
 
 .document-newsletter-header .newsletter-tagline {
   font-size: 1.25rem;
-  background: linear-gradient(135deg, var(--accent-pink), #ff6b8f);
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-pink));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -86,7 +86,7 @@
 
 .document-report-header .report-tagline {
   font-size: 1rem;
-  color: var(--primary-purple);
+  color: var(--color-dark-purple-800);
   font-weight: 600;
 }
 
@@ -95,7 +95,7 @@
   border-top: 2px solid rgba(106, 13, 173, 0.2);
   padding-top: var(--space-lg);
   margin-top: var(--space-lg);
-  text-align: center;
+  text-align: center; /* Keep original alignment */
   font-size: 0.875rem;
   color: var(--text-secondary);
 }

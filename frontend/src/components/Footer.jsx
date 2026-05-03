@@ -91,9 +91,11 @@ function Footer() {
         {/* Quick Links */}
         <section className="footer-links-col">
           <h4>Quick Links</h4>
-          <nav>
+          <nav aria-label="Footer quick links">
             {quickLinks.map((item) => (
-              <Link key={item.to} to={item.to} className="footer-link">{item.label}</Link>
+              <Link key={item.to} to={item.to} className="footer-link">
+                {item.label}
+              </Link>
             ))}
           </nav>
         </section>
@@ -101,9 +103,9 @@ function Footer() {
         {/* Get Involved */}
         <section className="footer-links-col">
           <h4>Get Involved</h4>
-          <nav>
+          <nav aria-label="Get involved links">
             {getInvolvedLinks.map((item) => (
-              <Link key={`${item.to}-${item.label}`} to={item.to} className="footer-link">
+              <Link key={item.to} to={item.to} className="footer-link">
                 {item.label}
               </Link>
             ))}
@@ -125,11 +127,13 @@ function Footer() {
             <input
               type="email"
               placeholder="Your email address"
+              aria-label="Email address for newsletter"
+              required
               value={subscriberEmail}
               onChange={(e) => setSubscriberEmail(e.target.value)}
             />
             <button type="submit" className="btn btn-primary btn-sm" disabled={subscribing}>
-              {subscribing ? "..." : "Subscribe"}
+              {subscribing ? "Sending..." : "Subscribe"}
             </button>
           </form>
         </section>
@@ -141,7 +145,7 @@ function Footer() {
           <p>&copy; {new Date().getFullYear()} Silver Shield Organisation. All rights reserved.</p>
           <p>
             Built by{" "}
-            <a href="mailto:kelly123simiyu@gmail.com">KellyFloTech</a>
+            <a href="mailto:kelly123simiyu@gmail.com">Kelly123simiyu@gmail.com</a>
           </p>
         </div>
       </div>

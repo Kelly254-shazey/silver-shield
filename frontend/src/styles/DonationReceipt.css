@@ -11,7 +11,7 @@
 .receipt-actions {
   display: flex;
   gap: var(--space-md);
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-lg);
   justify-content: flex-end;
 }
 
@@ -33,7 +33,7 @@
 .receipt-section {
   margin-bottom: var(--space-2xl);
   padding-bottom: var(--space-lg);
-  border-bottom: 1px solid rgba(106, 13, 173, 0.1);
+  border-bottom: 1px solid rgba(106, 13, 173, 0.15);
 }
 
 .receipt-section:last-of-type {
@@ -44,7 +44,7 @@
   font-size: 1.25rem;
   font-weight: 800;
   margin-bottom: var(--space-lg);
-  color: var(--primary-purple);
+  color: var(--color-dark-purple-800);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -67,7 +67,7 @@
 .receipt-field label {
   font-weight: 700;
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: var(--space-xs);
@@ -75,7 +75,7 @@
 
 .receipt-field p {
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   margin: 0;
   font-size: 1rem;
 }
@@ -91,7 +91,7 @@
   font-size: 1.75rem !important;
   font-weight: 900 !important;
   background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink));
-  -webkit-background-clip: text;
+  -webkit-background-clip: text; /* Keep original styles */
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
@@ -100,7 +100,7 @@
   text-align: center;
   margin: var(--space-2xl) 0;
   padding: var(--space-lg);
-  background: linear-gradient(135deg, rgba(255, 46, 147, 0.05) 0%, rgba(106, 13, 173, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(255, 46, 147, 0.05) 0%, rgba(106, 13, 173, 0.05) 100%); /* Keep original gradient */
   border-radius: var(--radius-md);
 }
 
@@ -137,7 +137,7 @@
 
 .receipt-footer-branding p:first-child {
   font-weight: 800;
-  color: var(--primary-purple);
+  color: var(--color-dark-purple-800);
   font-size: 1.125rem;
   letter-spacing: 1px;
 }
@@ -146,7 +146,7 @@
   font-style: italic;
   font-weight: 700;
   background: linear-gradient(135deg, var(--accent-pink), #ff6b8f);
-  -webkit-background-clip: text;
+  -webkit-background-clip: text; /* Keep original styles */
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-size: 1rem;

@@ -82,7 +82,7 @@ function ProgramsPage() {
           ))}
         </div>
 
-        <div className="grid three">
+        <div className="grid grid-2 programs-grid">
           {loading
             ? Array.from({ length: 6 }).map((_, index) => (
                 <LoadingSkeleton key={`program-loading-${index}`} className="media-card" />

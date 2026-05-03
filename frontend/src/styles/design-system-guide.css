@@ -44,9 +44,13 @@
    --primary-purple: #6A0DAD    (Brand primary - 20% usage)
    --accent-pink: #FF2E93       (Call-to-action - 10% usage)
    --soft-lavender: #B799FF     (Supporting tones)
+   --soft-lavender: #B799FF     (Supporting tones)
    --background-base: #F9F6FF   (Neutral base - 70% usage)
    --white: #FFFFFF             (Clean surfaces)
    --text-primary: #1A1A1A      (Primary text)
+   --color-dark-purple-900: #1A0826;
+   --color-dark-purple-800: #240C38;
+   --color-dark-purple-700: #3D1A5A;
    --text-secondary: #665A80    (Body text)
    --text-muted: #8B7FA0        (Captions)
 
