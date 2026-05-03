@@ -10,7 +10,7 @@ const { query } = require("./config/database");
 const app = express();
 const allowedOriginSet = new Set(env.allowedOrigins.map((origin) => String(origin || "").toLowerCase()));
 const uniquePaths = (paths) => [...new Set(paths.filter(Boolean))];
-const apiMountPaths = uniquePaths(["/api", env.apiBasePath]);
+const apiMountPaths = uniquePaths(["/api", env.apiBasePath, env.appBasePath]);
 const healthPaths = uniquePaths(["/api/health", `${env.apiBasePath}/health`]);
 const rootPaths = uniquePaths(["/", env.appBasePath]);
 const uploadsPaths = uniquePaths(["/uploads", env.uploadsBasePath]);

@@ -331,11 +331,16 @@ function HomePage() {
               </div>
             </motion.div>
           </div>
-          <div className="hp-scroll-hint" aria-hidden="true">
-            <span />
-          </div>
         </section>
+        {error && (
+          <div style={{ backgroundColor: '#fee2e2', color: '#b91c1c', padding: '0.5rem', textAlign: 'center', fontSize: '0.875rem' }}>
+            Note: Some live content could not be loaded. Showing latest available information.
+          </div>
+        )}
 
+        <div className="hp-scroll-hint" aria-hidden="true">
+          <span />
+        </div>
         {/* Strategic Commitments Section */}
         <section className="hp-section hp-commitments-section" role="region" aria-label="Strategic commitments">
           <div className="container">
