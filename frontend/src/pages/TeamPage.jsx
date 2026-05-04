@@ -56,6 +56,7 @@ function TeamPage() {
         <p className="eyebrow">Our Team</p>
         <h1>The people behind the impact.</h1>
         <p className="lead-text">Dedicated professionals and leaders driving positive change across communities in Kenya.</p>
+        <p className="lead-text">Dedicated professionals and leaders driving positive change across communities in Kenya.</p> {/* Keep original lead-text */}
       </section>
 
       {/* Leadership */}

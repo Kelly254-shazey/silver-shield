@@ -2,6 +2,34 @@
    DONATION RECEIPT STYLES
    ============================================================================ */
 
+/* Donate Page Layout */
+.donate-guide-layout {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-lg);
+  margin-top: var(--space-xl);
+}
+
+.donate-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.donate-status h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--brand-700);
+  margin: 0 0 var(--space-sm) 0;
+}
+
+.donate-status p {
+  margin: 0 0 var(--space-md) 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+/* Donation Receipt Container */
 .donation-receipt-container {
   padding: var(--space-xl);
   background: var(--white);
@@ -91,7 +119,7 @@
   font-size: 1.75rem !important;
   font-weight: 900 !important;
   background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink));
-  -webkit-background-clip: text; /* Keep original styles */
+  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
@@ -100,7 +128,7 @@
   text-align: center;
   margin: var(--space-2xl) 0;
   padding: var(--space-lg);
-  background: linear-gradient(135deg, rgba(255, 46, 147, 0.05) 0%, rgba(106, 13, 173, 0.05) 100%); /* Keep original gradient */
+  background: linear-gradient(135deg, rgba(255, 46, 147, 0.05) 0%, rgba(106, 13, 173, 0.05) 100%);
   border-radius: var(--radius-md);
 }
 
@@ -146,7 +174,7 @@
   font-style: italic;
   font-weight: 700;
   background: linear-gradient(135deg, var(--accent-pink), #ff6b8f);
-  -webkit-background-clip: text; /* Keep original styles */
+  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-size: 1rem;
@@ -202,6 +230,12 @@
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .donate-guide-layout {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .donation-receipt-container {
     padding: var(--space-md);
@@ -219,6 +253,15 @@
     grid-column: 1;
   }
 
+  .donate-guide-layout {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .donate-status {
+    gap: var(--space-sm);
+  }
+
   .receipt-actions {
     flex-direction: column;
   }
@@ -227,3 +270,11 @@
     width: 100%;
   }
 }
+
+  .receipt-actions {
+    flex-direction: column;
+  }
+
+  .receipt-actions .btn {
+    width: 100%;
+  }

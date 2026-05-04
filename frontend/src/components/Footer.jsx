@@ -127,7 +127,7 @@ function Footer() {
             <input
               type="email"
               placeholder="Your email address"
-              aria-label="Email address for newsletter"
+              aria-label="Email address for newsletter" /* Keep original aria-label */
               required
               value={subscriberEmail}
               onChange={(e) => setSubscriberEmail(e.target.value)}

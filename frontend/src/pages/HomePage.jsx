@@ -298,7 +298,7 @@ function HomePage() {
         {/* Hero Section */}
         <section className="hp-hero" role="region" aria-label="Hero section">
           <div className="hp-hero-bg" style={{ backgroundImage: `url(${heroImage})` }} />
-          <div className="hp-hero-overlay" />
+          <div className="hp-hero-overlay" aria-hidden="true" />
           <div className="container hp-hero-inner">
             <motion.div
               className="hp-hero-content"
