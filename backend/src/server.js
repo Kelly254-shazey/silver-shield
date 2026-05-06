@@ -41,11 +41,13 @@ app.get('/backend/stories', (req, res) => {
 
 // 4. DYNAMIC PORT CONFIGURATION
 // process.env.PORT is required for cPanel/Passenger environments
-const PORT = process.env.PORT || 5050;
-
-const server = app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-});
+// Only start server if not running on Vercel (Vercel uses serverless functions)
+if (!process.env.VERCEL) {
+    const PORT = process.env.PORT || 5050;
+    
+    const server = app.listen(PORT, () => {
+        console.log(`🚀 Server running on port ${PORT}`);
+    });
 
 // 5. GRACEFUL SHUTDOWN (Prevents "Address already in use" errors)
 const shutdown = () => {
