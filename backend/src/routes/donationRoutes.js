@@ -4,7 +4,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const { requireAuth, requireAdmin } = require("../middleware/auth");
 const mpesaService = require("../services/mpesaService");
 const paypalService = require("../services/paypalService");
-const payheroService = require("../services/payheroService");
+const payheroService = require("../services/payHeroService");
 const realtime = require("../services/realtimeService");
 
 const router = express.Router();
