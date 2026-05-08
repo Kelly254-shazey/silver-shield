@@ -106,9 +106,13 @@ class Router {
         $path = empty($segments) ? '/' : '/' . implode('/', $segments);
         $routePattern = "$method $path";
 
-        // Root endpoint
-        if ($path === '/' && $method === 'GET') {
-            Utils::jsonResponse(['message' => 'Silver Shield API', 'status' => 'running']);
+        // Root/API index endpoints
+        if (in_array($path, ['/', '/api', '/api/index.php'], true) && $method === 'GET') {
+            Utils::jsonResponse([
+                'message' => 'Silver Shield API',
+                'status' => 'running',
+                'health' => '/api/health'
+            ]);
             return;
         }
 
