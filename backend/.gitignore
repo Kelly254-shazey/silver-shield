@@ -1,8 +1,45 @@
+# Node.js (Not used - PHP only backend)
 node_modules/
+package.json
+package-lock.json
+vercel.json
+npm-debug.log
+yarn-error.log
+
+# Environment variables
+.env
 .env.local
 .env.*.local
+
+# Logs
 *.log
+php-server*.log
+php-server*.err.log
+
+# OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build artifacts
 dist/
 build/
+
+# Uploads and sessions
 uploads/
+sessions/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# PHP
+composer.lock
+vendor/

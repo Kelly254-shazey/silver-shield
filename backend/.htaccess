@@ -1,0 +1,34 @@
+# Security: Disable directory browsing
+Options -Indexes
+
+# Security: Protect sensitive files
+<FilesMatch "^\.env|.*\.log$|composer\.(json|lock)$|diagnose\.php|test-.*\.php|health-check\.php|verify-setup\.php">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /backend/
+    RewriteRule ^index\.php$ - [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+</IfModule>
+
+php_value upload_max_filesize 10M
+php_value post_max_size 10M
+php_value memory_limit 256M
+php_value max_execution_time 30
+php_value default_charset "UTF-8"

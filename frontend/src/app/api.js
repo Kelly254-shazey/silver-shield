@@ -1,5 +1,5 @@
 // Build API URL with proper protocol handling
-const LIVE_API_BASE_URL = "https://silver-shield-k2j9qc39x-kelly254-shazeys-projects.vercel.app";
+const LIVE_API_BASE_URL = "https://edumin.co.ke/backend/api";
 
 function trimTrailingSlash(value) {
   return String(value || "").replace(/\/+$/, "");
