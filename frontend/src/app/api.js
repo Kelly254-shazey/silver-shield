@@ -103,6 +103,7 @@ function getMediaBaseUrl(defaultValue) {
 
 const API_BASE_URL = getApiBaseUrl();
 const parsedApiUrl = safeParseUrl(API_BASE_URL);
+const API_REQUEST_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, "");
 const API_PATH_PREFIX = parsedApiUrl
   ? parsedApiUrl.pathname.replace(/\/api\/?$/, "").replace(/\/+$/, "")
   : "";
@@ -199,7 +200,7 @@ export async function apiFetch(path, { method = "GET", body, token, headers = {}
     }
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, options);
+  const response = await fetch(`${API_REQUEST_BASE_URL}/api${path}`, options);
 
   const text = await response.text();
   let payload = null;

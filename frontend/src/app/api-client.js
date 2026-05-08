@@ -18,7 +18,11 @@
  *   const result = await api.upload('/upload', formData, token)
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+
+function getApiRequestBaseUrl(baseUrl) {
+  return String(baseUrl || '').replace(/\/+$/, '').replace(/\/api\/?$/, '')
+}
 
 class ApiClient {
   constructor(baseUrl = API_BASE_URL) {
@@ -36,7 +40,7 @@ class ApiClient {
    * Generic HTTP request
    */
   async request(method, path, body = null, token = null, useFormData = false) {
-    const url = `${this.baseUrl}${path}`
+    const url = `${getApiRequestBaseUrl(this.baseUrl)}/api${path}`
     const options = {
       method: method.toUpperCase(),
       headers: {
