@@ -3,7 +3,7 @@ import { apiFetch } from "../app/api";
 import PageTransition from "../components/PageTransition";
 import { useToast } from "../context/ToastContext";
 
-const FALLBACK = { paybill: "522522", accountNumber: "1342183193", paymentLink: "https://lipwa.link/4852" };
+const FALLBACK = { paybill: "522522", accountNumber: "1342183193" };
 const PAYPAL_EMAIL = "Shieldsilver105@gmail.com";
 
 // Validate and format phone number for Kenya
@@ -53,7 +53,6 @@ function DonatePage() {
         setMpesa({
           paybill: String(d.paybill || FALLBACK.paybill),
           accountNumber: String(d.accountNumber || FALLBACK.accountNumber),
-          paymentLink: String(d.paymentLink || FALLBACK.paymentLink),
         });
       })
       .catch(() => {});
@@ -116,7 +115,6 @@ function DonatePage() {
         success: true,
         message: res.providerMessage || "STK Push sent! Check your phone.",
         phone: res.normalizedPhone || phone,
-        paymentLink: res.paymentLink || mpesa.paymentLink || FALLBACK.paymentLink,
       });
       pushToast("Payment prompt sent to your phone.", "success");
       setTimeout(() => { setPhone(""); setAmount(""); setName(""); setEmail(""); setPhoneError(""); }, 2000);
@@ -205,22 +203,9 @@ function DonatePage() {
                 {response.success && response.phone && (
                   <p className="response-detail">Prompt sent to: {response.phone}</p>
                 )}
-                {response.success && response.paymentLink && (
-                  <p className="response-detail">
-                    Payment link: <a href={response.paymentLink} target="_blank" rel="noreferrer">{response.paymentLink}</a>
-                  </p>
-                )}
               </div>
             )}
           </form>
-          <div className="mpesa-instructions">
-            <h4>Payment link</h4>
-            <p>
-              <a href={mpesa.paymentLink || FALLBACK.paymentLink} target="_blank" rel="noreferrer">
-                {mpesa.paymentLink || FALLBACK.paymentLink}
-              </a>
-            </p>
-          </div>
         </article>
 
         {/* PayPal */}

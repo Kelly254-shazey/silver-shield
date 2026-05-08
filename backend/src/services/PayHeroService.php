@@ -24,8 +24,8 @@ class PayHeroService {
 
     private static function getBaseUrl() {
         return self::$environment === 'production'
-            ? 'https://api.payhero.io'
-            : 'https://api-sandbox.payhero.io';
+            ? 'https://backend.payhero.co.ke'
+            : 'https://backend.payhero.co.ke';
     }
 
     public static function normalizePhone($phone) {
@@ -62,7 +62,7 @@ class PayHeroService {
 
         try {
             $normalizedPhone = self::normalizePhone($phone);
-            $url = self::getBaseUrl() . '/api/v1/request-money';
+            $url = self::getBaseUrl() . '/api/v2/payments';
             $description = trim((string)$description);
             if ($description === '') {
                 $description = Env::get('PAYMENT_PROMPT_DESCRIPTION', 'silvershield organization');
@@ -71,12 +71,19 @@ class PayHeroService {
             $payload = [
                 'amount' => (int)$amount,
                 'phone_number' => $normalizedPhone,
-                'account_number' => self::$accountNumber,
-                'description' => $description,
-                'channel_id' => (int)self::$channelId,
-                'callback_url' => self::$callbackUrl,
-                'external_reference' => $accountReference
+                'provider' => Env::get('PAYHERO_PROVIDER', 'sasapay'),
+                'network_code' => Env::get('PAYHERO_NETWORK_CODE', '63902'),
+                'external_reference' => $accountReference,
+                'callback_url' => self::$callbackUrl
             ];
+
+            if (!empty(self::$channelId)) {
+                $payload['channel_id'] = (int)self::$channelId;
+            }
+
+            if (!empty(self::$accountNumber)) {
+                $payload['account_number'] = self::$accountNumber;
+            }
 
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -86,7 +93,9 @@ class PayHeroService {
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, Env::isProduction());
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
             curl_setopt($ch, CURLOPT_TIMEOUT, 20);
 
             $response = curl_exec($ch);
@@ -121,7 +130,7 @@ class PayHeroService {
         }
 
         try {
-            $url = self::getBaseUrl() . "/api/v1/query/$transactionId";
+            $url = self::getBaseUrl() . "/api/v2/transaction-status/$transactionId";
 
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -129,7 +138,9 @@ class PayHeroService {
                 'Accept: application/json'
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, Env::isProduction());
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
             curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
             $response = curl_exec($ch);

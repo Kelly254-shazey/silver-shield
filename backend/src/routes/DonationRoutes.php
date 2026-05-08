@@ -105,7 +105,6 @@ class DonationRoutes {
                     'donationId' => $donationId,
                     'method' => $method,
                     'status' => 'PENDING',
-                    'paymentLink' => Env::get('PAYMENT_LINK', 'https://lipwa.link/4852'),
                     'providerReference' => $providerReference,
                     'providerMessage' => $provider['customerMessage'] ?? $provider['message'] ?? $provider['ResponseDescription'] ?? 'STK push sent.',
                     'normalizedPhone' => $provider['normalizedPhone'] ?? $donorPhone,
@@ -119,7 +118,6 @@ class DonationRoutes {
                     'donationId' => $donationId,
                     'method' => $method,
                     'status' => 'PENDING',
-                    'paymentLink' => Env::get('PAYMENT_LINK', 'https://lipwa.link/4852'),
                     'providerReference' => $provider['CheckoutRequestID'] ?? $reference,
                     'providerMessage' => $provider['CustomerMessage'] ?? $provider['ResponseDescription'] ?? 'STK push sent.',
                     'normalizedPhone' => $donorPhone,
@@ -147,7 +145,6 @@ class DonationRoutes {
         Utils::jsonResponse([
             'paybill' => Env::get('MPESA_PAYBILL', Env::get('MPESA_SHORTCODE', '522522')),
             'accountNumber' => Env::get('MPESA_ACCOUNT_NUMBER', '1342183193'),
-            'paymentLink' => Env::get('PAYMENT_LINK', 'https://lipwa.link/4852'),
             'promptDescription' => Env::get('PAYMENT_PROMPT_DESCRIPTION', 'silvershield organization'),
             'stkProvider' => Env::get('STK_PROVIDER', 'PAYHERO'),
             'environment' => Env::get('MPESA_ENVIRONMENT', 'sandbox'),
