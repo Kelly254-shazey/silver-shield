@@ -3,6 +3,18 @@
  * About Routes
  */
 class AboutRoutes {
+    private static function fallbackAbout() {
+        return [
+            'title' => 'About Silver Shield',
+            'storyContent' => '',
+            'mission' => 'Shaping lives through mentorship, outreach, and practical opportunity.',
+            'vision' => 'A world where every individual has access to transformative mentorship and support.',
+            'values' => 'Integrity, Compassion, Excellence',
+            'heroImage' => '',
+            'videoUrl' => ''
+        ];
+    }
+
     public static function handleGet() {
         if (Utils::getRequestMethod() !== 'GET') {
             Utils::errorResponse('Method not allowed', 405);
@@ -10,15 +22,11 @@ class AboutRoutes {
 
         try {
             $rows = Database::query("SELECT * FROM about LIMIT 1");
-            $about = !empty($rows) ? $rows[0] : [
-                'mission' => 'Shaping lives through mentorship, outreach, and practical opportunity.',
-                'vision' => 'A world where every individual has access to transformative mentorship and support.',
-                'values' => 'Integrity, Compassion, Excellence'
-            ];
+            $about = !empty($rows) ? array_merge(self::fallbackAbout(), $rows[0]) : self::fallbackAbout();
             Utils::jsonResponse($about);
         } catch (Exception $e) {
             error_log('About get error: ' . $e->getMessage());
-            Utils::errorResponse('Failed to fetch about', 500);
+            Utils::jsonResponse(self::fallbackAbout());
         }
     }
 

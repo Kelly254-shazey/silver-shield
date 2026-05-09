@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { API_BASE_URL, apiFetch } from "../app/api";
+import { apiFetch, apiUrl } from "../app/api";
 import { useToast } from "../context/ToastContext";
 import LogoBrand from "./LogoBrand";
 import SocialLinks from "./SocialLinks";
@@ -40,7 +40,7 @@ function Footer() {
 
   const newsletterDownloadUrl = useMemo(() => {
     if (!newsletterDoc?.id) return "";
-    return `${API_BASE_URL}/docs/public/${newsletterDoc.id}/download`;
+    return apiUrl(`/docs/public/${newsletterDoc.id}/download`);
   }, [newsletterDoc]);
 
   const onSubscribe = async (event) => {

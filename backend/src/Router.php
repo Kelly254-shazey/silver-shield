@@ -73,6 +73,8 @@ class Router {
         // Upload routes
         $this->routes['POST /api/upload'] = [UploadRoutes::class, 'handleUpload'];
         $this->routes['POST /api/upload/upload'] = [UploadRoutes::class, 'handleUpload'];
+        $this->routes['POST /upload'] = [UploadRoutes::class, 'handleUpload'];
+        $this->routes['POST /upload/upload'] = [UploadRoutes::class, 'handleUpload'];
 
         // About routes
         $this->routes['GET /api/about'] = [AboutRoutes::class, 'handleGet'];

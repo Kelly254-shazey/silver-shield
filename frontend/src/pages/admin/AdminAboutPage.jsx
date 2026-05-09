@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import PageTransition from "../../components/PageTransition";
-import { API_BASE_URL, apiFetch, resolveMediaUrl } from "../../app/api";
+import { apiFetch, apiUrl, resolveMediaUrl } from "../../app/api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { useDialog } from "../../context/DialogContext";
@@ -57,7 +57,7 @@ function AdminAboutPage() {
       const payload = new FormData();
       payload.append("file", file);
 
-      const response = await fetch(`${API_BASE_URL}/upload/upload`, {
+      const response = await fetch(apiUrl("/upload/upload"), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

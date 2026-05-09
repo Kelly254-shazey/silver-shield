@@ -179,6 +179,10 @@ export function resolveMediaUrl(value) {
   return joinUrl(MEDIA_BASE_URL, normalizedPath);
 }
 
+export function apiUrl(path) {
+  return `${API_REQUEST_BASE_URL}/api/${String(path || "").replace(/^\/+/, "")}`;
+}
+
 export async function apiFetch(path, { method = "GET", body, token, headers = {}, useFormData = false } = {}) {
   const normalizedMethod = String(method || "GET").toUpperCase();
   const options = {
@@ -200,7 +204,7 @@ export async function apiFetch(path, { method = "GET", body, token, headers = {}
     }
   }
 
-  const response = await fetch(`${API_REQUEST_BASE_URL}/api${path}`, options);
+  const response = await fetch(apiUrl(path), options);
 
   const text = await response.text();
   let payload = null;
