@@ -104,17 +104,17 @@ function AdminDashboardPage() {
               <motion.article 
                 key={i} 
                 variants={item}
-                className="bg-white p-6 rounded-3xl border border-border-subtle shadow-sm hover:shadow-md transition-all group"
+                className="card p-6 md:p-8 flex flex-col gap-4"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div className={`p-3 rounded-2xl ${card.color} group-hover:scale-110 transition-transform`}>
+                <header className="flex justify-between items-start mb-2">
+                  <div className={`w-10 h-10 flex items-center justify-center rounded-xl ${card.color}`}>
                     {card.icon}
                   </div>
-                  <ArrowUpRight className="text-text-400 group-hover:text-brand-600 transition-colors" size={20} />
-                </div>
-                <div className="flex flex-col">
+                  <ArrowUpRight className="text-text-400 opacity-50" size={18} />
+                </header>
+                <div className="card-content">
                   <span className="text-[10px] font-black text-text-400 uppercase tracking-widest">{card.label}</span>
-                  <h3 className="text-3xl font-black text-brand-900 mt-1">{card.value}</h3>
+                  <h3 className="text-2xl font-black text-brand-900 m-0 tracking-tight">{card.value}</h3>
                 </div>
               </motion.article>
             ))
@@ -125,70 +125,70 @@ function AdminDashboardPage() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           
           {/* Inbox Panel */}
-          <section className="flex flex-col gap-6">
-            <div className="flex items-center justify-between px-2">
-              <h2 className="text-sm font-black text-brand-900 uppercase tracking-widest flex items-center gap-2">
+          <article className="card p-8 flex flex-col gap-8">
+            <header className="flex items-center justify-between border-b border-border-subtle pb-6">
+              <h2 className="text-xs font-black text-brand-900 uppercase tracking-widest flex items-center gap-3 m-0">
                 <Inbox size={18} /> Recent Inquiries
               </h2>
-              <span className="text-[10px] font-bold text-accent-600 uppercase">Live Feed</span>
-            </div>
-            <div className="bg-white rounded-[32px] border border-border-subtle shadow-sm overflow-hidden">
-              <div className="flex flex-col">
+              <span className="text-[9px] font-black text-accent-600 uppercase tracking-tighter">Live Feed</span>
+            </header>
+            <div className="flex-grow">
+              <div className="flex flex-col gap-2">
                 {recentMessages.length === 0 ? (
-                  <div className="p-12 text-center text-text-400 text-sm font-medium uppercase tracking-widest">No recent messages.</div>
-                ) : recentMessages.map((msg, i) => (
-                  <div key={msg.id} className={`p-6 flex items-start gap-4 hover:bg-surface-200 transition-colors ${i !== recentMessages.length - 1 ? 'border-b border-border-subtle' : ''}`}>
-                    <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-800 flex-shrink-0 font-bold text-xs uppercase">
+                  <div className="py-12 text-center text-text-400 text-[10px] font-bold uppercase tracking-widest">Quiet in the hub.</div>
+                ) : recentMessages.map((msg) => (
+                  <div key={msg.id} className="p-5 flex items-start gap-4 hover:bg-surface-200 rounded-2xl transition-colors border border-transparent hover:border-border-subtle">
+                    <div className="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center text-brand-800 flex-shrink-0 font-black text-xs uppercase shadow-sm">
                       {msg.fullName.charAt(0)}
                     </div>
                     <div className="flex-grow min-w-0">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="text-sm font-black text-text-900 truncate m-0">{msg.subject}</h4>
-                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter ${msg.status === 'UNREAD' ? 'bg-accent-600 text-white' : 'bg-surface-300 text-text-500'}`}>
+                      <div className="flex justify-between items-center mb-1">
+                        <h4 className="text-sm font-black text-brand-900 truncate m-0 uppercase tracking-tighter">{msg.subject}</h4>
+                        <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${msg.status === 'UNREAD' ? 'bg-accent-600 text-white' : 'bg-surface-300 text-text-500'}`}>
                           {msg.status}
                         </span>
                       </div>
-                      <p className="text-xs text-text-500 font-medium m-0">{msg.fullName}</p>
+                      <p className="text-[10px] text-text-400 font-bold uppercase tracking-widest m-0">{msg.fullName}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          </section>
+          </article>
 
           {/* Donations Panel */}
-          <section className="flex flex-col gap-6">
-            <div className="flex items-center justify-between px-2">
-              <h2 className="text-sm font-black text-brand-900 uppercase tracking-widest flex items-center gap-2">
+          <article className="card p-8 flex flex-col gap-8">
+            <header className="flex items-center justify-between border-b border-border-subtle pb-6">
+              <h2 className="text-xs font-black text-brand-900 uppercase tracking-widest flex items-center gap-3 m-0">
                 <DollarSign size={18} /> Recent Support
               </h2>
-              <span className="text-[10px] font-bold text-success uppercase">Verified Impact</span>
-            </div>
-            <div className="bg-white rounded-[32px] border border-border-subtle shadow-sm overflow-hidden">
-              <div className="flex flex-col">
+              <span className="text-[9px] font-black text-success uppercase tracking-tighter">Verified Impact</span>
+            </header>
+            <div className="flex-grow">
+              <div className="flex flex-col gap-2">
                 {recentDonations.length === 0 ? (
-                  <div className="p-12 text-center text-text-400 text-sm font-medium uppercase tracking-widest">No recent donations.</div>
-                ) : recentDonations.map((dn, i) => (
-                  <div key={dn.id} className={`p-6 flex items-start gap-4 hover:bg-surface-200 transition-colors ${i !== recentDonations.length - 1 ? 'border-b border-border-subtle' : ''}`}>
-                    <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center text-success flex-shrink-0">
+                  <div className="py-12 text-center text-text-400 text-[10px] font-bold uppercase tracking-widest">Awaiting contributions.</div>
+                ) : recentDonations.map((dn) => (
+                  <div key={dn.id} className="p-5 flex items-start gap-4 hover:bg-surface-200 rounded-2xl transition-colors border border-transparent hover:border-border-subtle">
+                    <div className="w-11 h-11 rounded-xl bg-success/10 flex items-center justify-center text-success flex-shrink-0 shadow-sm">
                       <DollarSign size={20} />
                     </div>
                     <div className="flex-grow min-w-0">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="text-sm font-black text-text-900 m-0">
+                      <div className="flex justify-between items-center mb-1">
+                        <h4 className="text-sm font-black text-brand-900 m-0 tracking-tighter">
                           {dn.currency} {Number(dn.amount).toLocaleString()}
                         </h4>
-                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter ${dn.status === 'SUCCESS' ? 'bg-success text-white' : 'bg-warning text-white'}`}>
+                        <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${dn.status === 'SUCCESS' ? 'bg-success text-white' : 'bg-warning text-white'}`}>
                           {dn.status}
                         </span>
                       </div>
-                      <p className="text-xs text-text-500 font-medium uppercase tracking-widest m-0">{dn.method} • {dn.payerName || "Anonymous"}</p>
+                      <p className="text-[10px] text-text-400 font-bold uppercase tracking-widest m-0">{dn.method} • {dn.payerName || "Anonymous"}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          </section>
+          </article>
 
         </div>
       </div>

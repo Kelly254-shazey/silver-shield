@@ -183,35 +183,36 @@ function AdminTeamPage() {
               ) : currentData.map((m) => (
                 <motion.article 
                   key={m.id}
-                  whileHover={{ y: -5 }}
-                  className="bg-white p-6 rounded-[32px] border border-border-subtle shadow-sm flex flex-col gap-6 relative group"
+                  whileHover={{ y: -8, scale: 1.01 }}
+                  className="card p-8 flex flex-col gap-6 relative group"
                 >
-                  <div className="flex items-center gap-4">
-                    <img src={resolveMediaUrl(m.profileImage)} className="w-16 h-16 rounded-2xl object-cover bg-surface-200 border border-border-subtle shadow-sm" alt="" />
-                    <div className="flex flex-col leading-tight min-w-0">
-                      <h3 className="text-lg font-black text-brand-900 uppercase tracking-tighter m-0 truncate">{m.name}</h3>
+                  <header className="flex items-center gap-5">
+                    <img src={resolveMediaUrl(m.profileImage)} className="w-20 h-20 rounded-2xl object-cover bg-surface-200 border border-border-subtle shadow-sm" alt="" />
+                    <div className="flex flex-col leading-tight min-w-0 flex-grow">
+                      <h3 className="text-base font-black text-brand-900 uppercase tracking-tighter m-0 truncate">{m.name}</h3>
                       <p className="text-[10px] font-bold text-accent-600 uppercase tracking-widest m-0 truncate">{m.role}</p>
                     </div>
-                  </div>
+                  </header>
 
-                  <div className="flex flex-col gap-2 pt-4 border-t border-border-subtle">
+                  <div className="flex flex-col gap-4 flex-grow">
                     {isTeam ? (
-                      <>
+                      <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2 text-xs font-medium text-text-500 truncate"><Mail size={14} className="flex-shrink-0"/> {m.email}</div>
                         <div className="flex items-center gap-2 text-xs font-medium text-text-500 truncate"><Briefcase size={14} className="flex-shrink-0"/> {m.department}</div>
-                      </>
+                      </div>
                     ) : (
-                      <p className="text-xs font-medium text-text-500 leading-relaxed italic m-0 line-clamp-2">{m.credentials}</p>
+                      <p className="text-xs font-medium text-text-500 leading-relaxed italic m-0 line-clamp-3">{m.credentials}</p>
                     )}
-                    <div className="flex items-center justify-between mt-2">
-                      <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${m.status === 'active' ? 'bg-success text-white' : 'bg-surface-300 text-text-500'}`}>
-                        {m.status}
-                      </span>
-                      {m.linkedinUrl && <a href={m.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:text-brand-800 transition-colors"><ExternalLink size={16}/></a>}
-                    </div>
                   </div>
 
-                  <div className="absolute top-4 right-4 flex gap-1 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                  <footer className="flex items-center justify-between pt-6 border-t border-border-subtle mt-auto">
+                    <span className={`text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest ${m.status === 'active' ? 'bg-success text-white' : 'bg-surface-300 text-text-500'}`}>
+                      {m.status}
+                    </span>
+                    {m.linkedinUrl && <a href={m.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:text-brand-900 transition-colors"><ExternalLink size={18}/></a>}
+                  </footer>
+
+                  <div className="absolute top-6 right-6 flex gap-1 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={() => handleEdit(m)} className="p-2 bg-brand-100 text-brand-800 rounded-lg border-none cursor-pointer hover:bg-brand-200 transition-colors" title="Edit"><Edit2 size={14}/></button>
                     <button onClick={() => handleDelete(m.id)} className="p-2 bg-danger/10 text-danger rounded-lg border-none cursor-pointer hover:bg-danger/20 transition-colors" title="Remove"><Trash2 size={14}/></button>
                   </div>

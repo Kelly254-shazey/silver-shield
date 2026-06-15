@@ -74,8 +74,7 @@ function StoriesPage() {
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background:
-                "radial-gradient(circle at 50% 120%, var(--brand-600) 0%, transparent 60%)",
+              background: "radial-gradient(circle at 50% 120%, var(--brand-600) 0%, transparent 60%)",
               opacity: 0.2,
             }}
           />
@@ -143,7 +142,7 @@ function StoriesPage() {
             </select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
             {loading
               ? Array(4)
                   .fill(0)
@@ -161,7 +160,7 @@ function StoriesPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.05 }}
-                    whileHover={{ y: -12 }}
+                    whileHover={{ y: -6 }}
                     className="program-card group"
                   >
                     <div className="program-media">

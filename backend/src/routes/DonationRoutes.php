@@ -183,6 +183,8 @@ class DonationRoutes {
         Utils::jsonResponse([
             'paybill' => Env::get('MPESA_PAYBILL', Env::get('MPESA_SHORTCODE', '522522')),
             'accountNumber' => Env::get('MPESA_ACCOUNT_NUMBER', '1342183193'),
+            'amount' => (float)Env::get('MPESA_DEFAULT_AMOUNT', 10),
+            'merchantName' => Env::get('MPESA_MERCHANT_NAME', 'kellyflo'),
             'promptDescription' => Env::get('PAYMENT_PROMPT_DESCRIPTION', 'silvershield organization'),
             'stkProvider' => Env::get('STK_PROVIDER', 'PAYHERO'),
             'environment' => Env::get('MPESA_ENVIRONMENT', 'sandbox'),

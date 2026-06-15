@@ -7,14 +7,14 @@ import LogoBrand from "./LogoBrand";
 
 const navLinks = [
   { to: "/", label: "Home" },
-  { to: "/about", label: "About" },
   { type: "programs", label: "Programs" },
   { to: "/events", label: "Events" },
   { to: "/stories", label: "Stories" },
   { to: "/blog", label: "Blog" },
-  {  to: "/contact", label: "Contact" },
-  { to : "/team", label: "Team" },
+  { to: "/about", label: "About" },
+  { to: "/team", label: "Team" },
   { to: "/volunteer", label: "Volunteer" },
+  { to: "/contact", label: "Contact" },
 ];
 
 function Navbar() {
@@ -55,7 +55,7 @@ function Navbar() {
               </a>
             </div>
             <div className="top-info-label">
-              <span className="top-info-icon"></span>
+              <span className="top-info-icon">📍</span>
               Kanduyi, Bungoma, Kenya
             </div>
           </div>
@@ -64,10 +64,10 @@ function Navbar() {
         <div className="container navbar-inner">
           {/* Logo + Organization Name */}
           <Link to="/" className="navbar-brand">
-            <LogoBrand variant="default" tone="dark" className="navbar-logo" />
+            <LogoBrand variant="minimal" tone="dark" className="navbar-logo" />
             <div className="navbar-brand-text">
-              <span className="navbar-brand-title">Silver Shield</span>
-              <span className="navbar-brand-subtitle">Organisation</span>
+              <span className="navbar-brand-title">SILVER SHIELD</span>
+              <span className="navbar-brand-subtitle">ORGANISATION</span>
             </div>
           </Link>
 
@@ -128,14 +128,7 @@ function Navbar() {
                   className={({ isActive }) =>
                     `nav-item ${isActive ? "nav-item-active" : ""}`
                   }
-                >
-                  {({ isActive }) => (
-                    <>
-                      {item.label}
-                      {isActive && <span className="nav-underline" />}
-                    </>
-                  )}
-                </NavLink>
+                >{item.label}</NavLink>
               )
             )}
           </nav>
@@ -145,7 +138,7 @@ function Navbar() {
               Partner
             </Link>
             <Link to="/donate" className="btn btn-primary btn-sm">
-              <Heart size={14} className="fill-current" /> Donate
+              <Heart size={16} className="fill-current" /> Donate
             </Link>
           </div>
 

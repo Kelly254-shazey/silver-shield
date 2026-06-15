@@ -66,6 +66,16 @@ function AboutPage() {
       <div className="flex flex-col gap-20 pb-24 bg-surface-100">
         {/* Slim Hero */}
         <section className="section-hero bg-brand-900 overflow-hidden relative">
+          {heroImage && (
+            <div 
+              className="absolute inset-0 opacity-70 pointer-events-none"
+              style={{ 
+                backgroundImage: `url(${heroImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            />
+          )}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -89,7 +99,7 @@ function AboutPage() {
               className="h1 text-white tracking-tight"
             >
               Shaping{" "}
-              <span className="hero-gradient-text">Lives</span> with Purpose
+              <span className="--color-bg">Lives</span> with Purpose
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}

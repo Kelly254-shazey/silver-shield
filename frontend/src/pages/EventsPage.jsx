@@ -61,8 +61,7 @@ function EventsPage() {
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background:
-                "radial-gradient(circle at 50% 120%, var(--brand-600) 0%, transparent 60%)",
+              background: "radial-gradient(circle at 50% 120%, var(--brand-600) 0%, transparent 60%)",
               opacity: 0.2,
             }}
           />

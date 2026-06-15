@@ -17,7 +17,6 @@ const previewColumnsByEndpoint = {
   "/programs": ["title", "category", "status", "summary"],
   "/events": ["title", "status", "eventDate", "location"],
   "/stories": ["title", "status", "author", "category"],
-  "/impact/stats": ["label", "metricKey", "value", "unit"],
 };
 
 const statusOptionsByEndpoint = {
@@ -55,7 +54,6 @@ function toFieldLabel(field) {
 }
 
 function toEntityName(title) {
-  if (title === "Impact Stats") return "Impact Metric";
   if (title.endsWith("ies")) return `${title.slice(0, -3)}y`;
   if (title.endsWith("s")) return title.slice(0, -1);
   return title;
@@ -304,17 +302,17 @@ function AdminEntityPage({ title, endpoint, fields }) {
           
           {/* Form Panel */}
           <div ref={formRef} className="xl:col-span-4 xl:sticky xl:top-24">
-            <form className="bg-white p-8 rounded-[32px] border border-border-subtle shadow-sm flex flex-col gap-6" onSubmit={onSubmit}>
-              <div className="flex items-center gap-3 pb-4 border-b border-border-subtle">
-                <div className="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center text-brand-800">
+            <form className="card p-10 flex flex-col gap-8 shadow-sm" onSubmit={onSubmit}>
+              <header className="flex items-center gap-4 pb-6 border-b border-border-subtle">
+                <div className="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center text-brand-800">
                   {editingId !== null ? <Edit2 size={20}/> : <Plus size={20}/>}
                 </div>
-                <h2 className="text-sm font-black text-brand-900 uppercase tracking-widest m-0">
+                <h2 className="text-xs font-black text-brand-900 uppercase tracking-widest m-0">
                   {editingId !== null ? `Modify ${entityName}` : `New ${entityName}`}
                 </h2>
-              </div>
+              </header>
 
-              <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-6 flex-grow">
                 {fields.map((field) => {
                   const label = toFieldLabel(field);
                   const isLarge = largeTextFields.has(field);

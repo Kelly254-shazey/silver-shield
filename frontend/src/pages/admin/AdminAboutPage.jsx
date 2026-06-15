@@ -83,13 +83,13 @@ function AdminAboutPage() {
           
           {/* Editor Panel */}
           <div className="xl:col-span-7">
-            <form className="bg-white p-8 rounded-[40px] border border-border-subtle shadow-sm flex flex-col gap-8" onSubmit={onSubmit}>
-              <div className="flex items-center gap-3 pb-4 border-b border-border-subtle">
-                <div className="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center text-brand-800">
+            <form className="card p-10 flex flex-col gap-10 border border-border-subtle" onSubmit={onSubmit}>
+              <header className="flex items-center gap-4 pb-6 border-b border-border-subtle">
+                <div className="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center text-brand-800">
                   <Info size={20}/>
                 </div>
-                <h3 className="text-sm font-black text-brand-900 uppercase tracking-widest m-0 leading-tight">Master Story Editor</h3>
-              </div>
+                <h3 className="text-xs font-black text-brand-900 uppercase tracking-widest m-0 leading-tight">Master Story Editor</h3>
+              </header>
 
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2">

@@ -102,11 +102,10 @@ class ProgramRoutes {
 
             // Fetch "Sub-programs" (Explicit children OR same-category fallback if no explicit children exist)
             $category = $program['category'] ?? '';
-            $program['subPrograms'] = Database::query(
-                "SELECT id, title, slug, summary, heroImage, category FROM programs 
-                 WHERE (parentId = ? OR (category = ? AND parentId IS NULL)) 
-                 AND id != ? AND status <> 'archived' LIMIT 6",
-                [$program['id'], $category, $program['id']]
+            $program['sub_programs'] = Database::query(
+                "SELECT id, title, slug, summary, heroImage, category, description, goalAmount, raisedAmount, location, status FROM programs 
+                 WHERE parentId = ? AND status <> 'archived' ORDER BY createdAt ASC LIMIT 6",
+                [$program['id']]
             );
 
             Utils::jsonResponse($program);

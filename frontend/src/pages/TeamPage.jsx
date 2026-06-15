@@ -34,7 +34,7 @@ function MemberCard({ member, index }) {
       whileHover={{ y: -12 }}
       className="program-card group"
     >
-      <div className="program-media">
+      <div className="program-media program-media-portrait">
         <img
           src={resolveMediaUrl(member.profileImage)}
           alt={member.name}
@@ -70,7 +70,7 @@ function MemberCard({ member, index }) {
             {member.bio}
           </p>
         )}
-        <div className="flex items-center gap-2 label text-brand-800 truncate">
+        <div className="flex items-center gap-2 label text-brand-800 break-all">
           <Mail size={11} className="text-accent-500 flex-shrink-0" />{" "}
           {member.email || "Official Liaison"}
         </div>
@@ -83,14 +83,14 @@ function BoardCard({ member, index }) {
   return (
     <motion.article
       key={member.id}
-      initial={{ opacity: 0, scale: 0.96 }}
-      whileInView={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.05 }}
-      whileHover={{ y: -8 }}
+      whileHover={{ y: -12 }}
       className="program-card group"
     >
-      <div className="program-media">
+      <div className="program-media program-media-portrait">
         <img
           src={resolveMediaUrl(member.profileImage)}
           alt={member.name}
@@ -106,11 +106,11 @@ function BoardCard({ member, index }) {
           </a>
         )}
       </div>
-      <div className="program-body p-6 gap-2">
-        <h4 className="text-sm font-extrabold text-brand-900 uppercase tracking-tight m-0 truncate">
+      <div className="program-body p-5 gap-1">
+        <h4 className="text-xs font-extrabold text-brand-900 uppercase tracking-tight m-0 line-clamp-1">
           {member.name}
         </h4>
-        <p className="label text-text-400 m-0 truncate">
+        <p className="label text-text-400 m-0 line-clamp-2 leading-tight">
           {member.role}
         </p>
       </div>
@@ -150,8 +150,7 @@ function TeamPage() {
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background:
-                "radial-gradient(circle at 50% 120%, var(--brand-600) 0%, transparent 60%)",
+              background: "radial-gradient(circle at 50% 120%, var(--brand-600) 0%, transparent 60%)",
               opacity: 0.2,
             }}
           />

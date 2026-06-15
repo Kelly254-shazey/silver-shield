@@ -120,16 +120,22 @@ function HomePage() {
     <PageTransition>
       <div className="hp-root">
         {/* ─── HERO ─────────────────────────────── */}
-        <section className="hero-section section-hero">
+        <section className="hero-section section-hero min-h-[65vh] flex items-center py-12 md:py-20">
           <motion.div
             style={{ scale: heroScale, opacity: heroOpacity }}
             className="hero-overlay"
           >
-            <div className="hero-overlay-backdrop" />
+            <div 
+              className="hero-overlay-backdrop" 
+              style={{ 
+                background: "radial-gradient(circle at center, rgba(236, 72, 153, 0.1), rgba(0, 0, 0, 0.6))"
+              }}
+            />
             <div
               className="hero-overlay-image"
               style={{
                 backgroundImage: `url(${resolveMediaUrl(about.heroImage) || HERO_IMAGE_FALLBACK})`,
+                opacity: 0.95,
               }}
             />
             <div className="hero-glow hero-glow-brand" />
@@ -142,18 +148,18 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="hero-eyebrow">
+              <span className="hero-eyebrow text-white">
                 <Sparkles size={14} />
                 {about.tagline || "Dignity 	 Opportunity 	 Momentum"}
               </span>
 
-              <h1 className="hero-heading">
+              <h1 className="hero-heading text-white">
                 Building Confident Leaders
                 <br />
-                <span className="hero-heading-accent">&</span> Thriving Communities
+                <span>&</span> Thriving Communities
               </h1>
 
-              <p className="hero-copy">
+              <p className="hero-copy text-white">
                 We unlock potential through mentorship, skills training, and
                 community-led change. Partner with us to shape lives and drive
                 real progress across Bungoma.

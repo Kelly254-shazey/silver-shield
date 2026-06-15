@@ -7,7 +7,6 @@ import {
   Copy,
   Check,
   ArrowRight,
-  Heart,
   ShieldCheck,
   Zap,
   HelpCircle,
@@ -18,29 +17,21 @@ import { apiFetch } from "../app/api";
 import PageTransition from "../components/PageTransition";
 import { useToast } from "../context/ToastContext";
 
-const FALLBACK = { paybill: "522522", accountNumber: "1342183193" };
+const FALLBACK = {
+  paybill: "522522",
+  accountNumber: "1342183193",
+  amount: 10,
+  merchantName: "kellyflo",
+  stkProvider: "PAYHERO",
+};
 const PAYPAL_EMAIL = "Shieldsilver105@gmail.com";
-
-function validatePhoneNumber(phone) {
-  const digits = String(phone || "").replace(/\D/g, "");
-  if (!digits)
-    return { valid: false, error: "Phone number is required" };
-  if (/^254(7|1)\d{8}$/.test(digits)) return { valid: true, formatted: digits };
-  if (/^0(7|1)\d{8}$/.test(digits))
-    return { valid: true, formatted: `254${digits.slice(1)}` };
-  if (/^(7|1)\d{8}$/.test(digits)) return { valid: true, formatted: `254${digits}` };
-  return {
-    valid: false,
-    error: "Format: 07XXXXXXXX or 01XXXXXXXX",
-  };
-}
 
 function DonatePage() {
   const [mpesa, setMpesa] = useState(FALLBACK);
   const [stkConfigured, setStkConfigured] = useState(true);
+  const [amount, setAmount] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
-  const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
   const { pushToast } = useToast();
@@ -54,6 +45,9 @@ function DonatePage() {
         setMpesa({
           paybill: String(d.paybill || FALLBACK.paybill),
           accountNumber: String(d.accountNumber || FALLBACK.accountNumber),
+          amount: Number(d.amount || FALLBACK.amount),
+          merchantName: String(d.merchantName || FALLBACK.merchantName),
+          stkProvider: FALLBACK.stkProvider,
         });
         setStkConfigured(Boolean(d.configured));
       })
@@ -72,41 +66,49 @@ function DonatePage() {
     }
   };
 
+  const validatePhoneNumber = (value) => {
+    const digits = String(value || "").replace(/\D/g, "");
+    if (!digits) return { valid: false, error: "Phone number is required" };
+    if (/^254(7|1)\d{8}$/.test(digits)) return { valid: true, formatted: digits };
+    if (/^0(7|1)\d{8}$/.test(digits)) return { valid: true, formatted: `254${digits.slice(1)}` };
+    if (/^(7|1)\d{8}$/.test(digits)) return { valid: true, formatted: `254${digits}` };
+    return { valid: false, error: "Format: 07XXXXXXXX or 01XXXXXXXX" };
+  };
+
   const handlePhoneChange = (e) => {
-    const v = e.target.value;
-    setPhone(v);
-    if (v) {
-      const val = validatePhoneNumber(v);
-      setPhoneError(val.valid ? "" : val.error);
-    } else setPhoneError("");
+    const value = e.target.value;
+    setPhone(value);
+    if (!value) return setPhoneError("");
+    const result = validatePhoneNumber(value);
+    setPhoneError(result.valid ? "" : result.error);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const val = validatePhoneNumber(phone);
-    if (!val.valid) return setPhoneError(val.error);
+    const amountValue = Number(amount);
+    if (!Number.isFinite(amountValue) || amountValue < 10) {
+      return pushToast("Minimum amount is KES 10", "error");
+    }
 
-    const amountNum = Number(amount);
-    if (amountNum < 10) return pushToast("Minimum amount is KES 10", "error");
+    const phoneResult = validatePhoneNumber(phone);
+    if (!phoneResult.valid) return setPhoneError(phoneResult.error);
 
     setBusy(true);
     try {
-      await apiFetch("/donations/initiate", {
+      const response = await apiFetch("/donations/initiate", {
         method: "POST",
         body: {
-          method: "MPESA",
-          amount: amountNum,
-          donorPhone: val.formatted,
+          method: FALLBACK.stkProvider,
+          amount: amountValue,
+          donorPhone: phoneResult.formatted,
           currency: "KES",
         },
       });
-      pushToast("Payment prompt sent to your phone", "success");
-      setTimeout(() => {
-        setPhone("");
-        setAmount("");
-      }, 2000);
+      pushToast(response?.providerMessage || "M-Pesa prompt sent. Check your phone.", "success");
+      setAmount("");
+      setPhone("");
     } catch (err) {
-      pushToast(err.message, "error");
+      pushToast(err.message || "Failed to send M-Pesa prompt", "error");
     } finally {
       setBusy(false);
     }
@@ -115,12 +117,13 @@ function DonatePage() {
   return (
     <PageTransition>
       <div className="flex flex-col pb-24 bg-background">
-        {/* Slim Hero */}
-        <section className="section-hero relative overflow-hidden" style={{ background: 'var(--hero-gradient)' }}>
+        {/* Premium Hero */}
+        <section className="section-hero bg-brand-900 relative overflow-hidden">
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: "rgba(0,0,0,0.1)",
+              background: "radial-gradient(circle at 50% 120%, var(--color-brand-600) 0%, transparent 60%)",
+              opacity: 0.2,
             }}
           />
           <div className="container relative z-10 text-center">
@@ -144,23 +147,21 @@ function DonatePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="body-lg text-text-300 max-w-2xl mx-auto mt-7 font-medium leading-relaxed"
+              className="body-lg text-brand-100/70 max-w-2xl mx-auto mt-7 font-medium leading-relaxed"
             >
               Your generosity directly empowers women and youth initiatives.
               Every contribution drives sustainable change across Bungoma.
             </motion.p>
           </div>
-          {/* Fold Transition */}
-          <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-surface-100 to-transparent" />
         </section>
 
         {/* Donation Hub */}
         <section className="container py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 items-start">
             {/* STK Push */}
-            <div className="lg:col-span-7">
+            <div className="lg:col-span-2 xl:col-span-1">
               <form
-                className="bg-white p-8 lg:p-12 rounded-3xl shadow-lg border border-border-subtle flex flex-col gap-8 relative overflow-hidden"
+                className="card p-8 md:p-10 flex flex-col gap-8 relative overflow-hidden h-full"
                 onSubmit={handleSubmit}
               >
                 <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
@@ -177,24 +178,24 @@ function DonatePage() {
                   <h2 className="h2 text-text-900">Mobile Express</h2>
                   {!stkConfigured && (
                     <p className="text-xs font-bold text-danger uppercase tracking-wider mt-1 bg-danger/5 px-3 py-2 rounded-lg border border-danger/10">
-                      Express payment is currently syncing. Manual paybill is
-                      available.
+                      Express payment is not configured on the server.
                     </p>
                   )}
                 </div>
 
                 <div className="flex flex-col gap-8 relative z-10">
-                  {/* Amount */}
                   <div className="flex flex-col gap-3">
-                    <label className="input-label">Support Amount (KES)</label>
+                    <label className="form-label text-brand-800">Amount (KES)</label>
                     <div className="relative group">
-                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-text-500 font-bold text-lg select-none">
+                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-text-500 font-bold text-sm select-none">
                         KES
                       </span>
                       <input
                         type="number"
-                        className="input-base pl-16 pr-5 text-2xl font-bold rounded-xl"
-                        placeholder="1,000"
+                        min="10"
+                        step="1"
+                        className="input-field pl-16 pr-5 text-2xl font-bold"
+                        placeholder="10"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         required
@@ -202,25 +203,25 @@ function DonatePage() {
                       />
                     </div>
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {[500, 1000, 2000, 5000].map((v) => (
+                      {[10, 50, 100, 500].map((value) => (
                         <button
-                          key={v}
+                          key={value}
                           type="button"
-                          onClick={() => setAmount(String(v))}
-                          className="px-4 py-2 rounded-xl bg-surface-200 text-xs font-bold uppercase tracking-wider hover:bg-brand-900 hover:text-white hover:shadow-md transition-all border-none border border-transparent hover:border-brand-900 text-text-600"
+                          onClick={() => setAmount(String(value))}
+                          className="px-5 py-2.5 rounded-xl bg-surface-200 text-[10px] font-black uppercase tracking-widest hover:bg-brand-900 hover:text-white hover:shadow-md transition-all border-none text-text-600"
+                          disabled={busy}
                         >
-                          +{v.toLocaleString()}
+                          {value.toLocaleString()}
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Phone */}
                   <div className="flex flex-col gap-3">
-                    <label className="input-label">M-Pesa Number</label>
+                    <label className="form-label text-brand-800">M-Pesa Number</label>
                     <input
                       type="tel"
-                      className={`input-base py-4 rounded-xl ${phoneError ? "input-error" : ""}`}
+                      className={`input-field py-4 ${phoneError ? "input-error" : ""}`}
                       placeholder="07XXXXXXXX"
                       value={phone}
                       onChange={handlePhoneChange}
@@ -236,17 +237,11 @@ function DonatePage() {
 
                   <button
                     type="submit"
-                    disabled={busy || !amount || !phone}
+                    disabled={busy || !amount || !phone || !stkConfigured}
                     className="btn btn-primary btn-lg py-5 rounded-xl w-full group relative overflow-hidden transition-all active:scale-[0.98]"
                   >
                     <span className="relative z-10 flex items-center justify-center gap-2.5 text-[11px] tracking-widest">
-                      {busy ? (
-                        "Authenticating..."
-                      ) : (
-                        <>
-                          <Zap size={18} /> Initiate Express Pay
-                        </>
-                      )}
+                      {busy ? "Sending Prompt..." : <><Zap size={18} /> Send M-Pesa Prompt</>}
                     </span>
                   </button>
 
@@ -260,143 +255,148 @@ function DonatePage() {
               </form>
             </div>
 
-            {/* Sidebar */}
-            <div className="lg:col-span-5 flex flex-col gap-7">
-              {/* Paybill */}
-              <div className="bg-white p-8 rounded-3xl border border-border-subtle shadow-sm flex flex-col gap-7">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-11 h-11 rounded-xl bg-brand-900 text-white flex items-center justify-center shadow-md">
-                    <Smartphone size={22} />
-                  </div>
-                  <div>
-                    <span className="label text-text-400">Manual Process</span>
-                    <p className="font-bold text-text-900 tracking-tight">
-                      M-Pesa Paybill
-                    </p>
-                  </div>
+            {/* Paybill Card */}
+            <motion.div 
+              whileHover={{ y: -8 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="card p-8 md:p-10 flex flex-col gap-8 h-full"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-brand-900 text-white flex items-center justify-center shadow-md">
+                  <Smartphone size={22} />
                 </div>
-
-                <div className="flex flex-col gap-4">
-                  {[
-                    {
-                      label: "Business Number",
-                      value: mpesa.paybill,
-                      field: "paybill",
-                    },
-                    {
-                      label: "Account ID",
-                      value: mpesa.accountNumber,
-                      field: "account",
-                    },
-                  ].map((field) => (
-                    <div
-                      key={field.field}
-                      className="flex items-center justify-between p-4 bg-surface-200 rounded-2xl border border-border-subtle hover:border-brand-500/20 transition-all"
-                    >
-                      <div className="flex flex-col gap-0.5">
-                        <span className="label text-text-400">
-                          {field.label}
-                        </span>
-                        <span className="text-lg font-bold text-text-900 font-mono tracking-tight">
-                          {field.value}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => copy(field.value, field.field)}
-                        className="w-10 h-10 bg-white rounded-xl text-text-500 shadow-sm hover:bg-brand-900 hover:text-white transition-all flex items-center justify-center border border-border-subtle shrink-0"
-                      >
-                        {copiedField === field.field ? (
-                          <Check size={16} />
-                        ) : (
-                          <Copy size={16} />
-                        )}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="p-6 bg-brand-50 rounded-2xl border border-brand-100">
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <HelpCircle size={16} className="text-brand-700" />
-                    <h4 className="label text-brand-800">Quick Steps</h4>
-                  </div>
-                  <ol className="flex flex-col gap-2 pl-1">
-                    <li className="body-sm text-text-700 font-medium">
-                      Open <span className="font-bold text-brand-900">Lipa na M-Pesa</span> &gt; Pay Bill
-                    </li>
-                    <li className="body-sm text-text-700 font-medium">
-                      Enter Business No.{" "}
-                      <span className="font-mono font-bold text-brand-900">
-                        {mpesa.paybill}
-                      </span>
-                    </li>
-                    <li className="body-sm text-text-700 font-medium">
-                      Enter Account ID{" "}
-                      <span className="font-mono font-bold text-brand-900">
-                        {mpesa.accountNumber}
-                      </span>
-                    </li>
-                    <li className="body-sm text-text-700 font-medium">
-                      Confirm with your M-Pesa PIN
-                    </li>
-                  </ol>
+                <div>
+                  <span className="label text-text-400">Manual Process</span>
+                  <p className="font-bold text-text-900 tracking-tight">
+                    M-Pesa Paybill
+                  </p>
                 </div>
               </div>
 
-              {/* PayPal */}
-              <div className="bg-white p-8 rounded-3xl border border-border-subtle shadow-sm flex flex-col gap-6 group">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-11 h-11 rounded-xl bg-accent-600 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                    <Globe size={22} />
-                  </div>
-                  <div>
-                    <span className="label text-text-400">International</span>
-                    <p className="font-bold text-text-900 tracking-tight">
-                      PayPal Gateway
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-accent-100 rounded-2xl border border-accent-100">
-                  <div className="flex flex-col min-w-0 gap-0.5">
-                    <span className="label text-accent-700">
-                      PayPal Recipient
-                    </span>
-                    <span className="text-sm font-bold text-text-900 truncate">
-                      {PAYPAL_EMAIL}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => copy(PAYPAL_EMAIL, "paypal")}
-                    className="w-10 h-10 bg-white rounded-xl text-accent-600 shadow-sm hover:bg-accent-600 hover:text-white transition-all flex items-center justify-center border border-accent-100 shrink-0"
+              <div className="flex flex-col gap-4">
+                {[
+                  {
+                    label: "Business Number",
+                    value: mpesa.paybill,
+                    field: "paybill",
+                  },
+                  {
+                    label: "Account ID",
+                    value: mpesa.accountNumber,
+                    field: "account",
+                  },
+                ].map((field) => (
+                  <div
+                    key={field.field}
+                    className="flex items-center justify-between gap-4 p-5 bg-surface-200 rounded-2xl border border-border-subtle hover:border-brand-500/20 transition-all"
                   >
-                    {copiedField === "paypal" ? (
-                      <Check size={16} />
-                    ) : (
-                      <Copy size={16} />
-                    )}
-                  </button>
-                </div>
-
-                <a
-                  href="https://www.paypal.com/paypalme/silvershield"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-accent btn-lg w-full no-underline transition-all hover:shadow-lg active:scale-[0.98]"
-                >
-                  <span className="tracking-widest">
-                    Visit PayPal Me
-                  </span>{" "}
-                  <ExternalLink size={16} />
-                </a>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="label text-text-400">
+                        {field.label}
+                      </span>
+                      <span className="text-base font-bold text-text-900 font-mono tracking-tight">
+                        {field.value}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => copy(field.value, field.field)}
+                      className="w-9 h-9 bg-white rounded-xl text-text-500 shadow-sm hover:bg-brand-900 hover:text-white transition-all flex items-center justify-center border border-border-subtle shrink-0"
+                    >
+                      {copiedField === field.field ? (
+                        <Check size={14} />
+                      ) : (
+                        <Copy size={14} />
+                      )}
+                    </button>
+                  </div>
+                ))}
               </div>
-            </div>
+
+              <div className="p-6 bg-brand-50 rounded-2xl border border-brand-100 mt-auto">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <HelpCircle size={16} className="text-brand-700" />
+                  <h4 className="label text-brand-800">Quick Steps</h4>
+                </div>
+                <ol className="flex flex-col gap-2 pl-1">
+                  <li className="body-sm text-text-700 font-medium">
+                    Open <span className="font-bold text-brand-900">Lipa na M-Pesa</span> &gt; Pay Bill
+                  </li>
+                  <li className="body-sm text-text-700 font-medium">
+                    Enter Business No.{" "}
+                    <span className="font-mono font-bold text-brand-900">
+                      {mpesa.paybill}
+                    </span>
+                  </li>
+                  <li className="body-sm text-text-700 font-medium">
+                    Enter Account ID{" "}
+                    <span className="font-mono font-bold text-brand-900">
+                      {mpesa.accountNumber}
+                    </span>
+                  </li>
+                  <li className="body-sm text-text-700 font-medium">
+                    Confirm with your M-Pesa PIN
+                  </li>
+                </ol>
+              </div>
+            </motion.div>
+
+            {/* PayPal Card */}
+            <motion.div
+              whileHover={{ y: -8 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="card p-8 md:p-10 border border-border-subtle flex flex-col gap-8 group h-full"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-accent-600 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                  <Globe size={22} />
+                </div>
+                <div>
+                  <span className="label text-text-400">International</span>
+                  <p className="font-bold text-text-900 tracking-tight">
+                    PayPal Gateway
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-4 p-5 bg-accent-100 rounded-2xl border border-accent-100">
+                <div className="flex flex-col min-w-0 gap-0.5">
+                  <span className="label text-accent-700">
+                    PayPal Recipient
+                  </span>
+                  <span className="text-sm font-bold text-text-900 break-all">
+                    {PAYPAL_EMAIL}
+                  </span>
+                </div>
+                <button
+                  onClick={() => copy(PAYPAL_EMAIL, "paypal")}
+                  className="w-9 h-9 bg-white rounded-xl text-accent-600 shadow-sm hover:bg-accent-600 hover:text-white transition-all flex items-center justify-center border border-accent-100 shrink-0"
+                >
+                  {copiedField === "paypal" ? (
+                    <Check size={14} />
+                  ) : (
+                    <Copy size={14} />
+                  )}
+                </button>
+              </div>
+
+              <a
+                href="https://www.paypal.com/paypalme/silvershield"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-accent btn-lg w-full no-underline transition-all hover:shadow-lg active:scale-[0.98] mt-auto"
+              >
+                <span className="tracking-widest">
+                  Visit PayPal Me
+                </span>{" "}
+                <ExternalLink size={16} />
+              </a>
+            </motion.div>
           </div>
         </section>
 
         {/* Accountability */}
         <section className="container">
-          <div className="bg-white p-10 lg:p-16 rounded-3xl border border-border-subtle text-center flex flex-col items-center gap-7 shadow-sm">
+          <div className="card p-10 md:p-12 xl:p-16 text-center flex flex-col items-center gap-7">
             <div className="w-16 h-16 rounded-2xl bg-surface-200 flex items-center justify-center text-brand-600 border border-border-subtle shadow-sm">
               <Sparkles size={32} />
             </div>

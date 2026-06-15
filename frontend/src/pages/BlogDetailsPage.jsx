@@ -49,8 +49,8 @@ function BlogDetailsPage() {
   return (
     <PageTransition>
       <div className="pb-24">
-        <header className="bg-brand-900 pt-32 pb-48 text-white relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20" style={{ background: `url(${resolveMediaUrl(post.coverImage)}) center/cover no-repeat`, filter: "blur(4px)" }} />
+        <header className="bg-brand-900 pt-24 pb-24 text-white relative overflow-hidden">
+          <div className="absolute inset-0 opacity-70" style={{ background: `url(${resolveMediaUrl(post.coverImage)}) center/cover no-repeat` }} />
           <div className="container relative z-10">
             <div className="max-w-4xl mx-auto flex flex-col gap-8">
               <Link to="/blog" className="flex items-center gap-2 text-[10px] font-black text-brand-400 uppercase tracking-[0.3em] hover:text-white transition-colors no-underline w-fit">

@@ -72,7 +72,7 @@ function BlogPage() {
   return (
     <PageTransition>
       <div className="flex flex-col gap-16 pb-24">
-        <section className="section-hero bg-brand-900 overflow-hidden relative text-white">
+        <section className="section-hero bg-brand-900 overflow-hidden relative text-white pt-24 pb-24">
           <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(circle at 50% 120%, var(--brand-600) 0%, transparent 60%)", opacity: 0.2 }} />
           <div className="container relative z-10 text-center">
             <motion.span initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="label text-accent-400 mb-5 block">Knowledge &amp; Insights</motion.span>

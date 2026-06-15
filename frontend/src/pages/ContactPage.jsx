@@ -119,11 +119,18 @@ function ContactPage() {
       <div className="flex flex-col gap-20 pb-24">
         {/* Slim Hero */}
         <section className="section-hero bg-brand-900 overflow-hidden relative">
+          <div 
+            className="absolute inset-0 opacity-60 pointer-events-none"
+            style={{ 
+              backgroundImage: `url('https://edumin.co.ke/backend/uploads/com1-1771957870271-956089917.jpeg')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          />
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background:
-                "radial-gradient(circle at 50% 120%, var(--brand-600) 0%, transparent 60%)",
+              background: "radial-gradient(circle at 50% 120%, var(--brand-600) 0%, transparent 60%)",
               opacity: 0.2,
             }}
           />
@@ -158,23 +165,24 @@ function ContactPage() {
 
         {/* Contact Bento */}
         <section className="section">
-          <div className="container grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
-            {/* Left Column */}
-          <div className="xl:col-span-4 flex flex-col gap-7">
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4">
+          <div className="container grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            {/* Left Column: Context & Intel */}
+            <div className="lg:col-span-5 flex flex-col gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
               {detailCards.map((card, i) => (
                 <motion.div
                   key={i}
-                  className="card p-6 md:p-8 flex flex-col gap-3 border border-border-subtle"
+                  whileHover={{ y: -4 }}
+                  className="card p-6 md:p-8 flex flex-col gap-4 border border-border-subtle"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-brand-100 flex items-center justify-center text-brand-800 shadow-sm">
+                  <header className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center text-brand-800 shadow-sm">
                     {card.icon}
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="label text-text-400">
-                      {card.title}
-                    </span>
-                    <span className="text-xs font-bold text-brand-900 break-words leading-tight">
+                    </div>
+                    <span className="label text-text-400 uppercase tracking-widest">{card.title}</span>
+                  </header>
+                  <div className="card-content flex-grow">
+                    <span className="text-base font-black text-brand-900 break-all tracking-tight">
                       {card.value}
                     </span>
                   </div>
@@ -182,19 +190,38 @@ function ContactPage() {
               ))}
             </div>
 
-            <div className="bg-brand-900 text-white p-8 md:p-10 rounded-[32px] border border-white/10 shadow-lg relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                <div
-                  className="absolute -bottom-1/2 -right-1/4 w-full h-full rounded-full"
-                  style={{
-                    background: "var(--accent-600)",
-                    filter: "blur(60px)",
-                    opacity: 0.15,
-                  }}
-                />
-              </div>
-              
-            <div className="card overflow-hidden h-56 group bg-surface-200 border border-border-subtle">
+            <motion.div
+                whileHover={{ y: -8 }}
+                className="bg-brand-900 text-white p-10 rounded-[32px] border border-white/10 shadow-premium relative overflow-hidden group"
+              >
+                <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                  <div
+                    className="absolute -bottom-1/2 -right-1/4 w-full h-full rounded-full"
+                    style={{
+                      background: "var(--accent-600)",
+                      filter: "blur(60px)",
+                      opacity: 0.15,
+                    }}
+                  />
+                </div>
+                <div className="relative z-10 flex flex-col gap-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
+                      <Sparkles size={20} className="text-accent-400" />
+                    </div>
+                    <h4 className="text-sm font-black uppercase tracking-widest m-0">Shield Intelligence</h4>
+                  </div>
+                  <p className="text-xs text-brand-100/80 leading-relaxed font-medium m-0">
+                    Our Bungoma hub provides real-time answers grounded in official Silver Shield documentation.
+                  </p>
+                  <div className="flex items-center gap-2 text-[9px] font-extrabold text-brand-400 uppercase tracking-widest border-t border-white/5 pt-4">
+                    <Building2 size={12} /> Verified Documentation Node
+                  </div>
+                </div>
+              </motion.div>
+
+
+              <div className="card overflow-hidden h-64 group bg-surface-200 border border-border-subtle shadow-sm shrink-0">
               <iframe
                 title="Location Map"
                 className="w-full h-full border-none"
@@ -202,13 +229,12 @@ function ContactPage() {
               />
             </div>
           </div>
-          </div>
 
           {/* Right Column: Form */}
-          <div className="xl:col-span-8">
+          <div className="lg:col-span-7">
             <form
               id="contact-form"
-              className="card p-8 md:p-12 xl:p-16 flex flex-col gap-8 border border-border-subtle"
+              className="card p-10 lg:p-16 flex flex-col gap-8 border border-border-subtle"
               onSubmit={onSubmit}
             >
               <div className="flex flex-col gap-2">
@@ -228,7 +254,7 @@ function ContactPage() {
                   <label className="form-label text-brand-800">
                     Type of Connection
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                  <div className="flex flex-wrap gap-2.5">
                     {[
                       { id: "general", label: "General", icon: <User size={13} /> },
                       { id: "partner", label: "Partner", icon: <Handshake size={13} /> },
@@ -456,7 +482,7 @@ function ContactPage() {
             </form>
           </div>
           </div>
-        </section>
+        </section> {/* Closing tag for section on line 160 */}
       </div>
     </PageTransition>
   );

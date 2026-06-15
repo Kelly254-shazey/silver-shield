@@ -18,16 +18,16 @@ function MpesaPaymentCard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const copy = (val, field) => {
-    navigator.clipboard.writeText(val);
+  const copy = async (val, field) => {
+    await navigator.clipboard.writeText(val);
     setCopied(field);
     setTimeout(() => setCopied(null), 2000);
   };
 
-  if (loading) return <div className="bg-white p-8 rounded-[40px] border border-border-subtle animate-pulse h-64" />;
+  if (loading) return <div className="card p-10 animate-pulse h-64" />;
 
   return (
-    <div className="bg-white p-8 rounded-[40px] border border-border-subtle shadow-premium flex flex-col gap-8">
+    <div className="card p-10 flex flex-col gap-8">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-2xl bg-brand-900 text-white flex items-center justify-center shadow-lg">
           <Smartphone size={24} />
@@ -39,7 +39,7 @@ function MpesaPaymentCard() {
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between p-4 bg-surface-200 rounded-2xl border border-transparent hover:border-brand-800/10 transition-all">
+        <div className="flex items-center justify-between gap-4 p-5 bg-surface-200 rounded-2xl border border-transparent hover:border-brand-800/10 transition-all">
           <div className="flex flex-col gap-1">
             <span className="text-[8px] font-black text-text-400 uppercase tracking-widest">Business No</span>
             <span className="text-lg font-black text-brand-900 font-mono tracking-tighter leading-none">{mpesaDetails.paybill}</span>
@@ -49,7 +49,7 @@ function MpesaPaymentCard() {
           </button>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-surface-200 rounded-2xl border border-transparent hover:border-brand-800/10 transition-all">
+        <div className="flex items-center justify-between gap-4 p-5 bg-surface-200 rounded-2xl border border-transparent hover:border-brand-800/10 transition-all">
           <div className="flex flex-col gap-1">
             <span className="text-[8px] font-black text-text-400 uppercase tracking-widest">Account ID</span>
             <span className="text-lg font-black text-brand-900 font-mono tracking-tighter leading-none">{mpesaDetails.accountNumber}</span>

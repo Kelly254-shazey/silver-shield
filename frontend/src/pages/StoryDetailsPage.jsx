@@ -31,7 +31,7 @@ function StoryDetailsPage() {
       <div className="flex flex-col gap-16 pb-24 font-body">
         
         {/* Editorial Hero */}
-        <section className="section-hero bg-brand-900 overflow-hidden relative">
+        <section className="section-hero bg-brand-900 overflow-hidden relative pt-24 pb-24">
           <div className="absolute inset-0 opacity-10 pointer-events-none" />
           <div className="container relative z-10">
             <div className="max-w-4xl mx-auto flex flex-col gap-8 text-center">

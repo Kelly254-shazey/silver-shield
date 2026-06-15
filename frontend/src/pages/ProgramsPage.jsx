@@ -80,9 +80,8 @@ function ProgramsPage() {
         <section className="programs-hero">
           <div
             className="hero-backdrop"
-            style={{
-              background:
-                "radial-gradient(circle at 50% 120%, var(--color-brand-600) 0%, transparent 65%)",
+            style={{ 
+              background: "radial-gradient(circle at 50% 120%, var(--color-brand-600) 0%, transparent 65%)",
               opacity: 0.2,
             }}
           />
@@ -148,7 +147,7 @@ function ProgramsPage() {
         </div>
 
         <section className="section programs-grid-section">
-          <div className="container programs-grid">
+          <div className="container grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             {loading
               ? Array(6)
                   .fill(0)
@@ -170,7 +169,8 @@ function ProgramsPage() {
                       stiffness: 350,
                       damping: 25,
                     }}
-                    className="program-card"
+                    whileHover={{ y: -12 }}
+                    className="program-card group"
                   >
                     <div className="program-media">
                       <img
@@ -184,10 +184,10 @@ function ProgramsPage() {
                     </div>
 
                     <div className="program-body">
-                      <h3 className="program-title">
+                      <h3 className="program-title text-text-900 mb-1 leading-tight uppercase tracking-tight line-clamp-2">
                         {p.title}
                       </h3>
-                      <p className="program-description">
+                      <p className="program-description line-clamp-3">
                         {truncateText(
                           p.summary ||
                             "Description in development. We are working on providing full details for this initiative.",
@@ -195,17 +195,17 @@ function ProgramsPage() {
                         )}
                       </p>
 
-                      <div className="program-metrics">
-                        <div className="program-metric-row">
+                      <div className="pt-4 mt-2 border-t border-border-subtle flex flex-col gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <span className="label text-text-400">Goal Amount</span>
-                            <div className="program-metric-value">
+                            <span className="label text-text-400 text-[9px]">Goal</span>
+                            <div className="text-sm font-black text-brand-900">
                               ${Number(p.goalAmount || 0).toLocaleString()}
                             </div>
                           </div>
                           <div className="program-metric-status">
-                            <span className="label text-accent-600">Secured Impact</span>
-                            <div className="program-metric-value text-accent-600">
+                            <span className="label text-accent-600 text-[9px]">Secured</span>
+                            <div className="text-sm font-black text-accent-600">
                               ${Number(p.raisedAmount || 0).toLocaleString()}
                             </div>
                           </div>
@@ -226,14 +226,14 @@ function ProgramsPage() {
                         </div>
                       </div>
 
-                      <div className="program-actions">
+                      <div className="flex gap-2 mt-2">
                         <Link
                           to={
                             p.id && !p.isFallback
                               ? getProgramPath(p)
                               : "/programs"
                           }
-                          className="btn btn-primary btn-block"
+                          className="btn btn-primary btn-sm flex-grow"
                         >
                           Details
                         </Link>
