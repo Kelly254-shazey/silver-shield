@@ -3,24 +3,19 @@
  * Programs Routes
  */
 class ProgramRoutes {
-    private static $initiatives = [
-        [
-            'title' => 'Women empowerment program (wezesha dada initiative)',
-            'slug' => 'women-empowerment-program-wezesha-dada-initiative',
-            'summary' => 'Empowering women through mentorship, enterprise support, and leadership pathways.',
-            'description' => 'The Wezesha Dada initiative strengthens women-led households through training and support.',
-            'category' => 'Women Empowerment',
-            'location' => 'Nairobi and surrounding counties'
-        ],
-        [
-            'title' => 'Youth empowerment program',
-            'slug' => 'youth-empowerment-program',
-            'summary' => 'Preparing youth with skills, confidence, and opportunities for sustainable futures.',
-            'description' => 'Our youth program provides mentorship and entrepreneurship support.',
-            'category' => 'Youth Empowerment',
-            'location' => 'Nairobi, Kisumu, and Mombasa'
-        ]
-    ];
+    private static function programColumns() {
+        $columns = Database::query("SHOW COLUMNS FROM programs");
+        return array_map(function ($column) { return $column['Field']; }, $columns);
+    }
+
+    private static function ensureColumns() {
+        try {
+            $columns = self::programColumns();
+            if (!in_array('parentId', $columns, true)) {
+                Database::query("ALTER TABLE programs ADD COLUMN parentId INT NULL AFTER id");
+            }
+        } catch (Exception $e) { /* Table may not exist yet */ }
+    }
 
     public static function handleList() {
         if (Utils::getRequestMethod() !== 'GET') {
@@ -50,20 +45,22 @@ class ProgramRoutes {
 
         $title = $input['title'] ?? '';
         $slug = Utils::createSlug($input['slug'] ?? $title);
-            $summary = $input['summary'] ?? '';
-            $description = $input['description'] ?? '';
-            $category = $input['category'] ?? '';
+        $summary = $input['summary'] ?? '';
+        $description = $input['description'] ?? '';
+        $category = $input['category'] ?? '';
+        $parentId = !empty($input['parentId']) ? (int)$input['parentId'] : null;
 
         if (empty($title) || empty($description)) {
             Utils::errorResponse('Title and description are required.', 400);
         }
 
         try {
-            $sql = "
-                INSERT INTO programs (title, slug, summary, description, category, heroImage, galleryImages, goalAmount, raisedAmount, location, status, createdAt)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-            ";
-            Database::execute($sql, [
+            self::ensureColumns();
+            $sql = "INSERT INTO programs (parentId, title, slug, summary, description, category, heroImage, galleryImages, goalAmount, raisedAmount, location, status, createdAt)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+                    
+            Database::query($sql, [
+                $parentId,
                 $title,
                 $slug,
                 $summary,
@@ -89,17 +86,30 @@ class ProgramRoutes {
         }
 
         try {
+            self::ensureColumns();
+            // More robust lookup: check ID, check exact slug, and check case-insensitive slug
             $rows = Database::query(
-                "SELECT * FROM programs WHERE id = ? OR slug = ? LIMIT 1",
-                [$id, $id]
+                "SELECT * FROM programs WHERE id = ? OR slug = ? OR LOWER(slug) = LOWER(?) LIMIT 1",
+                [$id, $id, $id]
             );
 
             if (empty($rows)) {
                 Utils::errorResponse('Program not found', 404);
             }
 
-            $rows[0]['galleryImages'] = json_decode($rows[0]['galleryImages'] ?? '[]', true) ?: [];
-            Utils::jsonResponse($rows[0]);
+            $program = $rows[0];
+            $program['galleryImages'] = json_decode($program['galleryImages'] ?? '[]', true) ?: [];
+
+            // Fetch "Sub-programs" (Explicit children OR same-category fallback if no explicit children exist)
+            $category = $program['category'] ?? '';
+            $program['subPrograms'] = Database::query(
+                "SELECT id, title, slug, summary, heroImage, category FROM programs 
+                 WHERE (parentId = ? OR (category = ? AND parentId IS NULL)) 
+                 AND id != ? AND status <> 'archived' LIMIT 6",
+                [$program['id'], $category, $program['id']]
+            );
+
+            Utils::jsonResponse($program);
         } catch (Exception $e) {
             error_log('Programs get error: ' . $e->getMessage());
             Utils::errorResponse('Failed to fetch program', 500);
@@ -115,10 +125,21 @@ class ProgramRoutes {
         $input = Utils::getJsonInput();
 
         try {
-            $sql = "UPDATE programs SET title = ?, slug = ?, summary = ?, description = ?, category = ?, heroImage = ?, galleryImages = ?, goalAmount = ?, raisedAmount = ?, location = ?, status = ?, updatedAt = NOW() WHERE id = ? OR slug = ?";
-            Database::execute($sql, [
-                $input['title'] ?? '',
-                Utils::createSlug($input['slug'] ?? $input['title'] ?? $id),
+            self::ensureColumns();
+            // First, find the current state to preserve the slug if not provided
+            $existing = Database::query("SELECT slug FROM programs WHERE id = ? OR slug = ? LIMIT 1", [$id, $id]);
+            $currentSlug = !empty($existing) ? $existing[0]['slug'] : $id;
+
+            $title = $input['title'] ?? '';
+            // Prioritize input slug > generated slug from title > current slug
+            $newSlug = Utils::createSlug($input['slug'] ?? ($title ?: $currentSlug));
+            $parentId = !empty($input['parentId']) ? (int)$input['parentId'] : null;
+
+            $sql = "UPDATE programs SET parentId = ?, title = ?, slug = ?, summary = ?, description = ?, category = ?, heroImage = ?, galleryImages = ?, goalAmount = ?, raisedAmount = ?, location = ?, status = ?, updatedAt = NOW() WHERE id = ? OR slug = ?";
+            Database::query($sql, [
+                $parentId,
+                $title,
+                $newSlug,
                 $input['summary'] ?? '',
                 $input['description'] ?? '',
                 $input['category'] ?? '',
@@ -147,7 +168,7 @@ class ProgramRoutes {
         Auth::requireAdmin();
 
         try {
-            Database::execute("DELETE FROM programs WHERE id = ? OR slug = ?", [$id, $id]);
+            Database::query("DELETE FROM programs WHERE id = ? OR slug = ?", [$id, $id]);
             Utils::jsonResponse(['message' => 'Program deleted successfully']);
         } catch (Exception $e) {
             error_log('Programs delete error: ' . $e->getMessage());

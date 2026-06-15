@@ -18,7 +18,8 @@
  *   const result = await api.upload('/upload', formData, token)
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const LIVE_API_BASE_URL = 'https://edumin.co.ke/backend/'
+const API_BASE_URL = LIVE_API_BASE_URL
 
 function getApiRequestBaseUrl(baseUrl) {
   return String(baseUrl || '').replace(/\/+$/, '').replace(/\/api\/?$/, '')

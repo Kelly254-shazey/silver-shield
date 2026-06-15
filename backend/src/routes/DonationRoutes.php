@@ -44,7 +44,8 @@ class DonationRoutes {
         }
 
         $input = Utils::getJsonInput();
-        $method = strtoupper(trim($input['method'] ?? 'PAYHERO'));
+        $fallbackMethod = strtoupper(trim(Env::get('STK_PROVIDER', 'PAYHERO')));
+        $method = strtoupper(trim($input['method'] ?? $fallbackMethod));
         $amount = (float)($input['amount'] ?? 0);
         $donorName = trim($input['donorName'] ?? 'Anonymous Donor');
         $donorEmail = trim($input['donorEmail'] ?? $input['email'] ?? '');
@@ -52,7 +53,7 @@ class DonationRoutes {
         $currency = strtoupper(trim($input['currency'] ?? 'KES'));
 
         if ($amount <= 0) {
-            Utils::errorResponse('Method and valid amount are required.', 400);
+            Utils::errorResponse('Amount must be greater than zero.', 400);
         }
 
         if (!in_array($method, ['MPESA', 'PAYHERO', 'PAYPAL'])) {
@@ -64,7 +65,7 @@ class DonationRoutes {
         }
 
         try {
-            $result = Database::execute(
+            Database::query(
                 "INSERT INTO donations (donorName, donorEmail, donorPhone, amount, currency, method, status, programId, metadata, createdAt)
                  VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, NOW())",
                 [
@@ -79,40 +80,77 @@ class DonationRoutes {
                 ]
             );
 
-            $donationId = $result['insertId'];
+            $donationId = Database::getConnection()->insert_id;
             $reference = 'SILVER-' . $donationId;
 
-            Database::execute(
+            Database::query(
                 "UPDATE donations SET providerReference = ?, updatedAt = NOW() WHERE id = ?",
                 [$reference, $donationId]
             );
 
+            if ($method === 'PAYHERO' && !PayHeroService::isConfigured()) {
+                if (PaymentService::isConfigured()) {
+                    $method = 'MPESA';
+                } else {
+                    Utils::errorResponse('PayHero STK push is not configured and no native M-Pesa fallback is available.', 500);
+                }
+            }
+
             if ($method === 'PAYHERO') {
-                $provider = PayHeroService::initiateStkPush(
-                    $amount,
-                    $donorPhone,
-                    $reference,
-                    Env::get('PAYMENT_PROMPT_DESCRIPTION', 'silvershield organization')
-                );
+                try {
+                    $provider = PayHeroService::initiateStkPush(
+                        $amount,
+                        $donorPhone,
+                        $reference,
+                        Env::get('PAYMENT_PROMPT_DESCRIPTION', 'silvershield organization')
+                    );
+                } catch (Exception $e) {
+                    if (PaymentService::isConfigured() && self::shouldFallbackToMpesa($e->getMessage())) {
+                        error_log('PayHero STK failed with recoverable channel error; falling back to native M-Pesa.');
+                        $method = 'MPESA';
+                        if ($donationId !== null) {
+                            Database::query(
+                                "UPDATE donations SET method = ?, metadata = ?, updatedAt = NOW() WHERE id = ?",
+                                [
+                                    $method,
+                                    json_encode([
+                                        'payheroError' => $e->getMessage(),
+                                        'fallbackProvider' => 'MPESA'
+                                    ]),
+                                    $donationId
+                                ]
+                            );
+                        }
+                    } else {
+                        throw $e;
+                    }
+                }
 
-                $providerReference = $provider['id'] ?? $provider['transactionId'] ?? $reference;
-                Database::execute(
-                    "UPDATE donations SET providerReference = ?, metadata = ?, updatedAt = NOW() WHERE id = ?",
-                    [$providerReference, json_encode($provider), $donationId]
-                );
+                if ($method === 'PAYHERO') {
+                    $providerReference = $provider['id'] ?? $provider['transactionId'] ?? $reference;
+                    if ($donationId !== null) {
+                        Database::query(
+                            "UPDATE donations SET providerReference = ?, metadata = ?, updatedAt = NOW() WHERE id = ?",
+                            [$providerReference, json_encode($provider), $donationId]
+                        );
+                    }
 
-                Utils::rawJsonResponse([
-                    'donationId' => $donationId,
-                    'method' => $method,
-                    'status' => 'PENDING',
-                    'providerReference' => $providerReference,
-                    'providerMessage' => $provider['customerMessage'] ?? $provider['message'] ?? $provider['ResponseDescription'] ?? 'STK push sent.',
-                    'normalizedPhone' => $provider['normalizedPhone'] ?? $donorPhone,
-                    'providerPayload' => $provider
-                ], 201);
+                    Utils::rawJsonResponse([
+                        'donationId' => $donationId,
+                        'method' => $method,
+                        'status' => 'PENDING',
+                        'providerReference' => $providerReference,
+                        'providerMessage' => $provider['customerMessage'] ?? $provider['message'] ?? $provider['ResponseDescription'] ?? 'STK push sent.',
+                        'normalizedPhone' => $provider['normalizedPhone'] ?? $donorPhone,
+                        'providerPayload' => $provider
+                    ], 201);
+                }
             }
 
             if ($method === 'MPESA') {
+                if (!PaymentService::isConfigured()) {
+                    Utils::errorResponse('Native M-Pesa STK push is not configured.', 500);
+                }
                 $provider = PaymentService::initiateMpesaPayment($donorPhone, $amount, 'Silver Shield Donation');
                 Utils::rawJsonResponse([
                     'donationId' => $donationId,
@@ -207,7 +245,7 @@ class DonationRoutes {
         $mappedStatus = in_array($status, ['SUCCESS', 'COMPLETED', 'PAID']) ? 'COMPLETED' : (in_array($status, ['FAILED', 'CANCELLED', 'CANCELED']) ? 'FAILED' : 'PENDING');
 
         if ($reference) {
-            Database::execute(
+            Database::query(
                 "UPDATE donations SET status = ?, transactionId = COALESCE(transactionId, ?), metadata = ?, updatedAt = NOW()
                  WHERE providerReference = ? OR transactionId = ?",
                 [$mappedStatus, $reference, json_encode($input), $reference, $reference]
@@ -225,6 +263,12 @@ class DonationRoutes {
             }
         }
         return null;
+    }
+
+    private static function shouldFallbackToMpesa($message) {
+        $normalized = strtolower((string)$message);
+        return strpos($normalized, 'not a payments channel') !== false
+            || strpos($normalized, 'bad_request') !== false;
     }
 
     private static function normalizeKenyaPhone($phone) {

@@ -1,4 +1,19 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  Smartphone,
+  Globe,
+  Copy,
+  Check,
+  ArrowRight,
+  Heart,
+  ShieldCheck,
+  Zap,
+  HelpCircle,
+  ExternalLink,
+  Sparkles,
+} from "lucide-react";
 import { apiFetch } from "../app/api";
 import PageTransition from "../components/PageTransition";
 import { useToast } from "../context/ToastContext";
@@ -6,42 +21,28 @@ import { useToast } from "../context/ToastContext";
 const FALLBACK = { paybill: "522522", accountNumber: "1342183193" };
 const PAYPAL_EMAIL = "Shieldsilver105@gmail.com";
 
-// Validate and format phone number for Kenya
 function validatePhoneNumber(phone) {
   const digits = String(phone || "").replace(/\D/g, "");
-  
-  if (!digits) {
+  if (!digits)
     return { valid: false, error: "Phone number is required" };
-  }
-  
-  // Check if it's a valid Kenyan format
-  if (/^254(7|1)\d{8}$/.test(digits)) {
-    return { valid: true, formatted: digits };
-  }
-  
-  if (/^0(7|1)\d{8}$/.test(digits)) {
+  if (/^254(7|1)\d{8}$/.test(digits)) return { valid: true, formatted: digits };
+  if (/^0(7|1)\d{8}$/.test(digits))
     return { valid: true, formatted: `254${digits.slice(1)}` };
-  }
-  
-  if (/^(7|1)\d{8}$/.test(digits)) {
-    return { valid: true, formatted: `254${digits}` };
-  }
-  
-  return { 
-    valid: false, 
-    error: "Invalid format. Use 07XXXXXXXX, 01XXXXXXXX, or +2547XXXXXXXX" 
+  if (/^(7|1)\d{8}$/.test(digits)) return { valid: true, formatted: `254${digits}` };
+  return {
+    valid: false,
+    error: "Format: 07XXXXXXXX or 01XXXXXXXX",
   };
 }
 
 function DonatePage() {
   const [mpesa, setMpesa] = useState(FALLBACK);
+  const [stkConfigured, setStkConfigured] = useState(true);
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [amount, setAmount] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
-  const [response, setResponse] = useState(null);
+  const [copiedField, setCopiedField] = useState(null);
   const { pushToast } = useToast();
 
   useEffect(() => {
@@ -54,183 +55,370 @@ function DonatePage() {
           paybill: String(d.paybill || FALLBACK.paybill),
           accountNumber: String(d.accountNumber || FALLBACK.accountNumber),
         });
+        setStkConfigured(Boolean(d.configured));
       })
       .catch(() => {});
     return () => { mounted = false; };
   }, []);
 
-  const copy = async (val) => {
-    try { 
-      await navigator.clipboard.writeText(String(val)); 
+  const copy = async (val, field) => {
+    try {
+      await navigator.clipboard.writeText(String(val));
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+      pushToast("Copied to clipboard", "success");
     } catch (err) {
-      // Silently ignore if clipboard is unavailable
       void err;
     }
   };
 
   const handlePhoneChange = (e) => {
-    const value = e.target.value;
-    setPhone(value);
-    if (value) {
-      const validation = validatePhoneNumber(value);
-      setPhoneError(validation.valid ? "" : validation.error);
-    } else {
-      setPhoneError("");
-    }
+    const v = e.target.value;
+    setPhone(v);
+    if (v) {
+      const val = validatePhoneNumber(v);
+      setPhoneError(val.valid ? "" : val.error);
+    } else setPhoneError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!phone || !amount || !name) {
-      pushToast("Please fill in all required fields.", "error");
-      return;
-    }
-    
-    const validation = validatePhoneNumber(phone);
-    if (!validation.valid) {
-      pushToast(validation.error, "error");
-      setPhoneError(validation.error);
-      return;
-    }
-    
+    const val = validatePhoneNumber(phone);
+    if (!val.valid) return setPhoneError(val.error);
+
     const amountNum = Number(amount);
-    if (amountNum <= 0) { pushToast("Amount must be greater than 0.", "error"); return; }
-    if (amountNum < 10) { pushToast("Minimum amount is KES 10.", "error"); return; }
+    if (amountNum < 10) return pushToast("Minimum amount is KES 10", "error");
 
     setBusy(true);
-    setResponse(null);
     try {
-      const res = await apiFetch("/donations/initiate", {
+      await apiFetch("/donations/initiate", {
         method: "POST",
-        body: { 
-          method: "PAYHERO", 
-          amount: amountNum, 
-          donorName: name.trim(), 
-          donorEmail: email.trim(), 
-          donorPhone: validation.formatted, 
-          currency: "KES" 
+        body: {
+          method: "MPESA",
+          amount: amountNum,
+          donorPhone: val.formatted,
+          currency: "KES",
         },
       });
-      setResponse({
-        success: true,
-        message: res.providerMessage || "STK Push sent! Check your phone.",
-        phone: res.normalizedPhone || phone,
-      });
-      pushToast("Payment prompt sent to your phone.", "success");
-      setTimeout(() => { setPhone(""); setAmount(""); setName(""); setEmail(""); setPhoneError(""); }, 2000);
+      pushToast("Payment prompt sent to your phone", "success");
+      setTimeout(() => {
+        setPhone("");
+        setAmount("");
+      }, 2000);
     } catch (err) {
-      setResponse({ success: false, message: err.message || "Failed. Please try again." });
-      pushToast(err.message || "STK Push failed.", "error");
+      pushToast(err.message, "error");
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <PageTransition className="page-space">
-      <section className="mini-hero container glass-panel">
-        <p className="eyebrow">Donate</p>
-        <h1>Support Silver Shield</h1>
-        <p>Every contribution helps us reach more women, youth, and families in Bungoma.</p>
-      </section>
+    <PageTransition>
+      <div className="flex flex-col pb-24 bg-background">
+        {/* Slim Hero */}
+        <section className="section-hero relative overflow-hidden" style={{ background: 'var(--hero-gradient)' }}>
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "rgba(0,0,0,0.1)",
+            }}
+          />
+          <div className="container relative z-10 text-center">
+            <motion.span
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="label text-accent-400 mb-5 block"
+            >
+              Fuel the Impact
+            </motion.span>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="h1 text-white tracking-tight"
+            >
+              Secure{" "}
+              <span className="text-accent-400">Contribution</span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="body-lg text-text-300 max-w-2xl mx-auto mt-7 font-medium leading-relaxed"
+            >
+              Your generosity directly empowers women and youth initiatives.
+              Every contribution drives sustainable change across Bungoma.
+            </motion.p>
+          </div>
+          {/* Fold Transition */}
+          <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-surface-100 to-transparent" />
+        </section>
 
-      <section className="container section donate-guide-layout">
+        {/* Donation Hub */}
+        <section className="container py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            {/* STK Push */}
+            <div className="lg:col-span-7">
+              <form
+                className="bg-white p-8 lg:p-12 rounded-3xl shadow-lg border border-border-subtle flex flex-col gap-8 relative overflow-hidden"
+                onSubmit={handleSubmit}
+              >
+                <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
+                  <Smartphone size={120} />
+                </div>
 
-        {/* M-Pesa Manual */}
-        <article className="glass-card donate-status">
-          <h2>M-Pesa Paybill</h2>
-          <p>Pay directly using M-Pesa Paybill.</p>
-          <div className="payment-method">
-            <label>Paybill Number</label>
-            <div className="highlight-box">
-              <code className="mono-code">{mpesa.paybill}</code>
-              <button type="button" className="copy-btn" onClick={() => copy(mpesa.paybill)}>Copy</button>
+                <div className="flex flex-col gap-3 relative z-10">
+                  <div className="flex items-center gap-2.5">
+                    <Zap size={18} className="text-accent-600" />
+                    <span className="label text-brand-600">
+                      Instant Secure Pay
+                    </span>
+                  </div>
+                  <h2 className="h2 text-text-900">Mobile Express</h2>
+                  {!stkConfigured && (
+                    <p className="text-xs font-bold text-danger uppercase tracking-wider mt-1 bg-danger/5 px-3 py-2 rounded-lg border border-danger/10">
+                      Express payment is currently syncing. Manual paybill is
+                      available.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-8 relative z-10">
+                  {/* Amount */}
+                  <div className="flex flex-col gap-3">
+                    <label className="input-label">Support Amount (KES)</label>
+                    <div className="relative group">
+                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-text-500 font-bold text-lg select-none">
+                        KES
+                      </span>
+                      <input
+                        type="number"
+                        className="input-base pl-16 pr-5 text-2xl font-bold rounded-xl"
+                        placeholder="1,000"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        required
+                        disabled={busy}
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {[500, 1000, 2000, 5000].map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setAmount(String(v))}
+                          className="px-4 py-2 rounded-xl bg-surface-200 text-xs font-bold uppercase tracking-wider hover:bg-brand-900 hover:text-white hover:shadow-md transition-all border-none border border-transparent hover:border-brand-900 text-text-600"
+                        >
+                          +{v.toLocaleString()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Phone */}
+                  <div className="flex flex-col gap-3">
+                    <label className="input-label">M-Pesa Number</label>
+                    <input
+                      type="tel"
+                      className={`input-base py-4 rounded-xl ${phoneError ? "input-error" : ""}`}
+                      placeholder="07XXXXXXXX"
+                      value={phone}
+                      onChange={handlePhoneChange}
+                      required
+                      disabled={busy}
+                    />
+                    {phoneError && (
+                      <span className="input-error-text">
+                        {phoneError}
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={busy || !amount || !phone}
+                    className="btn btn-primary btn-lg py-5 rounded-xl w-full group relative overflow-hidden transition-all active:scale-[0.98]"
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-2.5 text-[11px] tracking-widest">
+                      {busy ? (
+                        "Authenticating..."
+                      ) : (
+                        <>
+                          <Zap size={18} /> Initiate Express Pay
+                        </>
+                      )}
+                    </span>
+                  </button>
+
+                  <div className="flex items-center justify-center gap-2.5 text-text-400 mt-1">
+                    <ShieldCheck size={15} className="text-success" />
+                    <span className="text-xs font-semibold tracking-wide">
+                      End-to-End Secure Transaction
+                    </span>
+                  </div>
+                </div>
+              </form>
             </div>
-          </div>
-          <div className="payment-method">
-            <label>Account Number</label>
-            <div className="highlight-box">
-              <code className="mono-code">{mpesa.accountNumber}</code>
-              <button type="button" className="copy-btn" onClick={() => copy(mpesa.accountNumber)}>Copy</button>
-            </div>
-          </div>
-          <div className="mpesa-instructions">
-            <h4>Steps</h4>
-            <ol className="instruction-list">
-              <li>Open M-Pesa → Lipa na M-Pesa → Pay Bill</li>
-              <li>Business No: <strong>{mpesa.paybill}</strong></li>
-              <li>Account No: <strong>{mpesa.accountNumber}</strong></li>
-              <li>Enter amount, PIN, and confirm.</li>
-            </ol>
-          </div>
-        </article>
 
-        {/* STK Push */}
-        <article className="glass-card donate-status">
-          <h2>Quick Pay (STK Push)</h2>
-          <p>Enter your M-Pesa number and receive a payment prompt instantly.</p>
-          <form onSubmit={handleSubmit} className="stk-push-form">
-            <div className="form-row">
-              <div className="form-group">
-                <label>Amount (KES) *</label>
-                <input type="number" placeholder="e.g. 500" value={amount}
-                  onChange={(e) => setAmount(e.target.value)} min="10" step="1" required disabled={busy} />
-                <small style={{ color: '#999', marginTop: '4px', display: 'block' }}>Minimum: KES 10</small>
+            {/* Sidebar */}
+            <div className="lg:col-span-5 flex flex-col gap-7">
+              {/* Paybill */}
+              <div className="bg-white p-8 rounded-3xl border border-border-subtle shadow-sm flex flex-col gap-7">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-brand-900 text-white flex items-center justify-center shadow-md">
+                    <Smartphone size={22} />
+                  </div>
+                  <div>
+                    <span className="label text-text-400">Manual Process</span>
+                    <p className="font-bold text-text-900 tracking-tight">
+                      M-Pesa Paybill
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  {[
+                    {
+                      label: "Business Number",
+                      value: mpesa.paybill,
+                      field: "paybill",
+                    },
+                    {
+                      label: "Account ID",
+                      value: mpesa.accountNumber,
+                      field: "account",
+                    },
+                  ].map((field) => (
+                    <div
+                      key={field.field}
+                      className="flex items-center justify-between p-4 bg-surface-200 rounded-2xl border border-border-subtle hover:border-brand-500/20 transition-all"
+                    >
+                      <div className="flex flex-col gap-0.5">
+                        <span className="label text-text-400">
+                          {field.label}
+                        </span>
+                        <span className="text-lg font-bold text-text-900 font-mono tracking-tight">
+                          {field.value}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => copy(field.value, field.field)}
+                        className="w-10 h-10 bg-white rounded-xl text-text-500 shadow-sm hover:bg-brand-900 hover:text-white transition-all flex items-center justify-center border border-border-subtle shrink-0"
+                      >
+                        {copiedField === field.field ? (
+                          <Check size={16} />
+                        ) : (
+                          <Copy size={16} />
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-6 bg-brand-50 rounded-2xl border border-brand-100">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <HelpCircle size={16} className="text-brand-700" />
+                    <h4 className="label text-brand-800">Quick Steps</h4>
+                  </div>
+                  <ol className="flex flex-col gap-2 pl-1">
+                    <li className="body-sm text-text-700 font-medium">
+                      Open <span className="font-bold text-brand-900">Lipa na M-Pesa</span> &gt; Pay Bill
+                    </li>
+                    <li className="body-sm text-text-700 font-medium">
+                      Enter Business No.{" "}
+                      <span className="font-mono font-bold text-brand-900">
+                        {mpesa.paybill}
+                      </span>
+                    </li>
+                    <li className="body-sm text-text-700 font-medium">
+                      Enter Account ID{" "}
+                      <span className="font-mono font-bold text-brand-900">
+                        {mpesa.accountNumber}
+                      </span>
+                    </li>
+                    <li className="body-sm text-text-700 font-medium">
+                      Confirm with your M-Pesa PIN
+                    </li>
+                  </ol>
+                </div>
               </div>
-              <div className="form-group">
-                <label>M-Pesa Number *</label>
-                <input type="tel" placeholder="07XXXXXXXX" value={phone}
-                  onChange={handlePhoneChange} required disabled={busy} aria-invalid={!!phoneError} />
-                {phoneError && <small style={{ color: '#ef4444', marginTop: '4px', display: 'block' }}>{phoneError}</small>}
+
+              {/* PayPal */}
+              <div className="bg-white p-8 rounded-3xl border border-border-subtle shadow-sm flex flex-col gap-6 group">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-accent-600 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                    <Globe size={22} />
+                  </div>
+                  <div>
+                    <span className="label text-text-400">International</span>
+                    <p className="font-bold text-text-900 tracking-tight">
+                      PayPal Gateway
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-accent-100 rounded-2xl border border-accent-100">
+                  <div className="flex flex-col min-w-0 gap-0.5">
+                    <span className="label text-accent-700">
+                      PayPal Recipient
+                    </span>
+                    <span className="text-sm font-bold text-text-900 truncate">
+                      {PAYPAL_EMAIL}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => copy(PAYPAL_EMAIL, "paypal")}
+                    className="w-10 h-10 bg-white rounded-xl text-accent-600 shadow-sm hover:bg-accent-600 hover:text-white transition-all flex items-center justify-center border border-accent-100 shrink-0"
+                  >
+                    {copiedField === "paypal" ? (
+                      <Check size={16} />
+                    ) : (
+                      <Copy size={16} />
+                    )}
+                  </button>
+                </div>
+
+                <a
+                  href="https://www.paypal.com/paypalme/silvershield"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-accent btn-lg w-full no-underline transition-all hover:shadow-lg active:scale-[0.98]"
+                >
+                  <span className="tracking-widest">
+                    Visit PayPal Me
+                  </span>{" "}
+                  <ExternalLink size={16} />
+                </a>
               </div>
             </div>
-            <div className="form-group">
-              <label>Full Name *</label>
-              <input type="text" placeholder="Your full name" value={name}
-                onChange={(e) => setName(e.target.value)} required disabled={busy} />
-            </div>
-            <div className="form-group">
-              <label>Email (optional)</label>
-              <input type="email" placeholder="your@email.com" value={email}
-                onChange={(e) => setEmail(e.target.value)} disabled={busy} />
-            </div>
-            <button type="submit" className="btn btn-primary" disabled={busy}>
-              {busy ? "Sending..." : "Send Payment Prompt"}
-            </button>
-            {response && (
-              <div className={`stk-response-box ${response.success ? "success" : "error"}`}>
-                <p className="response-message">{response.message}</p>
-                {response.success && response.phone && (
-                  <p className="response-detail">Prompt sent to: {response.phone}</p>
-                )}
-              </div>
-            )}
-          </form>
-        </article>
-
-        {/* PayPal */}
-        <article className="glass-card donate-status">
-          <h2>PayPal</h2>
-          <p>Send a donation via PayPal to our registered email.</p>
-          <div className="payment-method">
-            <label>PayPal Email</label>
-            <div className="highlight-box">
-              <code className="mono-code">{PAYPAL_EMAIL}</code>
-              <button type="button" className="copy-btn" onClick={() => copy(PAYPAL_EMAIL)}>Copy</button>
-            </div>
           </div>
-          <div className="mpesa-instructions">
-            <h4>Steps</h4>
-            <ol className="instruction-list">
-              <li>Log in to PayPal → Send Money</li>
-              <li>Enter: <strong>{PAYPAL_EMAIL}</strong></li>
-              <li>Enter amount, add note: <em>Silver Shield Donation</em></li>
-              <li>Confirm payment.</li>
-            </ol>
-          </div>
-        </article>
+        </section>
 
-      </section>
+        {/* Accountability */}
+        <section className="container">
+          <div className="bg-white p-10 lg:p-16 rounded-3xl border border-border-subtle text-center flex flex-col items-center gap-7 shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-surface-200 flex items-center justify-center text-brand-600 border border-border-subtle shadow-sm">
+              <Sparkles size={32} />
+            </div>
+            <h3 className="h2 text-text-900">Maximum Accountability.</h3>
+            <p className="body-lg text-text-500 max-w-2xl leading-relaxed font-medium">
+              Silver Shield is a fully registered NGO. 100% of your contribution
+              goes directly to community programs. We maintain strict financial
+              stewardship and provide detailed annual impact reports.
+            </p>
+            <Link
+              to="/about"
+              className="group inline-flex items-center gap-2.5 text-sm font-bold text-brand-700 uppercase tracking-widest no-underline transition-all hover:gap-3.5"
+            >
+              Governance &amp; Stewardship Records{" "}
+              <ArrowRight
+                size={16}
+                className="group-hover:translate-x-1 transition-transform"
+              />
+            </Link>
+          </div>
+        </section>
+      </div>
     </PageTransition>
   );
 }

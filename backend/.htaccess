@@ -1,31 +1,86 @@
-# Security: Disable directory browsing
+# =========================================================
+# BASIC SECURITY
+# =========================================================
+
+# Disable directory browsing
 Options -Indexes
 
-# Security: Protect sensitive files
-<FilesMatch "^\.env|.*\.log$|composer\.(json|lock)$|diagnose\.php|test-.*\.php|health-check\.php|verify-setup\.php">
+# =========================================================
+# PROTECT SENSITIVE FILES
+# =========================================================
+
+<FilesMatch "^\.env|.*\.log$|composer\.(json|lock)$|install\.sh$|cleanup\.bat$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
+
     <IfModule !mod_authz_core.c>
-        Order deny,allow
+        Order allow,deny
         Deny from all
     </IfModule>
 </FilesMatch>
 
+# =========================================================
+# ALLOW TEST FILES TEMPORARILY
+# =========================================================
+
+<FilesMatch "^(db-test|health-check)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Allow from all
+    </IfModule>
+</FilesMatch>
+
+# =========================================================
+# URL REWRITING
+# =========================================================
+
 <IfModule mod_rewrite.c>
+
     RewriteEngine On
     RewriteBase /backend/
+
+    # Prevent direct access rewrite loop
     RewriteRule ^index\.php$ - [L]
+
+    # Exclude test files from routing
+    RewriteCond %{REQUEST_URI} !db-test\.php$
+    RewriteCond %{REQUEST_URI} !health-check\.php$
+
+    # Serve existing files/folders normally
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^ index.php [L]
+
+    # Route everything else to index.php
+    RewriteRule ^ index.php [QSA,L]
+
 </IfModule>
 
+# =========================================================
+# SECURITY HEADERS
+# =========================================================
+
 <IfModule mod_headers.c>
+
     Header set X-Content-Type-Options "nosniff"
     Header set X-XSS-Protection "1; mode=block"
     Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # CORS (optional for API)
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+
 </IfModule>
+
+# =========================================================
+# PHP SETTINGS
+# =========================================================
 
 php_value upload_max_filesize 10M
 php_value post_max_size 10M

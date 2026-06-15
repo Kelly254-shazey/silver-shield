@@ -9,6 +9,12 @@ class PaymentService {
             : 'https://sandbox.safaricom.co.ke';
     }
 
+    public static function isConfigured() {
+        return !empty(Env::get('MPESA_CONSUMER_KEY'))
+            && !empty(Env::get('MPESA_CONSUMER_SECRET'))
+            && !empty(Env::get('MPESA_PASSKEY'));
+    }
+
     public static function initiateMpesaPayment($phone, $amount, $description) {
         try {
             $phone = preg_replace('/[^0-9]/', '', $phone);
@@ -91,6 +97,11 @@ class PaymentService {
             $decoded = json_decode($response, true);
             if (!is_array($decoded)) {
                 throw new Exception('M-Pesa returned an invalid response');
+            }
+
+            if (isset($decoded['errorCode']) || (isset($decoded['ResponseCode']) && (string)$decoded['ResponseCode'] !== '0')) {
+                $message = $decoded['errorMessage'] ?? $decoded['ResponseDescription'] ?? 'M-Pesa STK push failed';
+                throw new Exception($message);
             }
 
             return $decoded;

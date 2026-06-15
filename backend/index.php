@@ -19,13 +19,26 @@ header('X-XSS-Protection: 1; mode=block');
 
 // Handle CORS - Allow development and production origins
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$allowedOrigins = explode(',', Env::get('ALLOWED_ORIGINS', 'http://localhost:5173,http://localhost:8000'));
-$allowedOrigins = array_map('trim', $allowedOrigins);
+$defaultAllowedOrigins = implode(',', [
+    'http://localhost:5173',
+    'http://localhost:8000',
+    'http://localhost:3000',
+    'https://edumin.co.ke',
+    'https://www.edumin.co.ke',
+    'https://silverrshield.org',
+    'https://www.silverrshield.org',
+]);
+$allowedOrigins = explode(',', Env::get('ALLOWED_ORIGINS', $defaultAllowedOrigins));
+$allowedOrigins = array_values(array_filter(array_map(function ($value) {
+    return rtrim(trim($value), '/');
+}, $allowedOrigins)));
+$normalizedOrigin = rtrim($origin, '/');
 
 $isProduction = Env::get('NODE_ENV') === 'production';
 
-if (in_array($origin, $allowedOrigins)) {
-    header('Access-Control-Allow-Origin: ' . $origin);
+if ($normalizedOrigin !== '' && in_array($normalizedOrigin, $allowedOrigins, true)) {
+    header('Access-Control-Allow-Origin: ' . $normalizedOrigin);
+    header('Vary: Origin');
 }
 
 if (!$isProduction) {

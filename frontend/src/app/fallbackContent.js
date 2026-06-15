@@ -111,7 +111,7 @@ export const FALLBACK_EVENTS = [
     status: "upcoming",
     title: "Women in Enterprise Bootcamp",
     description: "Hands-on training for women-led businesses, financial literacy, and networking.",
-    location: "Nairobi",
+    location: "kandui",
     eventDate: daysFromNowIso(6),
     coverImage:
       "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1400&q=80",

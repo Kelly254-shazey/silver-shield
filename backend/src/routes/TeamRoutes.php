@@ -37,7 +37,7 @@ class TeamRoutes {
         }
 
         try {
-            $result = Database::execute(
+            Database::query(
                 "INSERT INTO team_members (name, role, email, phone, bio, profileImage, department, linkedinUrl, orderIndex, status)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
@@ -53,7 +53,8 @@ class TeamRoutes {
                     $input['status'] ?? 'active'
                 ]
             );
-            self::respondById('team_members', $result['insertId'], 201);
+            $insertId = Database::getConnection()->insert_id;
+            self::respondById('team_members', $insertId, 201);
         } catch (Exception $e) {
             error_log('Team create error: ' . $e->getMessage());
             Utils::errorResponse('Failed to add team member', 500);
@@ -65,7 +66,7 @@ class TeamRoutes {
         $input = Utils::getJsonInput();
 
         try {
-            Database::execute(
+            Database::query(
                 "UPDATE team_members
                  SET name = ?, role = ?, email = ?, phone = ?, bio = ?, profileImage = ?, department = ?, linkedinUrl = ?, orderIndex = ?, status = ?, updatedAt = NOW()
                  WHERE id = ?",
@@ -102,7 +103,7 @@ class TeamRoutes {
         }
 
         try {
-            $result = Database::execute(
+            Database::query(
                 "INSERT INTO board_members (name, role, credentials, profileImage, linkedinUrl, orderIndex, status)
                  VALUES (?, ?, ?, ?, ?, ?, ?)",
                 [
@@ -115,7 +116,8 @@ class TeamRoutes {
                     $input['status'] ?? 'active'
                 ]
             );
-            self::respondById('board_members', $result['insertId'], 201);
+            $insertId = Database::getConnection()->insert_id;
+            self::respondById('board_members', $insertId, 201);
         } catch (Exception $e) {
             error_log('Board create error: ' . $e->getMessage());
             Utils::errorResponse('Failed to add board member', 500);
@@ -127,7 +129,7 @@ class TeamRoutes {
         $input = Utils::getJsonInput();
 
         try {
-            Database::execute(
+            Database::query(
                 "UPDATE board_members
                  SET name = ?, role = ?, credentials = ?, profileImage = ?, linkedinUrl = ?, orderIndex = ?, status = ?, updatedAt = NOW()
                  WHERE id = ?",
@@ -184,7 +186,7 @@ class TeamRoutes {
         Auth::requireAdmin();
 
         try {
-            Database::execute("DELETE FROM $table WHERE id = ?", [$id]);
+            Database::query("DELETE FROM $table WHERE id = ?", [$id]);
             Utils::jsonResponse(['message' => $message]);
         } catch (Exception $e) {
             error_log('Team delete error: ' . $e->getMessage());

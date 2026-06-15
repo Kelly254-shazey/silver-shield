@@ -3,7 +3,8 @@ import PageTransition from "../../components/PageTransition";
 import { apiFetch, apiUrl, resolveMediaUrl } from "../../app/api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-import { useDialog } from "../../context/DialogContext";
+import LoadingSkeleton from "../../components/LoadingSkeleton";
+import { Info, Image, Video, Save, Eye, Globe, Award, Zap } from "lucide-react";
 
 const initialForm = {
   title: "About Silver Shield",
@@ -17,7 +18,6 @@ const initialForm = {
 function AdminAboutPage() {
   const { token } = useAuth();
   const { pushToast } = useToast();
-  const { showConfirm } = useDialog();
   const [formData, setFormData] = useState(initialForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,216 +26,184 @@ function AdminAboutPage() {
   useEffect(() => {
     let mounted = true;
     apiFetch("/about", { token })
-      .then((response) => {
-        if (mounted) {
-          setFormData((prev) => ({ ...prev, ...(response.data || {}) }));
-        }
-      })
-      .catch((error) => pushToast(error.message || "Unable to load about content.", "error"))
-      .finally(() => {
-        if (mounted) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [token, pushToast]);
+      .then((response) => { if (mounted) setFormData((p) => ({ ...p, ...(response.data || {}) })); })
+      .catch((error) => pushToast(error.message, "error"))
+      .finally(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, [token]);
 
   const heroImage = useMemo(() => resolveMediaUrl(formData.heroImage), [formData.heroImage]);
-  const videoUrl = useMemo(() => resolveMediaUrl(formData.videoUrl), [formData.videoUrl]);
 
   const uploadFile = async (event, kind) => {
     const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
+    if (!file) return;
     try {
-      setUploading((prev) => ({ ...prev, [kind]: true }));
+      setUploading((p) => ({ ...p, [kind]: true }));
       const payload = new FormData();
       payload.append("file", file);
-
       const response = await fetch(apiUrl("/upload/upload"), {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: payload,
       });
-
-      const text = await response.text();
-      let data = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch {
-        data = { message: text };
-      }
-
-      if (!response.ok) {
-        throw new Error(data.message || "Upload failed.");
-      }
-
-      const nextUrl = resolveMediaUrl(data.url || data.relativeUrl);
-      if (kind === "image") {
-        setFormData((prev) => ({ ...prev, heroImage: nextUrl }));
-      } else {
-        setFormData((prev) => ({ ...prev, videoUrl: nextUrl }));
-      }
-      pushToast(`${kind === "image" ? "Image" : "Video"} uploaded successfully.`, "success");
-    } catch (error) {
-      pushToast(error.message || "Upload failed.", "error");
-    } finally {
-      setUploading((prev) => ({ ...prev, [kind]: false }));
-    }
+      if (!response.ok) throw new Error("Upload failed");
+      const data = await response.json();
+      const nextUrl = data.relativeUrl || data.url;
+      setFormData((p) => ({ ...p, [kind === "image" ? "heroImage" : "videoUrl"]: nextUrl }));
+      pushToast(`${kind.toUpperCase()} uploaded successfully.`, "success");
+    } catch (error) { pushToast(error.message, "error"); } finally { setUploading((p) => ({ ...p, [kind]: false })); }
   };
 
-  const onSubmit = async (event) => {
-    event.preventDefault();
-    showConfirm({
-      title: "Update About Page?",
-      message: "Save these About page changes now?",
-      confirmText: "Save Changes",
-      cancelText: "Cancel",
-      variant: "primary",
-      onConfirm: async () => {
-        setSaving(true);
-        try {
-          const response = await apiFetch("/about", {
-            method: "PUT",
-            token,
-            body: formData,
-          });
-          setFormData((prev) => ({ ...prev, ...(response.data || {}) }));
-          pushToast("About page updated.", "success");
-        } catch (error) {
-          pushToast(error.message || "Unable to save about content.", "error");
-        } finally {
-          setSaving(false);
-        }
-      },
-    });
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await apiFetch("/about", { method: "PUT", token, body: formData });
+      pushToast("Global 'About' content synchronized.", "success");
+    } catch (error) { pushToast(error.message, "error"); } finally { setSaving(false); }
   };
 
-  if (loading) {
-    return (
-      <PageTransition className="admin-page">
-        <section className="admin-section">
-          <h1>About Page</h1>
-          <p>Loading...</p>
-        </section>
-      </PageTransition>
-    );
-  }
+  if (loading) return <PageTransition><div className="p-12"><LoadingSkeleton className="h-[600px] rounded-[40px]"/></div></PageTransition>;
 
   return (
-    <PageTransition className="admin-page">
-      <section className="admin-section">
-        <h1>About Page Content</h1>
-        <div className="admin-crud-layout">
-          <form className="glass-card admin-form" onSubmit={onSubmit}>
-            <h2>Update Story, Photo, and Video</h2>
-
-            <input
-              placeholder="Page title"
-              value={formData.title || ""}
-              onChange={(event) =>
-                setFormData((prev) => ({ ...prev, title: event.target.value }))
-              }
-            />
-
-            <textarea
-              rows={7}
-              placeholder="Our Story"
-              value={formData.storyContent || ""}
-              onChange={(event) =>
-                setFormData((prev) => ({ ...prev, storyContent: event.target.value }))
-              }
-            />
-
-            <textarea
-              rows={3}
-              placeholder="Mission"
-              value={formData.mission || ""}
-              onChange={(event) =>
-                setFormData((prev) => ({ ...prev, mission: event.target.value }))
-              }
-            />
-
-            <textarea
-              rows={3}
-              placeholder="Vision"
-              value={formData.vision || ""}
-              onChange={(event) =>
-                setFormData((prev) => ({ ...prev, vision: event.target.value }))
-              }
-            />
-
-            <div className="media-upload-row">
-              <label>Upload Photo</label>
-              <input type="file" accept="image/*" onChange={(event) => uploadFile(event, "image")} />
-              {uploading.image && <small>Uploading image...</small>}
-            </div>
-            <input
-              placeholder="Photo URL"
-              value={formData.heroImage || ""}
-              onChange={(event) =>
-                setFormData((prev) => ({ ...prev, heroImage: event.target.value }))
-              }
-            />
-
-            <div className="media-upload-row">
-              <label>Upload Video</label>
-              <input type="file" accept="video/*" onChange={(event) => uploadFile(event, "video")} />
-              {uploading.video && <small>Uploading video...</small>}
-            </div>
-            <input
-              placeholder="Video URL (MP4, YouTube, Vimeo, etc.)"
-              value={formData.videoUrl || ""}
-              onChange={(event) =>
-                setFormData((prev) => ({ ...prev, videoUrl: event.target.value }))
-              }
-            />
-
-            <button className="btn btn-primary" type="submit" disabled={saving}>
-              {saving ? "Saving..." : "Save About Page"}
-            </button>
-          </form>
-
-          <div className="glass-card admin-table-wrap">
-            <h2>Preview</h2>
-            <div className="simple-list">
-              <div className="simple-list-item">
-                <strong>{formData.title || "About Silver Shield"}</strong>
-                <p>{formData.storyContent || "No story content yet."}</p>
-              </div>
-              <div className="simple-list-item">
-                <strong>Mission</strong>
-                <p>{formData.mission || "-"}</p>
-              </div>
-              <div className="simple-list-item">
-                <strong>Vision</strong>
-                <p>{formData.vision || "-"}</p>
-              </div>
-              {heroImage && (
-                <div className="simple-list-item">
-                  <strong>Photo</strong>
-                  <img src={heroImage} alt="About" style={{ width: "100%", borderRadius: "12px" }} />
-                </div>
-              )}
-              {videoUrl && (
-                <div className="simple-list-item">
-                  <strong>Video URL</strong>
-                  <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="text-link">
-                    {videoUrl}
-                  </a>
-                </div>
-              )}
-            </div>
+    <PageTransition>
+      <div className="flex flex-col gap-8">
+        
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 px-1">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-black text-accent-600 uppercase tracking-widest">Brand Identity</span>
+            <h2 className="text-3xl font-black text-brand-900 m-0 uppercase tracking-tighter leading-tight">Public Narrative</h2>
+          </div>
+          <div className="flex items-center gap-2 text-[10px] font-bold text-text-400 uppercase tracking-widest bg-white px-3 py-1 rounded-full border border-border-subtle shadow-sm">
+            <Globe size={14} className="text-brand-600" /> Primary landing page content
           </div>
         </div>
-      </section>
+
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+          
+          {/* Editor Panel */}
+          <div className="xl:col-span-7">
+            <form className="bg-white p-8 rounded-[40px] border border-border-subtle shadow-sm flex flex-col gap-8" onSubmit={onSubmit}>
+              <div className="flex items-center gap-3 pb-4 border-b border-border-subtle">
+                <div className="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center text-brand-800">
+                  <Info size={20}/>
+                </div>
+                <h3 className="text-sm font-black text-brand-900 uppercase tracking-widest m-0 leading-tight">Master Story Editor</h3>
+              </div>
+
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-brand-800 uppercase tracking-widest ml-1">Hero Title</label>
+                  <input
+                    className="w-full bg-surface-200 border-none py-3.5 px-4 rounded-xl focus:ring-2 focus:ring-brand-600 outline-none text-sm font-bold"
+                    value={formData.title}
+                    onChange={(e) => setFormData(p => ({ ...p, title: e.target.value }))}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-brand-800 uppercase tracking-widest ml-1">Main Narrative</label>
+                  <textarea
+                    className="w-full bg-surface-200 border-none p-4 rounded-xl focus:ring-2 focus:ring-brand-600 outline-none text-sm font-semibold min-h-[200px] leading-relaxed"
+                    value={formData.storyContent}
+                    onChange={(e) => setFormData(p => ({ ...p, storyContent: e.target.value }))}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black text-brand-800 uppercase tracking-widest ml-1 flex items-center gap-1"><Award size={12}/> Mission</label>
+                    <textarea
+                      className="w-full bg-surface-200 border-none p-4 rounded-xl focus:ring-2 focus:ring-brand-600 outline-none text-xs font-semibold min-h-[100px]"
+                      value={formData.mission}
+                      onChange={(e) => setFormData(p => ({ ...p, mission: e.target.value }))}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black text-brand-800 uppercase tracking-widest ml-1 flex items-center gap-1"><Zap size={12}/> Vision</label>
+                    <textarea
+                      className="w-full bg-surface-200 border-none p-4 rounded-xl focus:ring-2 focus:ring-brand-600 outline-none text-xs font-semibold min-h-[100px]"
+                      value={formData.vision}
+                      onChange={(e) => setFormData(p => ({ ...p, vision: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-border-subtle">
+                  <div className="flex flex-col gap-3">
+                    <label className="text-[10px] font-black text-brand-800 uppercase tracking-widest ml-1">Background Image</label>
+                    <label className="flex items-center justify-center gap-2 w-full py-3.5 px-4 bg-surface-200 rounded-xl cursor-pointer hover:bg-brand-100 transition-colors border-2 border-dashed border-border-base text-text-500 font-bold text-[10px] uppercase tracking-widest">
+                      <Image size={16} /> {uploading.image ? "Uploading..." : "Replace Image"}
+                      <input type="file" className="hidden" accept="image/*" onChange={(e) => uploadFile(e, "image")} />
+                    </label>
+                    <input 
+                      className="w-full bg-surface-200 border-none py-2 px-4 rounded-lg text-[9px] font-mono text-text-400"
+                      value={formData.heroImage}
+                      readOnly
+                    />
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <label className="text-[10px] font-black text-brand-800 uppercase tracking-widest ml-1">Video Resource</label>
+                    <label className="flex items-center justify-center gap-2 w-full py-3.5 px-4 bg-surface-200 rounded-xl cursor-pointer hover:bg-brand-100 transition-colors border-2 border-dashed border-border-base text-text-500 font-bold text-[10px] uppercase tracking-widest">
+                      <Video size={16} /> {uploading.video ? "Uploading..." : "Replace Video"}
+                      <input type="file" className="hidden" accept="video/*" onChange={(e) => uploadFile(e, "video")} />
+                    </label>
+                    <input 
+                      className="w-full bg-surface-200 border-none py-2 px-4 rounded-lg text-[9px] font-mono text-text-400"
+                      value={formData.videoUrl}
+                      readOnly
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-border-subtle flex justify-end">
+                <button 
+                  type="submit" 
+                  disabled={saving}
+                  className="btn btn-primary px-12 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg border-none cursor-pointer flex items-center gap-2"
+                >
+                  <Save size={18}/> {saving ? "Syncing..." : "Save Narrative"}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Preview Panel */}
+          <div className="xl:col-span-5 h-full">
+            <div className="bg-brand-900 rounded-[40px] p-1 shadow-sm overflow-hidden h-full flex flex-col min-h-[600px]">
+              <div className="flex items-center gap-2 p-6 border-b border-white/5">
+                <Eye size={16} className="text-accent-500" />
+                <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Live View Preview</span>
+              </div>
+              <div className="flex-grow bg-surface-200 rounded-[38px] overflow-y-auto p-10 flex flex-col gap-10">
+                <div className="flex flex-col gap-4">
+                  <h3 className="text-3xl font-black text-brand-900 uppercase tracking-tighter m-0">{formData.title || "Silver Shield"}</h3>
+                  <p className="text-sm text-text-700 leading-relaxed font-medium m-0">{formData.storyContent || "No content defined."}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-6 bg-brand-100 rounded-3xl border border-brand-800/10">
+                    <span className="text-[9px] font-black text-brand-800 uppercase tracking-widest block mb-2">Our Mission</span>
+                    <p className="text-xs text-text-900 font-bold m-0 leading-tight">{formData.mission || "TBA"}</p>
+                  </div>
+                  <div className="p-6 bg-accent-100 rounded-3xl border border-accent-600/10">
+                    <span className="text-[9px] font-black text-accent-700 uppercase tracking-widest block mb-2">Our Vision</span>
+                    <p className="text-xs text-text-900 font-bold m-0 leading-tight">{formData.vision || "TBA"}</p>
+                  </div>
+                </div>
+
+                {heroImage && (
+                  <div className="rounded-3xl overflow-hidden border-4 border-white shadow-xl">
+                    <img src={heroImage} className="w-full aspect-video object-cover" alt="Hero Preview" />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </PageTransition>
   );
 }

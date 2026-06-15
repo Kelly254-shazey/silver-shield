@@ -1,5 +1,5 @@
 // Build API URL with proper protocol handling
-const LIVE_API_BASE_URL = "https://edumin.co.ke/backend/api";
+const LIVE_API_BASE_URL = "https://edumin.co.ke/backend/";
 
 function trimTrailingSlash(value) {
   return String(value || "").replace(/\/+$/, "");
@@ -24,24 +24,7 @@ function isLocalApiUrl(value) {
 }
 
 function getApiBaseUrl() {
-  const envUrl = String(import.meta.env.VITE_API_BASE_URL || "").trim();
-  if (envUrl) {
-    const normalizedEnvUrl = trimTrailingSlash(envUrl);
-
-    if (typeof window !== "undefined") {
-      const appHost = String(window.location.hostname || "").trim();
-      const appIsLocal = isLocalHost(appHost);
-
-      // Prevent production builds from accidentally using localhost API.
-      if (!appIsLocal && isLocalApiUrl(normalizedEnvUrl)) {
-        return LIVE_API_BASE_URL;
-      }
-    }
-
-    return normalizedEnvUrl;
-  }
-
-  // Production default: always use the live deployed backend
+  // All frontend API calls must use the live deployed backend.
   return LIVE_API_BASE_URL;
 }
 
@@ -103,13 +86,13 @@ function getMediaBaseUrl(defaultValue) {
 
 const API_BASE_URL = getApiBaseUrl();
 const parsedApiUrl = safeParseUrl(API_BASE_URL);
-const API_REQUEST_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, "");
+const API_REQUEST_BASE_URL = trimTrailingSlash(API_BASE_URL.replace(/\/api\/?$/, ""));
 const API_PATH_PREFIX = parsedApiUrl
   ? parsedApiUrl.pathname.replace(/\/api\/?$/, "").replace(/\/+$/, "")
   : "";
 const API_ORIGIN = parsedApiUrl
   ? `${parsedApiUrl.origin}${API_PATH_PREFIX}`
-  : API_BASE_URL.replace(/\/api\/?$/, "");
+  : trimTrailingSlash(API_BASE_URL.replace(/\/api\/?$/, ""));
 const SOCKET_BASE_URL = parsedApiUrl ? parsedApiUrl.origin : API_ORIGIN;
 const SOCKET_PATH = API_PATH_PREFIX ? `${API_PATH_PREFIX}/socket.io` : "/socket.io";
 const MEDIA_BASE_URL = getMediaBaseUrl(API_ORIGIN);

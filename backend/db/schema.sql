@@ -169,9 +169,13 @@ CREATE TABLE IF NOT EXISTS board_members (
 
 CREATE TABLE IF NOT EXISTS about (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NULL,
+  storyContent LONGTEXT NULL,
   mission LONGTEXT NULL,
   vision LONGTEXT NULL,
   values LONGTEXT NULL,
+  heroImage VARCHAR(512) NULL,
+  videoUrl VARCHAR(512) NULL,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
@@ -242,10 +246,14 @@ CREATE TABLE IF NOT EXISTS realtime_events (
   INDEX idx_realtime_created (createdAt)
 );
 
-INSERT IGNORE INTO about (id, mission, vision, values)
+INSERT IGNORE INTO about (id, title, storyContent, mission, vision, values, heroImage, videoUrl)
 VALUES (
   1,
+  'About Silver Shield',
+  '',
   'Shaping lives through mentorship, outreach, and practical opportunity.',
   'A world where every individual has access to transformative mentorship and support.',
-  'Integrity, Compassion, Excellence'
+  'Integrity, Compassion, Excellence',
+  '',
+  ''
 );

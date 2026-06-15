@@ -46,6 +46,7 @@ $diagnostics = [
     'api_endpoints' => [
         'health' => '/api/health',
         'programs' => '/api/programs',
+        'blog' => '/api/blog',
         'stories' => '/api/stories',
         'volunteers' => '/api/volunteers',
         'donations' => '/api/donations',

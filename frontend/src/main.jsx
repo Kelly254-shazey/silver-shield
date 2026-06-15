@@ -6,15 +6,6 @@ import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import { DialogProvider } from "./context/DialogContext";
 import "./index.css";
-import "./App.css";
-import "./styles/component-showcase.css";
-import "./styles/HomePage.css";
-import "./styles/ConfirmDialog.css";
-import "./styles/AssistantWidget.css";
-import "./styles/AdminPanel.css";
-import "./styles/LogoBrand.css";
-import "./styles/DocumentHeader.css";
-import "./styles/DonationReceipt.css";
 
 const getRouterBasename = () => {
   const scriptPath = new URL(import.meta.url, window.location.origin).pathname;

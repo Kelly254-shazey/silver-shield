@@ -1,53 +1,51 @@
 import LogoBrand from "./LogoBrand";
+import { Mail, Phone, MapPin, Globe } from "lucide-react";
 
-/**
- * DocumentHeader Component
- * Used for documents, receipts, invoices, newsletters
- * Includes logo, organization name, slogan, and contact information
- */
 function DocumentHeader({ variant = "standard", customContact = null }) {
   const contactInfo = customContact || {
-    address: "Community Impact Centre, Nairobi, Kenya",
+    address: "Community Impact Centre, kandui, Kenya",
     email: "Shieldsilver105@gmail.com",
     phone: "0726 836021 / 0115 362421",
     website: "www.silvershield.org",
   };
 
+  const titles = {
+    receipt: { label: "Donation Receipt", sub: "Official Contribution Record" },
+    newsletter: { label: "Shield Dispatch", sub: "Community Update" },
+    invoice: { label: "Official Invoice", sub: "Service Fulfillment" },
+    report: { label: "Impact Statement", sub: "Verified Outcome Report" },
+    standard: { label: "Official Document", sub: "Silver Shield Organisation" }
+  };
+
+  const current = titles[variant] || titles.standard;
+
   return (
-    <div className={`document-header document-header-${variant}`}>
-      <LogoBrand variant="document" />
-
-      {variant === "receipt" && (
-        <div className="document-receipt-header">
-          <h1>DONATION RECEIPT</h1>
-          <p className="receipt-tagline">Thank you for your generosity</p>
+    <div className="flex flex-col gap-10 pb-10 border-b-2 border-brand-900 font-body">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+        <LogoBrand variant="full" className="scale-110 origin-left no-underline" />
+        <div className="flex flex-col md:items-end text-left md:text-right">
+          <h1 className="text-4xl font-black text-brand-900 uppercase tracking-tighter m-0 leading-tight">{current.label}</h1>
+          <p className="text-[10px] font-black text-accent-600 uppercase tracking-[0.3em] m-0 mt-2 leading-none">{current.sub}</p>
         </div>
-      )}
+      </div>
 
-      {variant === "newsletter" && (
-        <div className="document-newsletter-header">
-          <h1>Newsletter</h1>
-          <p className="newsletter-tagline">Silver Shield Shaping Lives</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8 border-t border-border-subtle">
+        <div className="flex flex-col gap-1">
+          <span className="text-[8px] font-black text-text-400 uppercase tracking-widest flex items-center gap-1"><MapPin size={10}/> Location</span>
+          <span className="text-[10px] font-bold text-text-700 uppercase leading-tight">{contactInfo.address}</span>
         </div>
-      )}
-
-      {variant === "invoice" && (
-        <div className="document-invoice-header">
-          <h1>INVOICE</h1>
+        <div className="flex flex-col gap-1">
+          <span className="text-[8px] font-black text-text-400 uppercase tracking-widest flex items-center gap-1"><Mail size={10}/> Email</span>
+          <span className="text-[10px] font-bold text-text-700 uppercase leading-tight">{contactInfo.email}</span>
         </div>
-      )}
-
-      {variant === "report" && (
-        <div className="document-report-header">
-          <h1>IMPACT REPORT</h1>
-          <p className="report-tagline">Building Stronger Communities</p>
+        <div className="flex flex-col gap-1">
+          <span className="text-[8px] font-black text-text-400 uppercase tracking-widest flex items-center gap-1"><Phone size={10}/> Contact</span>
+          <span className="text-[10px] font-bold text-text-700 uppercase leading-tight">{contactInfo.phone}</span>
         </div>
-      )}
-
-      <div className="document-contact-footer">
-        <p>{contactInfo.address}</p>
-        <p>Email: {contactInfo.email} | Phone: {contactInfo.phone}</p>
-        {contactInfo.website && <p>Website: {contactInfo.website}</p>}
+        <div className="flex flex-col gap-1">
+          <span className="text-[8px] font-black text-text-400 uppercase tracking-widest flex items-center gap-1"><Globe size={10}/> Digital</span>
+          <span className="text-[10px] font-bold text-text-700 uppercase leading-tight">{contactInfo.website}</span>
+        </div>
       </div>
     </div>
   );

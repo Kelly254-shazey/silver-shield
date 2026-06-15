@@ -34,8 +34,8 @@ echo Press Ctrl+C to stop the server
 echo ========================================
 echo.
 
-REM Start PHP built-in server
-%PHP_CMD% -S localhost:8000 index.php
+REM Start PHP built-in server with router script
+%PHP_CMD% -S localhost:8000 router.php
 
 REM If the server exits, show a message
 if errorlevel 1 (

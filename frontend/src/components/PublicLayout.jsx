@@ -1,16 +1,25 @@
+import { Fragment } from "react";
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import PageTransition from "./PageTransition";
 import AssistantWidget from "./AssistantWidget";
 
 function PublicLayout() {
   return (
-    <div className="app-shell">
-      <Navbar />
-      <Outlet />
-      <Footer />
+    <Fragment>
+      <div className="app-shell">
+        <Navbar />
+        <main className="page-content">
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
+        </main>
+        <Footer />
+      </div>
+      {/* Fixed-position widget — outside document flow, semantically grouped */}
       <AssistantWidget />
-    </div>
+    </Fragment>
   );
 }
 

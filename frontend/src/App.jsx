@@ -12,6 +12,8 @@ const ProgramsPage = React.lazy(() => import("./pages/ProgramsPage"));
 const ProgramDetailsPage = React.lazy(() => import("./pages/ProgramDetailsPage"));
 const StoriesPage = React.lazy(() => import("./pages/StoriesPage"));
 const StoryDetailsPage = React.lazy(() => import("./pages/StoryDetailsPage"));
+const BlogPage = React.lazy(() => import("./pages/BlogPage"));
+const BlogDetailsPage = React.lazy(() => import("./pages/BlogDetailsPage"));
 const DonatePage = React.lazy(() => import("./pages/DonatePage"));
 const ContactPage = React.lazy(() => import("./pages/ContactPage"));
 const TeamPage = React.lazy(() => import("./pages/TeamPage"));
@@ -39,6 +41,8 @@ function App() {
           <Route path="/programs/:id" element={<ProgramDetailsPage />} />
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/stories/:id" element={<StoryDetailsPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:id" element={<BlogDetailsPage />} />
           <Route path="/donate" element={<DonatePage />} />
           <Route path="/volunteer" element={<VolunteerPage />} />
           <Route path="/contact" element={<ContactPage />} />
@@ -76,6 +80,40 @@ function App() {
                   "raisedAmount",
                   "location",
                   "status",
+                ]}
+              />
+            }
+          />
+          <Route
+            path="blog"
+            element={
+              <AdminEntityPage
+                title="Blog"
+                endpoint="/blog"
+                fields={[
+                  "title",
+                  "slug",
+                  "excerpt",
+                  "content",
+                  "coverImage",
+                  "category",
+                  "author",
+                  "status",
+                ]}
+              />
+            }
+          />
+          <Route
+            path="sub-programs"
+            element={
+              <AdminEntityPage
+                title="Sub-Programs"
+                endpoint="/sub-programs"
+                fields={[
+                  "program_id",
+                  "title",
+                  "description",
+                  "coverImage",
                 ]}
               />
             }
@@ -142,6 +180,25 @@ function App() {
             }
           />
           <Route path="team" element={<AdminTeamPage />} />
+          <Route
+            path="volunteers"
+            element={
+              <AdminEntityPage
+                title="Volunteer Applications"
+                endpoint="/volunteers"
+                fields={[
+                  "fullName",
+                  "email",
+                  "phone",
+                  "location",
+                  "skills",
+                  "interests",
+                  "availability",
+                  "message",
+                ]}
+              />
+            }
+          />
           <Route path="donations" element={<AdminDonationsPage />} />
           <Route path="inbox" element={<AdminInboxPage />} />
           <Route path="docs" element={<AdminDocsPage />} />

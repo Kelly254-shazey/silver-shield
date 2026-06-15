@@ -50,18 +50,18 @@ class PayHeroService {
     }
 
     public static function initiateStkPush($amount, $phone, $accountReference = '', $description = 'Payment') {
-        if (!self::isConfigured()) {
-            return [
-                'mocked' => true,
-                'id' => 'MOCK-PAYHERO-' . time(),
-                'status' => 'PENDING',
-                'normalizedPhone' => $phone,
-                'environment' => 'mocked'
-            ];
-        }
-
         try {
             $normalizedPhone = self::normalizePhone($phone);
+            
+            if (!self::isConfigured()) {
+                return [
+                    'mocked' => true,
+                    'id' => 'MOCK-PAYHERO-' . time(),
+                    'status' => 'PENDING',
+                    'normalizedPhone' => $phone,
+                    'environment' => 'mocked'
+                ];
+            }
             $url = self::getBaseUrl() . '/api/v2/payments';
             $description = trim((string)$description);
             if ($description === '') {
@@ -93,8 +93,8 @@ class PayHeroService {
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Set to true in production with valid certs
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
             curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
             curl_setopt($ch, CURLOPT_TIMEOUT, 20);
 
@@ -138,8 +138,8 @@ class PayHeroService {
                 'Accept: application/json'
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, Env::isProduction());
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, Env::isProduction() ? 2 : 0);
             curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
             curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 

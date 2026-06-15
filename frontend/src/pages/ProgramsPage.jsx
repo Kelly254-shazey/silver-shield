@@ -3,16 +3,22 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
+import PaginationControls from "../components/PaginationControls";
 import { apiFetch, resolveMediaUrl } from "../app/api";
-import { getProgramPath, PROGRAM_NAV_ITEMS } from "../app/programCatalog";
+import { getProgramPath } from "../app/programCatalog";
 import { FALLBACK_PROGRAMS } from "../app/fallbackContent";
 import { truncateText } from "../app/text";
 import { useToast } from "../context/ToastContext";
+import { Heart } from "lucide-react";
 
 function ProgramsPage() {
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("title-asc");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const { pushToast } = useToast();
 
   useEffect(() => {
@@ -25,115 +31,239 @@ function ProgramsPage() {
       .finally(() => {
         if (mounted) setLoading(false);
       });
-
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [pushToast]);
 
-  const livePrograms = useMemo(
-    () => programs.filter((program) => String(program.status || "").toLowerCase() !== "draft"),
-    [programs],
-  );
-
-  const programItems = useMemo(
-    () => (livePrograms.length ? livePrograms : FALLBACK_PROGRAMS),
-    [livePrograms],
-  );
+  const programItems = useMemo(() => {
+    const live = programs.filter(
+      (p) => String(p.status || "").toLowerCase() !== "draft"
+    );
+    return live.length ? live : FALLBACK_PROGRAMS;
+  }, [programs]);
 
   const categories = useMemo(
-    () => ["all", ...new Set(programItems.map((program) => program.category).filter(Boolean))],
-    [programItems],
+    () => ["all", ...new Set(programItems.map((p) => p.category).filter(Boolean))],
+    [programItems]
   );
 
-  const filtered = useMemo(
-    () =>
-      programItems.filter((program) =>
-        category === "all" ? true : program.category === category,
-      ),
-    [programItems, category],
-  );
+  const filtered = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    const next = programItems.filter((p) => {
+      const matchesCategory = category === "all" ? true : p.category === category;
+      const haystack = [p.title, p.category, p.summary, p.description, p.location]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return matchesCategory && (!query || haystack.includes(query));
+    });
+
+    return [...next].sort((a, b) => {
+      if (sortBy === "goal-desc") return Number(b.goalAmount || 0) - Number(a.goalAmount || 0);
+      if (sortBy === "raised-desc") return Number(b.raisedAmount || 0) - Number(a.raisedAmount || 0);
+      if (sortBy === "title-desc") return String(b.title || "").localeCompare(String(a.title || ""));
+      return String(a.title || "").localeCompare(String(b.title || ""));
+    });
+  }, [programItems, category, searchTerm, sortBy]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [category, searchTerm, sortBy, pageSize]);
+
+  const pagedPrograms = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
 
   return (
-    <PageTransition className="page-space">
-      <section className="mini-hero container glass-panel">
-        <p className="eyebrow">Programs</p>
-        <h1>Programs with clear goals and measurable outcomes.</h1>
-      </section>
-
-      <section className="container section">
-        <div className="program-shortcuts">
-          {PROGRAM_NAV_ITEMS.map((item) => (
-            <Link key={item.slug} to={`/programs/${item.slug}`} className="program-shortcut-chip">
-              {item.label}
-            </Link>
-          ))}
-        </div>
-
-        <div className="filter-row">
-          {categories.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={item === category ? "chip-btn active" : "chip-btn"}
-              onClick={() => setCategory(item)}
+    <PageTransition>
+      <div className="programs-page">
+        <section className="programs-hero">
+          <div
+            className="hero-backdrop"
+            style={{
+              background:
+                "radial-gradient(circle at 50% 120%, var(--color-brand-600) 0%, transparent 65%)",
+              opacity: 0.2,
+            }}
+          />
+          <div className="container text-center">
+            <motion.span
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="label text-accent-400 hero-eyebrow"
             >
-              {item}
-            </button>
-          ))}
+              Our Initiatives
+            </motion.span>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="hero-heading"
+            >
+              Strategic <span className="text-accent-400">Pathways</span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="hero-copy"
+            >
+              Programmes designed with clear metrics and sustainable community
+              outcomes for long-term growth.
+            </motion.p>
+          </div>
+        </section>
+
+        <div className="container programs-filter-shell">
+          <input
+            className="filter-field"
+            type="search"
+            placeholder="Search programs..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            aria-label="Search programs"
+          />
+          <select
+            className="filter-field"
+            value={sortBy}
+            onChange={(event) => setSortBy(event.target.value)}
+            aria-label="Sort programs"
+          >
+            <option value="title-asc">Title A-Z</option>
+            <option value="title-desc">Title Z-A</option>
+            <option value="goal-desc">Highest goal</option>
+            <option value="raised-desc">Most raised</option>
+          </select>
+          <div className="filter-pill-group">
+            {categories.map((item) => (
+              <button
+                key={item}
+                className={`filter-pill ${category === item ? "filter-pill-active" : ""}`}
+                onClick={() => setCategory(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-2">
-          {loading
-            ? Array.from({ length: 6 }).map((_, index) => (
-                <LoadingSkeleton key={`program-loading-${index}`} className="hp-program-card" />
-              ))
-            : filtered.map((program, index) => (
-                <motion.article
-                  key={program.id}
-                  className="hp-program-card glass-card hover-lift"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.08 }}
-                >
-                  <Link to={getProgramPath(program)} className="hp-card-img-wrap">
-                    <img
-                      src={resolveMediaUrl(program.heroImage)}
-                      alt={program.title}
-                      loading="lazy"
+        <section className="section programs-grid-section">
+          <div className="container programs-grid">
+            {loading
+              ? Array(6)
+                  .fill(0)
+                  .map((_, i) => (
+                    <LoadingSkeleton
+                      key={i}
+                      className="programs-skeleton"
                     />
-                    <span className="hp-card-badge">{program.category || "Programme"}</span>
-                  </Link>
-                  <div className="hp-card-body">
-                    <h3>{program.title}</h3>
-                    <p>{truncateText(program.summary || "Program details coming soon.", 120)}</p>
-                    <div className="inline-meta">
-                      <small>Goal: ${Number(program.goalAmount || 0).toLocaleString()}</small>
-                      <small>Raised: ${Number(program.raisedAmount || 0).toLocaleString()}</small>
+                  ))
+              : pagedPrograms.map((p, i) => (
+                  <motion.article
+                    key={p.id || i}
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-60px" }}
+                    transition={{
+                      delay: i * 0.04,
+                      type: "spring",
+                      stiffness: 350,
+                      damping: 25,
+                    }}
+                    className="program-card"
+                  >
+                    <div className="program-media">
+                      <img
+                        src={resolveMediaUrl(p.heroImage)}
+                        className="program-media-img"
+                        alt=""
+                      />
+                    <div className="program-meta">
+                        {p.category || "Impact"}
+                      </div>
                     </div>
-                    <div className="program-card-actions">
-                      <Link
-                        to={program.isFallback ? "/donate" : `/donate?programId=${program.id}`}
-                        className="btn btn-primary btn-sm"
-                      >
-                        Donate
-                      </Link>
-                      <Link
-                        to={`/contact?subject=${encodeURIComponent(program.title)}`}
-                        className="btn btn-secondary btn-sm"
-                      >
-                        Enquire
-                      </Link>
+
+                    <div className="program-body">
+                      <h3 className="program-title">
+                        {p.title}
+                      </h3>
+                      <p className="program-description">
+                        {truncateText(
+                          p.summary ||
+                            "Description in development. We are working on providing full details for this initiative.",
+                          150
+                        )}
+                      </p>
+
+                      <div className="program-metrics">
+                        <div className="program-metric-row">
+                          <div>
+                            <span className="label text-text-400">Goal Amount</span>
+                            <div className="program-metric-value">
+                              ${Number(p.goalAmount || 0).toLocaleString()}
+                            </div>
+                          </div>
+                          <div className="program-metric-status">
+                            <span className="label text-accent-600">Secured Impact</span>
+                            <div className="program-metric-value text-accent-600">
+                              ${Number(p.raisedAmount || 0).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="program-progress">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            whileInView={{
+                              width: `${Math.min(100, (p.raisedAmount / (p.goalAmount || 1)) * 100)}%`,
+                            }}
+                            viewport={{ once: true }}
+                            transition={{
+                              duration: 1.5,
+                              ease: [0.16, 1, 0.3, 1],
+                            }}
+                            className="program-progress-fill"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="program-actions">
+                        <Link
+                          to={
+                            p.id && !p.isFallback
+                              ? getProgramPath(p)
+                              : "/programs"
+                          }
+                          className="btn btn-primary btn-block"
+                        >
+                          Details
+                        </Link>
+                        <Link
+                          to={
+                            p.id && !p.isFallback
+                              ? `/donate?programId=${p.id}`
+                              : "/donate"
+                          }
+                          className="btn btn-secondary btn-icon"
+                        >
+                          <Heart size={14} className="fill-current text-accent-600" />
+                        </Link>
+                      </div>
                     </div>
-                    <Link to={getProgramPath(program)} className="hp-card-link">
-                      Full details {"->"}
-                    </Link>
-                  </div>
-                </motion.article>
-              ))}
-        </div>
-      </section>
+                  </motion.article>
+                ))}
+          </div>
+          {!loading && (
+            <PaginationControls
+              page={page}
+              pageSize={pageSize}
+              totalItems={filtered.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              label="programs"
+            />
+          )}
+        </section>
+      </div>
     </PageTransition>
   );
 }

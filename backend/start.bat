@@ -63,7 +63,7 @@ echo Server starting... Press Ctrl+C to stop
 echo.
 
 cd /d "%~dp0"
-"!PHP_FOUND!" -S localhost:8000 index.php
+"!PHP_FOUND!" -S localhost:8000 router.php
 
 echo.
 echo Server stopped.

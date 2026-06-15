@@ -51,6 +51,6 @@ echo "===========================================\n\n";
 
 echo "[3/3] Server running...\n\n";
 
-// Start the server
-$cmd = "$phpFound -S localhost:8000 index.php";
+// Start the server using the built-in router for API routing
+$cmd = "$phpFound -S localhost:8000 router.php";
 system($cmd);

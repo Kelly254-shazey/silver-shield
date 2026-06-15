@@ -3,6 +3,31 @@
  * Events Routes
  */
 class EventRoutes {
+    private static function eventColumns() {
+        $columns = Database::query("SHOW COLUMNS FROM events");
+        return array_map(function ($column) {
+            return $column['Field'];
+        }, $columns);
+    }
+
+    private static function filterFieldsByColumns($fields, $columns) {
+        $filtered = [];
+        foreach ($fields as $field => $value) {
+            if (in_array($field, $columns, true)) {
+                $filtered[$field] = $value;
+            }
+        }
+        return $filtered;
+    }
+
+    private static function normalizeEventDate($value) {
+        $text = trim((string)$value);
+        if ($text === '') {
+            return null;
+        }
+        return str_replace('T', ' ', $text);
+    }
+
     public static function handleList() {
         if (Utils::getRequestMethod() !== 'GET') {
             Utils::errorResponse('Method not allowed', 405);
@@ -25,24 +50,41 @@ class EventRoutes {
 
         Auth::requireAdmin();
         $input = Utils::getJsonInput();
+        $title = trim($input['title'] ?? '');
+        $eventDate = trim($input['eventDate'] ?? '');
+
+        if ($title === '' || $eventDate === '') {
+            Utils::errorResponse('Title and event date are required.', 400);
+        }
 
         try {
-            $sql = "INSERT INTO events (title, slug, description, eventDate, location, programSlug, coverImage, videoUrl, registrationUrl, capacity, registrations, status, createdAt)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-            Database::execute($sql, [
-                $input['title'] ?? '',
-                Utils::createSlug($input['slug'] ?? $input['title'] ?? ''),
-                $input['description'] ?? '',
-                $input['eventDate'] ?? '',
-                $input['location'] ?? '',
-                $input['programSlug'] ?? '',
-                $input['coverImage'] ?? '',
-                $input['videoUrl'] ?? '',
-                $input['registrationUrl'] ?? '',
-                $input['capacity'] ?? 100,
-                0,
-                $input['status'] ?? 'upcoming'
-            ]);
+            $columns = self::eventColumns();
+            $fields = self::filterFieldsByColumns([
+                'title' => $title,
+                'slug' => Utils::createSlug($input['slug'] ?? $title),
+                'description' => $input['description'] ?? '',
+                'eventDate' => self::normalizeEventDate($eventDate),
+                'location' => $input['location'] ?? '',
+                'programSlug' => $input['programSlug'] ?? '',
+                'coverImage' => $input['coverImage'] ?? '',
+                'image' => $input['coverImage'] ?? '',
+                'videoUrl' => $input['videoUrl'] ?? '',
+                'registrationUrl' => $input['registrationUrl'] ?? '',
+                'capacity' => (int)($input['capacity'] ?? 100),
+                'registrations' => 0,
+                'status' => $input['status'] ?? 'upcoming'
+            ], $columns);
+
+            if (in_array('createdAt', $columns, true)) {
+                $fields['createdAt'] = date('Y-m-d H:i:s');
+            }
+
+            $fieldNames = array_keys($fields);
+            $placeholders = array_fill(0, count($fieldNames), '?');
+            Database::query(
+                "INSERT INTO events (" . implode(', ', $fieldNames) . ") VALUES (" . implode(', ', $placeholders) . ")",
+                array_values($fields)
+            );
 
             Utils::jsonResponse(['message' => 'Event created successfully'], 201);
         } catch (Exception $e) {
@@ -60,23 +102,38 @@ class EventRoutes {
         $input = Utils::getJsonInput();
 
         try {
-            Database::execute(
-                "UPDATE events SET title = ?, slug = ?, description = ?, eventDate = ?, location = ?, programSlug = ?, coverImage = ?, videoUrl = ?, registrationUrl = ?, status = ?, updatedAt = NOW() WHERE id = ? OR slug = ?",
-                [
-                    $input['title'] ?? '',
-                    Utils::createSlug($input['slug'] ?? $input['title'] ?? $id),
-                    $input['description'] ?? '',
-                    $input['eventDate'] ?? '',
-                    $input['location'] ?? '',
-                    $input['programSlug'] ?? '',
-                    $input['coverImage'] ?? '',
-                    $input['videoUrl'] ?? '',
-                    $input['registrationUrl'] ?? '',
-                    $input['status'] ?? 'upcoming',
-                    $id,
-                    $id
-                ]
-            );
+            $columns = self::eventColumns();
+            $fields = self::filterFieldsByColumns([
+                'title' => $input['title'] ?? '',
+                'slug' => Utils::createSlug($input['slug'] ?? $input['title'] ?? $id),
+                'description' => $input['description'] ?? '',
+                'eventDate' => self::normalizeEventDate($input['eventDate'] ?? ''),
+                'location' => $input['location'] ?? '',
+                'programSlug' => $input['programSlug'] ?? '',
+                'coverImage' => $input['coverImage'] ?? '',
+                'image' => $input['coverImage'] ?? '',
+                'videoUrl' => $input['videoUrl'] ?? '',
+                'registrationUrl' => $input['registrationUrl'] ?? '',
+                'status' => $input['status'] ?? 'upcoming'
+            ], $columns);
+
+            if (in_array('updatedAt', $columns, true)) {
+                $fields['updatedAt'] = date('Y-m-d H:i:s');
+            }
+
+            if (empty($fields)) {
+                Utils::errorResponse('Events table has no editable columns.', 500);
+            }
+
+            $sets = [];
+            $params = [];
+            foreach ($fields as $field => $value) {
+                $sets[] = "$field = ?";
+                $params[] = $value;
+            }
+            $params[] = $id;
+
+            Database::query("UPDATE events SET " . implode(', ', $sets) . " WHERE id = ?", $params);
             Utils::jsonResponse(['message' => 'Event updated successfully']);
         } catch (Exception $e) {
             error_log('Events update error: ' . $e->getMessage());
@@ -92,7 +149,12 @@ class EventRoutes {
         Auth::requireAdmin();
 
         try {
-            Database::execute("DELETE FROM events WHERE id = ? OR slug = ?", [$id, $id]);
+            $columns = self::eventColumns();
+            if (in_array('slug', $columns, true)) {
+                Database::query("DELETE FROM events WHERE id = ? OR slug = ?", [$id, $id]);
+            } else {
+                Database::query("DELETE FROM events WHERE id = ?", [$id]);
+            }
             Utils::jsonResponse(['message' => 'Event deleted successfully']);
         } catch (Exception $e) {
             error_log('Events delete error: ' . $e->getMessage());

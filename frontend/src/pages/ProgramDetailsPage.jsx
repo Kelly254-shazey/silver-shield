@@ -1,309 +1,151 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { apiFetch, resolveMediaUrl } from "../app/api";
 import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
-import { apiFetch, resolveMediaUrl } from "../app/api";
-import { truncateText } from "../app/text";
 import { useToast } from "../context/ToastContext";
-
-function formatDate(value) {
-  if (!value) {
-    return "Date TBA";
-  }
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-  return parsed.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { ArrowLeft, Target, Heart, ShieldCheck, Info } from "lucide-react";
 
 function ProgramDetailsPage() {
   const { id } = useParams();
   const [program, setProgram] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [relatedEvents, setRelatedEvents] = useState([]);
-  const [relatedStories, setRelatedStories] = useState([]);
-  const [relatedLoading, setRelatedLoading] = useState(false);
   const { pushToast } = useToast();
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-
     apiFetch(`/programs/${id}`)
-      .then((response) => {
-        if (mounted) setProgram(response.data);
+      .then((res) => {
+        if (mounted) setProgram(res.data);
       })
-      .catch((error) => pushToast(error.message, "error"))
+      .catch((err) => pushToast(err.message, "error"))
       .finally(() => {
         if (mounted) setLoading(false);
       });
-
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [id, pushToast]);
 
-  useEffect(() => {
-    if (!program?.slug) {
-      setRelatedEvents([]);
-      setRelatedStories([]);
-      return;
-    }
+  if (loading) return (
+    <div className="container py-24">
+      <LoadingSkeleton className="h-[40vh] rounded-[40px] mb-12" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <LoadingSkeleton className="h-64 rounded-3xl" />
+        <LoadingSkeleton className="h-64 rounded-3xl" />
+        <LoadingSkeleton className="h-64 rounded-3xl" />
+      </div>
+    </div>
+  );
 
-    let mounted = true;
-    setRelatedLoading(true);
-
-    const loadRelated = async () => {
-      try {
-        const [eventsRes, storiesRes] = await Promise.all([
-          apiFetch(`/events?programSlug=${encodeURIComponent(program.slug)}`),
-          apiFetch(`/stories?programSlug=${encodeURIComponent(program.slug)}`),
-        ]);
-
-        let nextEvents = eventsRes.data || [];
-        let nextStories = storiesRes.data || [];
-
-        if (!nextEvents.length) {
-          const fallbackEvents = await apiFetch("/events");
-          nextEvents = (fallbackEvents.data || []).slice(0, 3);
-        }
-
-        if (!nextStories.length && program.category) {
-          const fallbackStories = await apiFetch(
-            `/stories?category=${encodeURIComponent(program.category)}`,
-          );
-          nextStories = (fallbackStories.data || []).slice(0, 3);
-        }
-
-        if (!nextStories.length) {
-          const fallbackStories = await apiFetch("/stories");
-          nextStories = (fallbackStories.data || []).slice(0, 3);
-        }
-
-        if (mounted) {
-          setRelatedEvents(nextEvents);
-          setRelatedStories(nextStories);
-        }
-      } catch (error) {
-        if (mounted) {
-          pushToast(error.message || "Unable to load related content.", "error");
-        }
-      } finally {
-        if (mounted) {
-          setRelatedLoading(false);
-        }
-      }
-    };
-
-    loadRelated();
-
-    return () => {
-      mounted = false;
-    };
-  }, [program?.slug, program?.category, pushToast]);
-
-  if (loading) {
-    return (
-      <PageTransition className="page-space">
-        <section className="container section">
-          <LoadingSkeleton className="program-hero-skeleton" />
-        </section>
-      </PageTransition>
-    );
-  }
-
-  if (!program) {
-    return (
-      <PageTransition className="page-space">
-        <section className="container section glass-panel">
-          <h1>Program not found</h1>
-          <Link to="/programs" className="text-link">
-            Back to programs
-          </Link>
-        </section>
-      </PageTransition>
-    );
-  }
-
-  const progress =
-    Number(program.goalAmount) > 0
-      ? Math.min(100, (Number(program.raisedAmount) / Number(program.goalAmount)) * 100)
-      : 0;
-  const galleryImages =
-    Array.isArray(program.galleryImages) && program.galleryImages.length > 0
-      ? program.galleryImages
-      : [program.heroImage].filter(Boolean);
+  if (!program) return (
+    <div className="container py-32 text-center">
+      <h1 className="h1 text-brand-900">Program Not Found</h1>
+      <Link to="/programs" className="btn btn-primary mt-8">Back to Programs</Link>
+    </div>
+  );
 
   return (
-    <PageTransition className="page-space">
-      <section className="program-hero">
-        <img src={resolveMediaUrl(program.heroImage)} alt={program.title} loading="eager" />
-        <div className="program-hero-overlay" />
-        <div className="container program-hero-content">
-          <p className="chip">{program.category}</p>
-          <h1>{program.title}</h1>
-          <p>{truncateText(program.summary || "Program summary coming soon.", 150)}</p>
-        </div>
-      </section>
-
-      <section className="container section program-detail-grid">
-        <article className="glass-card">
-          <h2>Program Overview</h2>
-          <p>{program.description || "Program details coming soon."}</p>
-          <p>
-            <strong>Location:</strong> {program.location || "Multiple regions"}
-          </p>
-        </article>
-
-        <aside className="glass-card">
-          <h3>Funding Progress</h3>
-          <div className="progress-track">
-            <div className="progress-fill" style={{ width: `${progress}%` }} />
+    <PageTransition>
+      <div className="pb-24">
+        {/* Hero Section */}
+        <header className="bg-brand-900 pt-32 pb-40 text-white relative overflow-hidden">
+          <div className="absolute inset-0 opacity-25" style={{ background: `url(${resolveMediaUrl(program.heroImage)}) center/cover no-repeat` }} />
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-950/80 to-brand-900" />
+          <div className="container relative z-10">
+            <div className="max-w-4xl flex flex-col gap-6">
+              <Link to="/programs" className="flex items-center gap-2 text-[10px] font-black text-brand-400 uppercase tracking-widest hover:text-white transition-colors no-underline w-fit">
+                <ArrowLeft size={14} /> Back to Initiatives
+              </Link>
+              <div className="flex flex-col gap-3">
+                <span className="badge badge-soft w-fit">{program.category}</span>
+                <h1 className="h1 text-white m-0 uppercase tracking-tighter">{program.title}</h1>
+              </div>
+              <p className="body-lg text-brand-100/80 max-w-2xl">{program.summary || program.description}</p>
+            </div>
           </div>
-          <p>
-            ${Number(program.raisedAmount || 0).toLocaleString()} raised of $
-            {Number(program.goalAmount || 0).toLocaleString()}
-          </p>
-          <Link to={`/donate?programId=${program.id}`} className="btn btn-primary">
-            Donate to This Program
-          </Link>
-        </aside>
-      </section>
+        </header>
 
-      <section className="container section section-sm">
-        <div className="cta-banner">
-          <p className="eyebrow">Take Action</p>
-          <h2>Support {program.title}</h2>
-          <p>
-            Your support helps this initiative reach more families, schools, and communities.
-          </p>
-          <div className="cta-banner-actions">
-            <Link to={`/donate?programId=${program.id}`} className="btn btn-primary">
-              Donate Now
-            </Link>
-            <Link
-              to={`/contact?subject=${encodeURIComponent(program.title)}`}
-              className="btn btn-secondary"
-            >
-              Send Your View
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="container section">
-        <div className="section-head split">
-          <h2>Program Events</h2>
-          <Link to="/events" className="text-link">
-            View all events
-          </Link>
-        </div>
-
-        <div className="grid three">
-          {relatedLoading
-            ? Array.from({ length: 3 }).map((_, index) => (
-                <LoadingSkeleton key={`related-events-${index}`} className="media-card" />
-              ))
-            : relatedEvents.map((event) => (
-                <article key={event.id} className="media-card hover-lift">
-                  <div className="media-wrap">
-                    <img src={resolveMediaUrl(event.coverImage)} alt={event.title} loading="lazy" />
+        <section className="container -mt-20 relative z-20">
+          <div className="flex flex-col gap-20">
+            {/* Main Stats/Description */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+              <div className="lg:col-span-8 flex flex-col gap-8">
+                <div className="card p-10 border border-border-subtle bg-white">
+                  <h2 className="h3 text-brand-900 mb-6 flex items-center gap-3">
+                    <Info className="text-accent-500" /> Executive Summary
+                  </h2>
+                  <div className="text-text-700 leading-relaxed whitespace-pre-wrap">
+                    {program.description}
                   </div>
-                  <div className="media-content">
-                    <p className="chip">{event.status || "upcoming"}</p>
-                    <h3>{event.title}</h3>
-                    <p>{truncateText(event.description || "Event details coming soon.", 120)}</p>
-                    <div className="inline-meta">
-                      <small>{formatDate(event.eventDate)}</small>
-                      <small>{event.location || "Location TBA"}</small>
+                </div>
+              </div>
+
+              <div className="lg:col-span-4 flex flex-col gap-6">
+                <div className="card p-8 border border-border-subtle bg-brand-900 text-white">
+                  <h3 className="label text-brand-400 mb-4">Impact Tracking</h3>
+                  <div className="flex flex-col gap-6">
+                    <div className="flex justify-between items-end">
+                      <span className="text-3xl font-black">${Number(program.raisedAmount).toLocaleString()}</span>
+                      <span className="label text-white/60">Raised</span>
                     </div>
-                    {event.registrationUrl ? (
-                      <a
-                        href={event.registrationUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-link"
-                      >
-                        Register / Learn More
-                      </a>
-                    ) : (
-                      <Link to="/events" className="text-link">
-                        Event details
-                      </Link>
-                    )}
-                  </div>
-                </article>
-              ))}
-        </div>
-
-        {!relatedLoading && !relatedEvents.length && (
-          <article className="glass-card">
-            <p>No events linked to this program yet.</p>
-          </article>
-        )}
-      </section>
-
-      <section className="container section">
-        <div className="section-head split">
-          <h2>Program Stories</h2>
-          <Link to="/stories" className="text-link">
-            View all stories
-          </Link>
-        </div>
-
-        <div className="grid three">
-          {relatedLoading
-            ? Array.from({ length: 3 }).map((_, index) => (
-                <LoadingSkeleton key={`related-stories-${index}`} className="media-card" />
-              ))
-            : relatedStories.map((story) => (
-                <article key={story.id} className="media-card hover-lift">
-                  <Link to={`/stories/${story.slug || story.id}`} className="media-wrap">
-                    <img src={resolveMediaUrl(story.coverImage)} alt={story.title} loading="lazy" />
-                  </Link>
-                  <div className="media-content">
-                    <p className="chip">{story.category || "Story"}</p>
-                    <h3>{story.title}</h3>
-                    <p>{truncateText(story.excerpt || story.summary || "Story details coming soon.", 120)}</p>
-                    <Link to={`/stories/${story.slug || story.id}`} className="text-link">
-                      Read full story
+                    <div className="program-progress h-2 bg-white/10 border-none shadow-none">
+                      <div className="program-progress-fill h-full" style={{ width: `${Math.min(100, (program.raisedAmount / (program.goalAmount || 1)) * 100)}%` }} />
+                    </div>
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-brand-300">
+                      <span>Goal: ${Number(program.goalAmount).toLocaleString()}</span>
+                      <span>{Math.round((program.raisedAmount / (program.goalAmount || 1)) * 100)}%</span>
+                    </div>
+                    <Link to={`/donate?programId=${program.id}`} className="btn btn-primary w-full gap-2">
+                      <Heart size={16} fill="currentColor" /> Fuel this Mission
                     </Link>
                   </div>
-                </article>
-              ))}
-        </div>
+                </div>
+              </div>
+            </div>
 
-        {!relatedLoading && !relatedStories.length && (
-          <article className="glass-card">
-            <p>No stories linked to this program yet.</p>
-          </article>
-        )}
-      </section>
+            {/* Sub-Programs Section */}
+            {program.sub_programs?.length > 0 && (
+              <div className="flex flex-col gap-10">
+                <div className="flex flex-col gap-2">
+                  <span className="label text-accent-600">Specialized Tracks</span>
+                  <h2 className="h2 text-brand-900 uppercase tracking-tight">Focus Initiatives</h2>
+                </div>
 
-      {galleryImages.length > 0 && (
-        <section className="container section">
-          <div className="section-head">
-            <p className="eyebrow">Gallery</p>
-            <h2>From the field</h2>
-          </div>
-          <div className="grid three">
-            {galleryImages.map((image, index) => (
-              <article key={`${image}-${index}`} className="media-wrap gallery-item">
-                <img
-                  src={resolveMediaUrl(image)}
-                  alt={`${program.title} gallery ${index + 1}`}
-                  loading="lazy"
-                />
-              </article>
-            ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                  {program.sub_programs.map((sub, i) => (
+                    <motion.div
+                      key={sub.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1 }}
+                      whileHover={{ y: -12 }}
+                      className="program-card group"
+                    >
+                      <div className="program-media">
+                        <img
+                          src={resolveMediaUrl(sub.coverImage)}
+                          alt={sub.title}
+                        />
+                        <div className="program-meta">
+                           Sub-Program
+                        </div>
+                      </div>
+                      <div className="program-body">
+                        <h3 className="program-title">{sub.title}</h3>
+                        <p className="program-description line-clamp-5">
+                          {sub.description}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
-      )}
+      </div>
     </PageTransition>
   );
 }

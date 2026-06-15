@@ -40,7 +40,7 @@ class MessageRoutes {
                 INSERT INTO messages (senderName, senderEmail, subject, message, type, status, createdAt)
                 VALUES (?, ?, ?, ?, ?, ?, NOW())
             ";
-            Database::execute($sql, [
+            Database::query($sql, [
                 $input['name'] ?? $input['senderName'] ?? '',
                 $input['email'] ?? '',
                 $input['subject'] ?? '',
@@ -68,7 +68,7 @@ class MessageRoutes {
             if (empty($rows)) {
                 Utils::errorResponse('Message not found', 404);
             }
-            Database::execute("UPDATE messages SET status = 'read' WHERE id = ? AND status = 'unread'", [$id]);
+            Database::query("UPDATE messages SET status = 'read' WHERE id = ? AND status = 'unread'", [$id]);
             Utils::jsonResponse($rows[0]);
         } catch (Exception $e) {
             error_log('Messages get error: ' . $e->getMessage());
@@ -85,7 +85,7 @@ class MessageRoutes {
         $input = Utils::getJsonInput();
 
         try {
-            Database::execute("UPDATE messages SET status = ? WHERE id = ?", [$input['status'] ?? 'read', $id]);
+            Database::query("UPDATE messages SET status = ? WHERE id = ?", [$input['status'] ?? 'read', $id]);
             Utils::jsonResponse(['message' => 'Message updated successfully']);
         } catch (Exception $e) {
             error_log('Messages update error: ' . $e->getMessage());
@@ -99,7 +99,7 @@ class MessageRoutes {
         }
 
         Auth::requireAuth();
-        Database::execute("UPDATE messages SET status = 'resolved' WHERE id = ?", [$id]);
+        Database::query("UPDATE messages SET status = 'resolved' WHERE id = ?", [$id]);
         Utils::jsonResponse(['message' => 'Reply recorded successfully']);
     }
 
@@ -109,7 +109,7 @@ class MessageRoutes {
         }
 
         Auth::requireAuth();
-        Database::execute("UPDATE messages SET status = 'archived' WHERE id = ?", [$id]);
+        Database::query("UPDATE messages SET status = 'archived' WHERE id = ?", [$id]);
         Utils::jsonResponse(['message' => 'Message archived successfully']);
     }
 
@@ -119,7 +119,7 @@ class MessageRoutes {
         }
 
         Auth::requireAuth();
-        Database::execute("DELETE FROM messages WHERE id = ?", [$id]);
+        Database::query("DELETE FROM messages WHERE id = ?", [$id]);
         Utils::jsonResponse(['message' => 'Message deleted successfully']);
     }
 }

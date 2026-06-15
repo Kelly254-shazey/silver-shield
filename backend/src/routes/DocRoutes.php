@@ -115,14 +115,15 @@ class DocRoutes {
         try {
             $sql = "INSERT INTO docs (title, category, content, isPublished, createdAt)
                     VALUES (?, ?, ?, ?, NOW())";
-            $result = Database::execute($sql, [
+            Database::query($sql, [
                 $input['title'] ?? '',
                 $input['category'] ?? '',
                 $input['content'] ?? '',
                 isset($input['isPublished']) ? ($input['isPublished'] ? 1 : 0) : 0
             ]);
 
-            $indexing = AIService::reindexDocument($result['insertId'], $input['content'] ?? '');
+            $insertId = Database::getConnection()->insert_id;
+            $indexing = AIService::reindexDocument($insertId, $input['content'] ?? '');
             Utils::jsonResponse(['indexing' => $indexing], 201, 'Document created successfully');
         } catch (Exception $e) {
             error_log('Doc create error: ' . $e->getMessage());
@@ -141,7 +142,7 @@ class DocRoutes {
         try {
             $sql = "UPDATE docs SET title = ?, category = ?, content = ?, isPublished = ?, updatedAt = NOW() 
                     WHERE id = ?";
-            Database::execute($sql, [
+            Database::query($sql, [
                 $input['title'] ?? '',
                 $input['category'] ?? '',
                 $input['content'] ?? '',
@@ -186,8 +187,8 @@ class DocRoutes {
         Auth::requireAdmin();
 
         try {
-            Database::execute("DELETE FROM doc_chunks WHERE docId = ?", [$id]);
-            Database::execute("DELETE FROM docs WHERE id = ?", [$id]);
+            Database::query("DELETE FROM doc_chunks WHERE docId = ?", [$id]);
+            Database::query("DELETE FROM docs WHERE id = ?", [$id]);
             Utils::jsonResponse(['message' => 'Document deleted successfully']);
         } catch (Exception $e) {
             error_log('Doc delete error: ' . $e->getMessage());

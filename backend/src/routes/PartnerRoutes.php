@@ -30,7 +30,7 @@ class PartnerRoutes {
         }
 
         try {
-            $result = Database::execute(
+            Database::query(
                 "INSERT INTO partners (name, logoUrl, websiteUrl, orderIndex) VALUES (?, ?, ?, ?)",
                 [
                     trim($input['name']),
@@ -40,7 +40,8 @@ class PartnerRoutes {
                 ]
             );
 
-            $rows = Database::query("SELECT * FROM partners WHERE id = ?", [$result['insertId']]);
+            $insertId = Database::getConnection()->insert_id;
+            $rows = Database::query("SELECT * FROM partners WHERE id = ?", [$insertId]);
             Utils::jsonResponse($rows[0] ?? ['message' => 'Partner created successfully'], 201);
         } catch (Exception $e) {
             error_log('Partners create error: ' . $e->getMessage());
@@ -57,7 +58,7 @@ class PartnerRoutes {
         $input = Utils::getJsonInput();
 
         try {
-            Database::execute(
+            Database::query(
                 "UPDATE partners SET name = ?, logoUrl = ?, websiteUrl = ?, orderIndex = ?, updatedAt = NOW() WHERE id = ?",
                 [
                     trim($input['name'] ?? ''),
@@ -88,7 +89,7 @@ class PartnerRoutes {
         Auth::requireAdmin();
 
         try {
-            Database::execute("DELETE FROM partners WHERE id = ?", [$id]);
+            Database::query("DELETE FROM partners WHERE id = ?", [$id]);
             Utils::jsonResponse(['message' => 'Partner deleted successfully']);
         } catch (Exception $e) {
             error_log('Partners delete error: ' . $e->getMessage());

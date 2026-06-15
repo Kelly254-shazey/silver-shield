@@ -108,8 +108,8 @@ echo.
 echo Press Ctrl+C to stop the server
 echo.
 
-REM Start PHP server with proper logging
-%PHP_CMD% -S localhost:8000 index.php 2>&1
+REM Start PHP server with router script for API routing
+%PHP_CMD% -S localhost:8000 router.php 2>&1
 
 echo.
 echo Server stopped.

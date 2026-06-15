@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { Mail, Phone, MapPin, Send, Download, Heart, ArrowRight } from "lucide-react";
 import { apiFetch, apiUrl } from "../app/api";
 import { useToast } from "../context/ToastContext";
 import LogoBrand from "./LogoBrand";
@@ -7,19 +8,18 @@ import SocialLinks from "./SocialLinks";
 
 const quickLinks = [
   { to: "/", label: "Home" },
-  { to: "/about", label: "About" },
-  { to: "/programs", label: "Programs" },
-  { to: "/events", label: "Events" },
-  { to: "/stories", label: "Stories" },
-  { to: "/contact", label: "Contact" },
+  { to: "/about", label: "About Us" },
+  { to: "/programs", label: "Our Programs" },
+  { to: "/events", label: "Upcoming Events" },
+  { to: "/stories", label: "Impact Stories" },
+  { to: "/contact", label: "Contact Us" },
 ];
 
 const getInvolvedLinks = [
   { to: "/donate", label: "Make a Donation" },
-  { to: "/volunteer", label: "Volunteer" },
+  { to: "/volunteer", label: "Join as Volunteer" },
   { to: "/contact?inquiry=partner#contact-form", label: "Partner With Us" },
-  { to: "/team", label: "Our Team" },
-  { to: "/admin/login", label: "Admin Login" },
+  { to: "/team", label: "Meet the Team" },
 ];
 
 function Footer() {
@@ -71,83 +71,99 @@ function Footer() {
   };
 
   return (
-    <footer className="site-footer">
+    <footer className="footer-shell">
+      <div className="footer-glow" />
       <div className="container footer-grid">
-
-        {/* Brand + Contact */}
-        <section className="footer-brand-col">
-          <LogoBrand variant="full" className="footer-logo" />
-          <p className="footer-tagline">
-            Shaping lives through mentorship, outreach, and practical opportunity.
+        <div className="footer-brand">
+          <LogoBrand variant="minimal" tone="light" />
+          <p className="footer-copy">
+            Building dignity, opportunity, and resilience across Bungoma through mentorship, outreach, and practical opportunity.
           </p>
-          <ul className="footer-contact-list">
-            <li><a href="mailto:Shieldsilver105@gmail.com">Shieldsilver105@gmail.com</a></li>
-            <li><a href="tel:+254726836021">0726 836021 / 0115 362421</a></li>
-            <li>Kanduyi, Bungoma, Kenya</li>
-          </ul>
+          <div className="footer-contact">
+            <a href="mailto:Shieldsilver105@gmail.com" className="footer-contact-link">
+              <span className="footer-contact-icon"><Mail size={18} /></span>
+              Shieldsilver105@gmail.com
+            </a>
+            <a href="tel:+254726836021" className="footer-contact-link">
+              <span className="footer-contact-icon"><Phone size={18} /></span>
+              0726 836021 / 0115 362421
+            </a>
+            <div className="footer-contact-link">
+              <span className="footer-contact-icon"><MapPin size={18} /></span>
+              Kanduyi, Bungoma, Kenya
+            </div>
+          </div>
           <SocialLinks className="footer-socials" />
-        </section>
+        </div>
 
-        {/* Quick Links */}
-        <section className="footer-links-col">
-          <h4>Quick Links</h4>
-          <nav aria-label="Footer quick links">
+        <div className="footer-section">
+          <h4 className="footer-heading">Platform</h4>
+          <nav className="footer-nav">
             {quickLinks.map((item) => (
               <Link key={item.to} to={item.to} className="footer-link">
                 {item.label}
               </Link>
             ))}
           </nav>
-        </section>
+        </div>
 
-        {/* Get Involved */}
-        <section className="footer-links-col">
-          <h4>Get Involved</h4>
-          <nav aria-label="Get involved links">
+        <div className="footer-section">
+          <h4 className="footer-heading">Involvement</h4>
+          <nav className="footer-nav">
             {getInvolvedLinks.map((item) => (
               <Link key={item.to} to={item.to} className="footer-link">
                 {item.label}
               </Link>
             ))}
+            <Link to="/admin/login" className="footer-link footer-admin-link">
+              Admin Portal <ArrowRight size={12} className="footer-admin-icon" />
+            </Link>
           </nav>
-        </section>
+        </div>
 
-        {/* Newsletter */}
-        <section className="footer-newsletter-col">
-          <h4>Newsletter</h4>
-          <p className="footer-newsletter-meta">
-            {newsletterDoc?.title || "Stay updated with our latest news and programs."}
+        <div className="footer-section">
+          <h4 className="footer-heading">Newsletter</h4>
+          <p className="footer-copy">
+            {newsletterDoc?.title || "Join our community updates and help us build a better future."}
           </p>
           {newsletterDoc && (
-            <a href={newsletterDownloadUrl} className="btn btn-secondary btn-sm" download>
-              Download Newsletter
+            <a href={newsletterDownloadUrl} className="footer-link footer-report-link" download>
+              <Download size={16} className="footer-report-icon" /> Latest Report
             </a>
           )}
-          <form className="footer-newsletter-form" onSubmit={onSubscribe}>
-            <input
-              type="email"
-              placeholder="Your email address"
-              aria-label="Email address for newsletter" /* Keep original aria-label */
-              required
-              value={subscriberEmail}
-              onChange={(e) => setSubscriberEmail(e.target.value)}
-            />
-            <button type="submit" className="btn btn-primary btn-sm" disabled={subscribing}>
-              {subscribing ? "Sending..." : "Subscribe"}
-            </button>
+          <form className="footer-form" onSubmit={onSubscribe}>
+            <div className="footer-form-group">
+              <input
+                type="email"
+                placeholder="Email address"
+                className="footer-input"
+                aria-label="Email address for newsletter"
+                required
+                value={subscriberEmail}
+                onChange={(e) => setSubscriberEmail(e.target.value)}
+              />
+              <button
+                type="submit"
+                className="footer-action"
+                disabled={subscribing}
+              >
+                <Send size={18} />
+              </button>
+            </div>
           </form>
-        </section>
-
+        </div>
       </div>
 
-      <div className="footer-bottom">
-        <div className="container footer-bottom-inner">
-          <p>&copy; {new Date().getFullYear()} Silver Shield Organisation. All rights reserved.</p>
-          <p>
-            Built by{" "}
-            <a href="mailto:kelly123simiyu@gmail.com">Kelly123simiyu@gmail.com</a>
-          </p>
+      <div className="container footer-bottom">
+        <p className="footer-bottom-note">&copy; {new Date().getFullYear()} Silver Shield Organisation. All Rights Reserved.</p>
+        <div className="footer-bottom-links">
+          <Link to="/about" className="footer-link">Privacy</Link>
+          <Link to="/contact" className="footer-link">Terms</Link>
+          <Link to="/about" className="footer-link">Safety</Link>
         </div>
+        <p className="footer-bottom-branding">
+          Empowering communities with <Heart size={11} className="footer-heart-icon" />
+        </p>
       </div>
     </footer>
   );

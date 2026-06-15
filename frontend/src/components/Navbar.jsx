@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
+import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
+import { Menu, X, ChevronDown, Heart } from "lucide-react";
 import { PROGRAM_NAV_ITEMS } from "../app/programCatalog";
 import LogoBrand from "./LogoBrand";
-import SocialLinks from "./SocialLinks";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -10,192 +11,245 @@ const navLinks = [
   { type: "programs", label: "Programs" },
   { to: "/events", label: "Events" },
   { to: "/stories", label: "Stories" },
-  { to: "/team", label: "Team" },
+  { to: "/blog", label: "Blog" },
+  {  to: "/contact", label: "Contact" },
+  { to : "/team", label: "Team" },
   { to: "/volunteer", label: "Volunteer" },
-  { to: "/donate", label: "Donate" },
 ];
 
 function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [programMenuOpen, setProgramMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [programMenuOpen, setProgramMenuOpen] = useState(false);
   const location = useLocation();
 
+  const { scrollY } = useScroll();
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setScrolled(latest > 50);
+  });
+
   useEffect(() => {
-    setMenuOpen(false);
+    setIsOpen(false);
     setProgramMenuOpen(false);
   }, [location.pathname]);
 
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "";
-    document.body.classList.toggle("nav-open", menuOpen);
-    return () => {
-      document.body.style.overflow = "";
-      document.body.classList.remove("nav-open");
-    };
-  }, [menuOpen]);
-
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") { setMenuOpen(false); setProgramMenuOpen(false); }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
-    <header className={`site-header${menuOpen ? " menu-open" : ""}${scrolled ? " scrolled" : ""}`}>
-      {/* Top bar */}
-      <div className="navbar-top-bar">
-        <div className="container navbar-top-container">
-          <div className="navbar-contact-info">
-            <a href="mailto:Shieldsilver105@gmail.com" className="navbar-contact-link">
-              <span className="navbar-meta-label">Email</span>
-              <span>Shieldsilver105@gmail.com</span>
-            </a>
-            <span className="navbar-contact-separator">/</span>
-            <a href="tel:+254726836021" className="navbar-contact-link">
-              <span className="navbar-meta-label">Call</span>
-              <span>0726 836021</span>
-            </a>
-            <span className="navbar-contact-separator">/</span>
-            <span className="navbar-contact-location">
-              <span className="navbar-meta-label">Based in</span>
-              <span>Kanduyi, Bungoma, Kenya</span>
-            </span>
-          </div>
-          <SocialLinks className="navbar-socials" linkClassName="social-link-minimal" />
-        </div>
-      </div>
-
-      {/* Main nav */}
-      <div className="container">
-        <div className="prototype-nav-shell">
-          <div className="brand-mark-wrap">
-            <LogoBrand variant="minimal" className="brand-mark" />
-          </div>
-
-          <nav className="nav-links" id="site-navigation" aria-label="Primary navigation">
-            {/* Mobile header inside drawer */}
-            <div className="nav-mobile-header">
-              <LogoBrand variant="minimal" className="brand-mark" />
-              <button
-                type="button"
-                className="nav-close-btn"
-                aria-label="Close menu"
-                onClick={() => setMenuOpen(false)}
-              >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
+    <>
+      <motion.header
+        initial={{ y: 0 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className={`navbar-shell ${scrolled ? "navbar-scrolled" : ""}`}
+      >
+        <div className="top-info-bar">
+          <div className="container navbar-inner">
+            <div className="top-info-group">
+              <a href="mailto:Shieldsilver105@gmail.com" className="top-info-item">
+                <span className="top-info-icon">✉</span>
+                Shieldsilver105@gmail.com
+              </a>
+              <a href="tel:+254726836021" className="top-info-item">
+                <span className="top-info-icon">☎</span>
+                +254 726 836 021
+              </a>
             </div>
+            <div className="top-info-label">
+              <span className="top-info-icon"></span>
+              Kanduyi, Bungoma, Kenya
+            </div>
+          </div>
+        </div>
 
+        <div className="container navbar-inner">
+          {/* Logo + Organization Name */}
+          <Link to="/" className="navbar-brand">
+            <LogoBrand variant="default" tone="dark" className="navbar-logo" />
+            <div className="navbar-brand-text">
+              <span className="navbar-brand-title">Silver Shield</span>
+              <span className="navbar-brand-subtitle">Organisation</span>
+            </div>
+          </Link>
+
+          {/* Desktop Nav */}
+          <nav className="nav-links">
             {navLinks.map((item) =>
               item.type === "programs" ? (
                 <div
-                  key="programs-menu"
-                  className={programMenuOpen ? "nav-dropdown-group open" : "nav-dropdown-group"}
+                  key="programs"
+                  className="nav-item nav-item-group"
                   onMouseEnter={() => setProgramMenuOpen(true)}
                   onMouseLeave={() => setProgramMenuOpen(false)}
                 >
-                  <NavLink
-                    to="/programs"
-                    className={({ isActive }) =>
-                      isActive ? "nav-link prototype-nav-link active" : "nav-link prototype-nav-link"
-                    }
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {item.label}
-                  </NavLink>
                   <button
-                    type="button"
-                    className="nav-dropdown-toggle"
-                    aria-label="Toggle programs menu"
+                    className={`nav-item-button ${
+                      location.pathname.startsWith("/programs") ? "nav-item-active" : ""
+                    }`}
                     aria-expanded={programMenuOpen}
-                    onClick={() => setProgramMenuOpen((prev) => !prev)}
                   >
-                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-                      <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                    Programs
+                    <ChevronDown
+                      size={14}
+                      className={`nav-item-chevron ${programMenuOpen ? "nav-item-chevron-open" : ""}`}
+                    />
                   </button>
-                  <div className="nav-dropdown-menu">
-                    {PROGRAM_NAV_ITEMS.map((program) => (
-                      <NavLink
-                        key={program.slug}
-                        to={`/programs/${program.slug}`}
-                        className={({ isActive }) =>
-                          isActive ? "nav-dropdown-item active" : "nav-dropdown-item"
-                        }
-                        onClick={() => { setMenuOpen(false); setProgramMenuOpen(false); }}
+                  <AnimatePresence>
+                    {programMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="program-dropdown-panel"
                       >
-                        {program.title}
-                      </NavLink>
-                    ))}
-                  </div>
+                        <div className="program-dropdown-header">
+                          <span className="label text-text-400">Our Focus Areas</span>
+                        </div>
+                        {PROGRAM_NAV_ITEMS.map((program) => (
+                          <NavLink
+                            key={program.slug}
+                            to={`/programs/${program.slug}`}
+                            className={({ isActive }) =>
+                              `program-dropdown-link ${isActive ? "program-dropdown-link-active" : ""}`
+                            }
+                          >
+                            {program.title}
+                          </NavLink>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ) : (
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  className={({ isActive }) =>
-                    isActive ? "nav-link prototype-nav-link active" : "nav-link prototype-nav-link"
-                  }
-                  onClick={() => setMenuOpen(false)}
                   end={item.to === "/"}
+                  className={({ isActive }) =>
+                    `nav-item ${isActive ? "nav-item-active" : ""}`
+                  }
                 >
-                  {item.label}
+                  {({ isActive }) => (
+                    <>
+                      {item.label}
+                      {isActive && <span className="nav-underline" />}
+                    </>
+                  )}
                 </NavLink>
-              ),
+              )
             )}
-
-            {/* Mobile CTA inside drawer */}
-            <div className="nav-mobile-cta">
-              <Link to="/donate" className="btn btn-primary" onClick={() => setMenuOpen(false)}>
-                Donate Now
-              </Link>
-              <Link to="/contact?inquiry=partner#contact-form" className="btn btn-secondary" onClick={() => setMenuOpen(false)}>
-                Partner With Us
-              </Link>
-            </div>
           </nav>
 
-          <div className="prototype-nav-actions">
-            <Link to="/contact?inquiry=partner#contact-form" className="btn btn-secondary prototype-partner-btn">
-              Partner With Us
+          <div className="nav-actions">
+            <Link to="/contact" className="btn btn-secondary btn-sm">
+              Partner
             </Link>
-            <Link to="/donate" className="btn btn-donate prototype-donate-btn">
-              Donate
+            <Link to="/donate" className="btn btn-primary btn-sm">
+              <Heart size={14} className="fill-current" /> Donate
             </Link>
-            <button
-              type="button"
-              className={menuOpen ? "icon-btn icon-menu active" : "icon-btn icon-menu"}
-              aria-label="Toggle menu"
-              aria-expanded={menuOpen}
-              aria-controls="site-navigation"
-              onClick={() => setMenuOpen((prev) => !prev)}
-            >
-              <span />
-              <span />
-              <span />
-            </button>
           </div>
-        </div>
-      </div>
 
-      <button
-        type="button"
-        className={menuOpen ? "mobile-nav-backdrop active" : "mobile-nav-backdrop"}
-        onClick={() => setMenuOpen(false)}
-        aria-label="Close menu overlay"
-      />
-    </header>
+          {/* Mobile Toggle */}
+          <button
+            className="nav-toggle"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+          >
+            {isOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+      </motion.header>
+
+      {/* Mobile Menu - positioned fixed outside navbar to prevent layout inflation */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="mobile-menu-backdrop"
+              onClick={() => setIsOpen(false)}
+            />
+            <motion.div
+              variants={{
+                closed: {
+                  opacity: 0,
+                  x: "100%",
+                  transition: { duration: 0.2, ease: "easeIn" },
+                },
+                open: {
+                  opacity: 1,
+                  x: 0,
+                  transition: {
+                    type: "spring",
+                    damping: 30,
+                    stiffness: 300,
+                    mass: 0.8,
+                  },
+                },
+              }}
+              initial="closed"
+              animate="open"
+              exit="closed"
+              className="mobile-menu-panel"
+            >
+              <div className="mobile-menu-content">
+                <div className="mobile-nav-group">
+                  {navLinks.map((item) =>
+                    item.type === "programs" ? (
+                      <div
+                        key="mob-programs"
+                        className="mobile-nav-group"
+                      >
+                        <span className="label text-text-400">Programs</span>
+                        <div className="mobile-nav-subgroup">
+                          {PROGRAM_NAV_ITEMS.map((program) => (
+                            <NavLink
+                              key={program.slug}
+                              to={`/programs/${program.slug}`}
+                              className="mobile-nav-link"
+                              onClick={() => setIsOpen(false)}
+                            >
+                              {program.title}
+                            </NavLink>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        className="mobile-nav-link"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {item.label}
+                      </NavLink>
+                    )
+                  )}
+                </div>
+              </div>
+              <div className="mobile-menu-actions">
+                <Link
+                  to="/donate"
+                  className="btn btn-primary btn-lg w-full"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Heart size={20} className="fill-current" /> Donate Now
+                </Link>
+                <Link
+                  to="/contact"
+                  className="btn btn-secondary btn-lg w-full"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Partner With Us
+                </Link>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 

@@ -1,140 +1,79 @@
 import { useEffect, useState } from "react";
+import { Smartphone, Copy, Check, ShieldCheck, Zap } from "lucide-react";
 import { apiFetch } from "../app/api";
 
 const fallbackDetails = {
   paybill: "522522",
   accountNumber: "1342183193",
-  environment: "sandbox",
-  configured: false,
-  warnings: [],
 };
 
-function MpesaPaymentCard({ amount = 0 }) {
+function MpesaPaymentCard() {
   const [mpesaDetails, setMpesaDetails] = useState(fallbackDetails);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
+  const [copied, setCopied] = useState(null);
 
   useEffect(() => {
-    const fetchMpesaDetails = async () => {
-      try {
-        const response = await apiFetch("/donations/mpesa/details");
-        const data = response?.data || {};
-        setMpesaDetails({
-          paybill: String(data.paybill || fallbackDetails.paybill),
-          accountNumber: String(data.accountNumber || fallbackDetails.accountNumber),
-          environment: String(data.environment || fallbackDetails.environment),
-          configured: Boolean(data.configured),
-          warnings: Array.isArray(data.warnings) ? data.warnings : [],
-        });
-        setLoadError("");
-      } catch (error) {
-        console.error("Failed to fetch M-Pesa details:", error);
-        setLoadError("Live M-Pesa details are unavailable. Showing fallback paybill details.");
-        setMpesaDetails((prev) => ({
-          ...fallbackDetails,
-          paybill: prev?.paybill || fallbackDetails.paybill,
-          accountNumber: prev?.accountNumber || fallbackDetails.accountNumber,
-        }));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMpesaDetails();
+    apiFetch("/donations/mpesa/details")
+      .then(res => setMpesaDetails(res?.data || fallbackDetails))
+      .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
-    return (
-      <div className="mpesa-card glass-panel loading">
-        <div className="skeleton-title" />
-        <div className="skeleton-text" />
-      </div>
-    );
-  }
+  const copy = (val, field) => {
+    navigator.clipboard.writeText(val);
+    setCopied(field);
+    setTimeout(() => setCopied(null), 2000);
+  };
 
-  const paybill = String(mpesaDetails?.paybill || fallbackDetails.paybill);
-  const accountNumber = String(mpesaDetails?.accountNumber || fallbackDetails.accountNumber);
+  if (loading) return <div className="bg-white p-8 rounded-[40px] border border-border-subtle animate-pulse h-64" />;
 
   return (
-    <div className="mpesa-card glass-panel premium-gradient">
-      <div className="mpesa-header">
-        <div className="mpesa-icon">M</div>
-        <h3>M-Pesa Payment</h3>
+    <div className="bg-white p-8 rounded-[40px] border border-border-subtle shadow-premium flex flex-col gap-8">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-brand-900 text-white flex items-center justify-center shadow-lg">
+          <Smartphone size={24} />
+        </div>
+        <div>
+          <h3 className="text-sm font-black text-brand-900 uppercase tracking-widest m-0 leading-tight">M-Pesa Express</h3>
+          <p className="text-[10px] font-bold text-text-400 uppercase m-0 mt-1">Manual Deployment</p>
+        </div>
       </div>
 
-      <div className="mpesa-content">
-        <div className="payment-method">
-          <label>Pay Bill Number</label>
-          <div className="highlight-box">
-            <code className="mono-code">{paybill}</code>
-            <button
-              className="copy-btn"
-              type="button"
-              onClick={() => navigator.clipboard.writeText(paybill)}
-              title="Copy paybill"
-            >
-              Copy
-            </button>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between p-4 bg-surface-200 rounded-2xl border border-transparent hover:border-brand-800/10 transition-all">
+          <div className="flex flex-col gap-1">
+            <span className="text-[8px] font-black text-text-400 uppercase tracking-widest">Business No</span>
+            <span className="text-lg font-black text-brand-900 font-mono tracking-tighter leading-none">{mpesaDetails.paybill}</span>
           </div>
+          <button onClick={() => copy(mpesaDetails.paybill, 'pb')} className="p-3 bg-white rounded-xl text-brand-800 shadow-sm hover:bg-brand-900 hover:text-white transition-all border-none cursor-pointer">
+            {copied === 'pb' ? <Check size={16}/> : <Copy size={16}/>}
+          </button>
         </div>
 
-        <div className="payment-method">
-          <label>Account Number</label>
-          <div className="highlight-box">
-            <code className="mono-code">{accountNumber}</code>
-            <button
-              className="copy-btn"
-              type="button"
-              onClick={() => navigator.clipboard.writeText(accountNumber)}
-              title="Copy account number"
-            >
-              Copy
-            </button>
+        <div className="flex items-center justify-between p-4 bg-surface-200 rounded-2xl border border-transparent hover:border-brand-800/10 transition-all">
+          <div className="flex flex-col gap-1">
+            <span className="text-[8px] font-black text-text-400 uppercase tracking-widest">Account ID</span>
+            <span className="text-lg font-black text-brand-900 font-mono tracking-tighter leading-none">{mpesaDetails.accountNumber}</span>
           </div>
+          <button onClick={() => copy(mpesaDetails.accountNumber, 'acc')} className="p-3 bg-white rounded-xl text-brand-800 shadow-sm hover:bg-brand-900 hover:text-white transition-all border-none cursor-pointer">
+            {copied === 'acc' ? <Check size={16}/> : <Copy size={16}/>}
+          </button>
         </div>
+      </div>
 
-        {amount > 0 && (
-          <div className="payment-method">
-            <label>Amount to Pay</label>
-            <div className="amount-display">
-              <span className="currency">KES</span>
-              <span className="value">{amount.toLocaleString()}</span>
-            </div>
-          </div>
-        )}
+      <div className="flex flex-col gap-3 p-6 bg-brand-100 rounded-[28px] border border-brand-800/5">
+        <h4 className="text-[10px] font-black text-brand-800 uppercase tracking-widest m-0 flex items-center gap-2">
+          <Zap size={14} className="text-accent-600"/> Quick Path
+        </h4>
+        <ol className="m-0 p-0 pl-4 space-y-1">
+          <li className="text-[10px] font-bold text-text-700">Dial *334# or use M-Pesa App</li>
+          <li className="text-[10px] font-bold text-text-700">Enter Paybill: {mpesaDetails.paybill}</li>
+          <li className="text-[10px] font-bold text-text-700">Account: {mpesaDetails.accountNumber}</li>
+        </ol>
+      </div>
 
-        <div className="mpesa-instructions">
-          <h4>How to pay manually:</h4>
-          <ol className="instruction-list">
-            <li>Go to M-Pesa menu on your phone</li>
-            <li>
-              Select <strong>Lipa na M-Pesa</strong>, then <strong>Pay Bill</strong>
-            </li>
-            <li>
-              Enter Pay Bill Number: <strong>{paybill}</strong>
-            </li>
-            <li>
-              Enter Account Reference: <strong>{accountNumber}</strong>
-            </li>
-            {amount > 0 && (
-              <li>
-                Enter Amount: <strong>{amount.toLocaleString()}</strong>
-              </li>
-            )}
-            <li>Enter your M-Pesa PIN and confirm</li>
-          </ol>
-        </div>
-
-        <div className="mpesa-security">
-          <span className="security-badge">Secure Payment</span>
-          <p>Your transaction is protected by M-Pesa security protocols.</p>
-          {mpesaDetails.environment && (
-            <p>
-              Environment: <strong>{mpesaDetails.environment}</strong>
-            </p>
-          )}
-          {loadError && <p>{loadError}</p>}
-        </div>
+      <div className="flex items-center justify-center gap-2 text-text-400">
+        <ShieldCheck size={14} className="text-success" />
+        <span className="text-[9px] font-bold uppercase tracking-widest">GSMA Certified Gateway</span>
       </div>
     </div>
   );

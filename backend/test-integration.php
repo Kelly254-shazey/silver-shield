@@ -229,7 +229,7 @@ if ($failed > 0) {
     echo "5. Run this test again\n";
 } else {
     echo "Next Steps:\n";
-    echo "1. Start backend: php -S localhost:8000\n";
+    echo "1. Start backend: php -S localhost:8000 router.php\n";
     echo "2. Start frontend: npm run dev (in frontend folder)\n";
     echo "3. Open http://localhost:5173\n";
     echo "4. Backend will connect automatically\n";

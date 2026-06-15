@@ -71,20 +71,30 @@ class Utils {
     }
 
     public static function getPathSegments() {
-        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '';
+        $path = '';
 
-        $appBasePath = rtrim((string)Env::get('APP_BASE_PATH', ''), '/');
-        if ($appBasePath !== '' && strpos($path, $appBasePath . '/') === 0) {
-            $path = substr($path, strlen($appBasePath));
-        } elseif ($appBasePath !== '' && $path === $appBasePath) {
-            $path = '/';
-        } else {
+        if (!empty($_SERVER['PATH_INFO'])) {
+            $path = $_SERVER['PATH_INFO'];
+        } elseif (!empty($_SERVER['REQUEST_URI'])) {
+            $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '';
             $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-            if (basename($scriptName) === 'index.php') {
-                $basePath = dirname($scriptName);
-                if ($basePath !== '/' && strpos($path, $basePath) === 0) {
-                    $path = substr($path, strlen($basePath));
-                }
+            // Normalize and compare without a leading slash so comparisons work
+            $normalizedPath = preg_replace('#/+#', '/', $path);
+            $trimmedPath = ltrim($normalizedPath, '/');
+            $trimmedScript = ltrim((string)$scriptName, '/');
+            if ($trimmedScript !== '' && strpos($trimmedPath, $trimmedScript) === 0) {
+                $path = substr($trimmedPath, strlen($trimmedScript));
+            } else {
+                $path = $trimmedPath;
+            }
+        }
+
+        $appBasePath = trim((string)Env::get('APP_BASE_PATH', ''), '/');
+        if ($appBasePath !== '') {
+            if (strpos($path, $appBasePath . '/') === 0) {
+                $path = substr($path, strlen($appBasePath) + 1);
+            } elseif ($path === $appBasePath) {
+                $path = '';
             }
         }
 

@@ -3,6 +3,21 @@
  * Stories Routes
  */
 class StoryRoutes {
+    private static function storyColumns() {
+        $columns = Database::query("SHOW COLUMNS FROM stories");
+        return array_map(function ($column) { return $column['Field']; }, $columns);
+    }
+
+    private static function filterFields($fields, $columns) {
+        $filtered = [];
+        foreach ($fields as $field => $value) {
+            if (in_array($field, $columns, true)) {
+                $filtered[$field] = $value;
+            }
+        }
+        return $filtered;
+    }
+
     public static function handleList() {
         if (Utils::getRequestMethod() !== 'GET') {
             Utils::errorResponse('Method not allowed', 405);
@@ -35,18 +50,18 @@ class StoryRoutes {
                 INSERT INTO stories (title, slug, content, excerpt, author, heroImage, status, createdAt)
                 VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
             ";
-            Database::execute($sql, [
+            Database::query($sql, [
                 $input['title'] ?? '',
                 Utils::createSlug($input['slug'] ?? $input['title'] ?? ''),
                 $input['content'] ?? '',
                 $input['excerpt'] ?? '',
                 $input['author'] ?? '',
-                $input['coverImage'] ?? $input['heroImage'] ?? '',
+                $input['heroImage'] ?? $input['coverImage'] ?? '',
                 $input['status'] ?? 'published'
             ]);
 
             $storyId = Database::getConnection()->insert_id;
-            Database::execute(
+            Database::query(
                 "UPDATE stories SET coverImage = ?, category = ?, programSlug = ?, tags = ? WHERE id = ?",
                 [
                     $input['coverImage'] ?? $input['heroImage'] ?? '',
@@ -97,24 +112,39 @@ class StoryRoutes {
         $input = Utils::getJsonInput();
 
         try {
-            Database::execute(
-                "UPDATE stories SET title = ?, slug = ?, excerpt = ?, content = ?, coverImage = ?, heroImage = ?, category = ?, programSlug = ?, author = ?, tags = ?, status = ?, updatedAt = NOW() WHERE id = ? OR slug = ?",
-                [
-                    $input['title'] ?? '',
-                    Utils::createSlug($input['slug'] ?? $input['title'] ?? $id),
-                    $input['excerpt'] ?? '',
-                    $input['content'] ?? '',
-                    $input['coverImage'] ?? '',
-                    $input['coverImage'] ?? '',
-                    $input['category'] ?? '',
-                    $input['programSlug'] ?? '',
-                    $input['author'] ?? '',
-                    json_encode($input['tags'] ?? []),
-                    $input['status'] ?? 'published',
-                    $id,
-                    $id
-                ]
-            );
+            $columns = self::storyColumns();
+            $fields = self::filterFields([
+                'title'       => $input['title'] ?? '',
+                'slug'        => Utils::createSlug($input['slug'] ?? $input['title'] ?? $id),
+                'excerpt'     => $input['excerpt'] ?? '',
+                'content'     => $input['content'] ?? '',
+                'coverImage'  => $input['coverImage'] ?? '',
+                'heroImage'   => $input['coverImage'] ?? $input['heroImage'] ?? '',
+                'category'    => $input['category'] ?? '',
+                'programSlug' => $input['programSlug'] ?? '',
+                'author'      => $input['author'] ?? '',
+                'tags'        => json_encode($input['tags'] ?? []),
+                'status'      => $input['status'] ?? 'published'
+            ], $columns);
+
+            if (in_array('updatedAt', $columns, true)) {
+                $fields['updatedAt'] = date('Y-m-d H:i:s');
+            }
+
+            if (empty($fields)) {
+                Utils::errorResponse('No valid fields to update', 400);
+            }
+
+            $sets = [];
+            $params = [];
+            foreach ($fields as $field => $value) {
+                $sets[] = "$field = ?";
+                $params[] = $value;
+            }
+            $params[] = $id;
+            $params[] = $id;
+
+            Database::query("UPDATE stories SET " . implode(', ', $sets) . " WHERE id = ? OR slug = ?", $params);
             Utils::jsonResponse(['message' => 'Story updated successfully']);
         } catch (Exception $e) {
             error_log('Stories update error: ' . $e->getMessage());
@@ -130,7 +160,7 @@ class StoryRoutes {
         Auth::requireAdmin();
 
         try {
-            Database::execute("DELETE FROM stories WHERE id = ? OR slug = ?", [$id, $id]);
+            Database::query("DELETE FROM stories WHERE id = ? OR slug = ?", [$id, $id]);
             Utils::jsonResponse(['message' => 'Story deleted successfully']);
         } catch (Exception $e) {
             error_log('Stories delete error: ' . $e->getMessage());

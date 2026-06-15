@@ -67,5 +67,5 @@ foreach ($requiredFiles as $file) {
 echo "\n";
 echo "Setup Verification Complete!\n\n";
 echo "To start the dev server, run:\n";
-echo "  php -S localhost:8000 -t .\n\n";
+echo "  php -S localhost:8000 router.php\n\n";
 echo "Then access: http://localhost:8000/api/health\n";

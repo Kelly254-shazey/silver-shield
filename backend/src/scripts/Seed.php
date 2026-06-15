@@ -67,7 +67,7 @@ class DatabaseSeeder {
                     'summary' => 'Mentorship, digital labs, and scholarships for girls in underserved schools.',
                     'description' => 'Silver Shield runs a 12-month STEM fellowship with laptop grants, coding clubs, and leadership coaching.',
                     'category' => 'Education',
-                    'location' => 'Nairobi, Kenya'
+                    'location' => 'kandui, Kenya'
                 ],
                 [
                     'title' => 'Community Health Outreach',

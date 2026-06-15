@@ -1,202 +1,101 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  Send,
+  Sparkles,
+  User,
+  Building2,
+  Upload,
+  Handshake,
+  HeartHandshake,
+  MessageSquare,
+} from "lucide-react";
 import PageTransition from "../components/PageTransition";
 import { apiFetch } from "../app/api";
 import { useToast } from "../context/ToastContext";
 import { useDialog } from "../context/DialogContext";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 
 const detailCards = [
-  { title: "Email", value: "Shieldsilver105@gmail.com" },
-  { title: "Phone", value: "0726 836021 / 0115 362421" },
-  { title: "Location", value: "Community Impact Centre, Nairobi, Kenya" },
-  { title: "Working Hours", value: "Mon - Fri, 8:00 AM - 5:00 PM" },
+  { title: "Email", value: "Shieldsilver105@gmail.com", icon: <Mail size={18} /> },
+  { title: "Phone", value: "0726 836021 / 0115 362421", icon: <Phone size={18} /> },
+  { title: "Location", value: "Community Impact Centre, Kanduyi, Bungoma", icon: <MapPin size={18} /> },
+  { title: "Working Hours", value: "Mon - Fri, 8:00 AM - 5:00 PM", icon: <Clock size={18} /> },
 ];
+
+const INITIAL_FORM_DATA = {
+  fullName: "",
+  email: "",
+  phone: "",
+  subject: "",
+  message: "",
+  website: "",
+  inquiryType: "general",
+  partnerCompanyName: "",
+  partnerDescription: "",
+  partnerRequirements: null,
+  volunteerSkills: "",
+  volunteerAvailability: "",
+};
 
 function ContactPage() {
   const [searchParams] = useSearchParams();
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: "",
-    website: "",
-    inquiryType: "general", // general, partner, volunteer
-    partnerCompanyName: "",
-    partnerDescription: "",
-    partnerRequirements: null,
-    volunteerSkills: "",
-    volunteerAvailability: "",
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [aiDoc, setAiDoc] = useState(null);
-  const [aiLoading, setAiLoading] = useState(true);
   const [fileError, setFileError] = useState("");
   const { pushToast } = useToast();
   const { showConfirm } = useDialog();
 
-  useEffect(() => {
-    let mounted = true;
-
-    const loadAiInfo = async () => {
-      try {
-        const [aiRes, contactRes] = await Promise.all([
-          apiFetch("/docs/public?category=ai&limit=1"),
-          apiFetch("/docs/public?category=contact&limit=1"),
-        ]);
-        if (!mounted) {
-          return;
-        }
-        setAiDoc((aiRes.data || [])[0] || (contactRes.data || [])[0] || null);
-      } catch {
-        if (mounted) {
-          setAiDoc(null);
-        }
-      } finally {
-        if (mounted) {
-          setAiLoading(false);
-        }
-      }
-    };
-
-    loadAiInfo();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
+ useEffect(() => {
     const inquiry = String(searchParams.get("inquiry") || "").toLowerCase();
-    if (!["partner", "volunteer"].includes(inquiry)) {
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      inquiryType: inquiry,
-      partnerRequirements: inquiry === "partner" ? prev.partnerRequirements : null,
-    }));
-    setFileError("");
-
-    const formElement = document.getElementById("contact-form");
-    if (formElement) {
-      formElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (["partner", "volunteer"].includes(inquiry)) {
+      setFormData((prev) => ({ ...prev, inquiryType: inquiry }));
+      const el = document.getElementById("contact-form");
+      if (el)
+        setTimeout(
+          () => el.scrollIntoView({ behavior: "smooth", block: "start" }),
+          100
+        );
     }
   }, [searchParams]);
 
-  const focusContactForm = (inquiryType) => {
-    setFormData((prev) => ({
-      ...prev,
-      inquiryType,
-      partnerRequirements:
-        inquiryType === "partner" ? prev.partnerRequirements : null,
-    }));
-    setFileError("");
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.website)
+      return pushToast("Bot detection triggered.", "error");
 
-    const formElement = document.getElementById("contact-form");
-    if (formElement) {
-      formElement.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
-  const onSubmit = async (event) => {
-    event.preventDefault();
-    if (formData.website) {
-      pushToast("Submission rejected.", "error");
-      return;
-    }
-
-    if (!formData.fullName || !formData.email || !formData.subject || !formData.message) {
-      pushToast("Please complete all required fields.", "error");
-      return;
-    }
-
-    if (formData.inquiryType === "partner" && !formData.partnerCompanyName) {
-      pushToast("Please provide your company/organization name.", "error");
-      return;
-    }
-
-    if (formData.inquiryType === "partner" && !formData.partnerRequirements) {
-      pushToast("Please upload your partnership requirements.", "error");
-      return;
-    }
-
-    if (formData.inquiryType === "volunteer" && !formData.volunteerSkills) {
-      pushToast("Please tell us about your skills and interests.", "error");
-      return;
-    }
-
-    // Show confirmation dialog
     showConfirm({
-      title: "Send Message",
-      message: `Are you sure you want to submit this ${formData.inquiryType} inquiry to Silver Shield? We'll get back to you shortly.`,
-      confirmText: "Yes, Send",
-      cancelText: "Cancel",
-      variant: "primary",
+      title: "Confirm Submission",
+      message: `Send this ${formData.inquiryType} inquiry to our community support team?`,
+      confirmText: "Deliver Message",
       onConfirm: async () => {
         setLoading(true);
         try {
           if (formData.inquiryType === "partner") {
-            const formDataObj = new FormData();
-            formDataObj.append("fullName", formData.fullName);
-            formDataObj.append("email", formData.email);
-            formDataObj.append("phone", formData.phone);
-            formDataObj.append("subject", formData.subject);
-            formDataObj.append("message", formData.message);
-            formDataObj.append("inquiryType", formData.inquiryType);
-            formDataObj.append("partnerCompanyName", formData.partnerCompanyName);
-            formDataObj.append("partnerDescription", formData.partnerDescription);
-            formDataObj.append("file", formData.partnerRequirements);
-
+            const fd = new FormData();
+            Object.entries(formData).forEach(([k, v]) => {
+              if (k !== "partnerRequirements") fd.append(k, v);
+            });
+            if (formData.partnerRequirements)
+              fd.append("file", formData.partnerRequirements);
             await apiFetch("/messages", {
               method: "POST",
-              body: formDataObj,
+              body: fd,
               useFormData: true,
             });
           } else {
-            const body = {
-              fullName: formData.fullName,
-              email: formData.email,
-              phone: formData.phone,
-              subject: formData.subject,
-              message: formData.message,
-              inquiryType: formData.inquiryType,
-            };
-
-            if (formData.inquiryType === "partner") {
-              body.partnerCompanyName = formData.partnerCompanyName;
-              body.partnerDescription = formData.partnerDescription;
-            }
-
-            if (formData.inquiryType === "volunteer") {
-              body.volunteerSkills = formData.volunteerSkills;
-              body.volunteerAvailability = formData.volunteerAvailability;
-            }
-
-            await apiFetch("/messages", {
-              method: "POST",
-              body,
-            });
+            await apiFetch("/messages", { method: "POST", body: formData });
           }
-
           setSubmitted(true);
-          setFormData({
-            fullName: "",
-            email: "",
-            phone: "",
-            subject: "",
-            message: "",
-            website: "",
-            inquiryType: "general",
-            partnerCompanyName: "",
-            partnerDescription: "",
-            partnerRequirements: null,
-            volunteerSkills: "",
-            volunteerAvailability: "",
-          });
-          pushToast("Message sent successfully.", "success");
+          pushToast("Transmission received. We'll be in touch.", "success");
+          setFormData(INITIAL_FORM_DATA);
+          setTimeout(() => setSubmitted(false), 5000);
         } catch (error) {
           pushToast(error.message, "error");
         } finally {
@@ -206,244 +105,359 @@ function ContactPage() {
     });
   };
 
-  const handleFileChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      setFileError("");
-      setFormData((prev) => ({ ...prev, partnerRequirements: null }));
-      return;
-    }
-
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      setFileError("File size must be less than 5MB");
-      setFormData((prev) => ({ ...prev, partnerRequirements: null }));
-      event.target.value = "";
-      return;
-    }
-
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return setFormData((p) => ({ ...p, partnerRequirements: null }));
+    if (file.size > 5 * 1024 * 1024)
+      return setFileError("File exceeds 5MB limit");
     setFileError("");
-    setFormData((prev) => ({ ...prev, partnerRequirements: file }));
+    setFormData((p) => ({ ...p, partnerRequirements: file }));
   };
 
   return (
-    <PageTransition className="page-space">
-      <section className="mini-hero container glass-panel">
-        <p className="eyebrow">Contact</p>
-        <h1>Contact Silver Shield</h1>
-      </section>
-
-      <section className="container section contact-layout">
-        <article className="glass-card contact-cta">
-          <div className="contact-cta-row">
-            <div>
-              <h2>Interested in Partnership Opportunities?</h2>
-              <p>
-                Join us in creating lasting community impact. We are looking for
-                organizations, sponsors, and passionate volunteers.
-              </p>
-            </div>
-            <div className="contact-cta-actions">
-              <button
-                className="btn btn-primary"
-                type="button"
-                onClick={() => focusContactForm("partner")}
-              >
-                Partner With Us
-              </button>
-            </div>
-          </div>
-        </article>
-
-        <article className="glass-card contact-info-panel">
-          <h2>Reach Us</h2>
-          <div className="contact-detail-list">
-            {detailCards.map((item) => (
-              <article key={item.title} className="contact-detail-card">
-                <h3>{item.title}</h3>
-                <p>{item.value}</p>
-              </article>
-            ))}
-          </div>
-          <div className="map-embed">
-            <iframe
-              title="Silver Shield Location"
-              src="https://www.openstreetmap.org/export/embed.html?bbox=36.78%2C-1.34%2C36.88%2C-1.24&layer=mapnik"
-            />
-          </div>
-
-          <article className="contact-detail-card ai-contact-card">
-            <h3>AI Assistant Information</h3>
-            {aiLoading ? (
-              <p>Loading approved AI information...</p>
-            ) : aiDoc ? (
-              <>
-                <p className="ai-contact-title">{aiDoc.title}</p>
-                <p>
-                  {String(aiDoc.content || "").slice(0, 320)}
-                  {String(aiDoc.content || "").length > 320 ? "..." : ""}
-                </p>
-                <small>
-                  Source: Admin Documentation Center ({aiDoc.category || "general"})
-                </small>
-              </>
-            ) : (
-              <p>
-                Our AI assistant gives grounded answers from approved documentation. Admin can
-                update this from Documentation Center using category <strong>ai</strong>.
-              </p>
-            )}
-          </article>
-        </article>
-
-        <form className="glass-card contact-form" id="contact-form" onSubmit={onSubmit}>
-          <h2>Send Us a Message</h2>
-          
-          <div className="form-group">
-            <label htmlFor="inquiryType">Inquiry Type</label>
-            <select
-              id="inquiryType"
-              value={formData.inquiryType}
-              onChange={(event) => {
-                const nextType = event.target.value;
-                setFormData((prev) => ({
-                  ...prev,
-                  inquiryType: nextType,
-                  partnerRequirements:
-                    nextType === "partner" ? prev.partnerRequirements : null,
-                }));
-                setFileError("");
-              }}
+    <PageTransition>
+      <div className="flex flex-col gap-20 pb-24">
+        {/* Slim Hero */}
+        <section className="section-hero bg-brand-900 overflow-hidden relative">
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(circle at 50% 120%, var(--brand-600) 0%, transparent 60%)",
+              opacity: 0.2,
+            }}
+          />
+          <div className="container relative z-10 text-center">
+            <motion.span
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="label text-accent-400 mb-5 block"
             >
-              <option value="general">General Inquiry</option>
-              <option value="partner">Partner With Us</option>
-              <option value="volunteer">Volunteer With Us</option>
-            </select>
-            <small>
-              Choose <strong>Partner With Us</strong> to upload your requirements
-              or <strong>Volunteer With Us</strong> to share your skills.
-            </small>
+              Get in Touch
+            </motion.span>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="h1 text-white"
+            >
+              Connect with{" "}
+              <span className="text-brand-400">Shield</span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="body-lg text-brand-100/70 max-w-2xl mx-auto mt-6"
+            >
+              Whether you are looking to partner, volunteer, or just say hello,
+              we are here to listen.
+            </motion.p>
           </div>
+        </section>
 
-          <div className="field-grid two">
-            <input
-              placeholder="Full name"
-              required
-              value={formData.fullName}
-              onChange={(event) =>
-                setFormData((prev) => ({ ...prev, fullName: event.target.value }))
-              }
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              required
-              value={formData.email}
-              onChange={(event) =>
-                setFormData((prev) => ({ ...prev, email: event.target.value }))
-              }
-            />
-          </div>
-          <input
-            placeholder="Phone (optional)"
-            value={formData.phone}
-            onChange={(event) =>
-              setFormData((prev) => ({ ...prev, phone: event.target.value }))
-            }
-          />
-          <input
-            placeholder="Subject"
-            required
-            value={formData.subject}
-            onChange={(event) =>
-              setFormData((prev) => ({ ...prev, subject: event.target.value }))
-            }
-          />
+        {/* Contact Bento */}
+        <section className="section">
+          <div className="container grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
+            {/* Left Column */}
+          <div className="xl:col-span-4 flex flex-col gap-7">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4">
+              {detailCards.map((card, i) => (
+                <motion.div
+                  key={i}
+                  className="card p-6 md:p-8 flex flex-col gap-3 border border-border-subtle"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-brand-100 flex items-center justify-center text-brand-800 shadow-sm">
+                    {card.icon}
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="label text-text-400">
+                      {card.title}
+                    </span>
+                    <span className="text-xs font-bold text-brand-900 break-words leading-tight">
+                      {card.value}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
 
-          {formData.inquiryType === "partner" && (
-            <>
-              <input
-                placeholder="Company/Organization Name"
-                required
-                value={formData.partnerCompanyName}
-                onChange={(event) =>
-                  setFormData((prev) => ({ ...prev, partnerCompanyName: event.target.value }))
-                }
-              />
-              <textarea
-                rows={3}
-                placeholder="Tell us about your organization and how you'd like to partner with us"
-                value={formData.partnerDescription}
-                onChange={(event) =>
-                  setFormData((prev) => ({ ...prev, partnerDescription: event.target.value }))
-                }
-              />
-              <div className="form-group">
-                <label htmlFor="partnerRequirements">Upload Partnership Requirements/Proposal</label>
-                <input
-                  id="partnerRequirements"
-                  type="file"
-                  accept=".pdf,.doc,.docx,.txt,.xls,.xlsx"
-                  required={formData.inquiryType === "partner"}
-                  onChange={handleFileChange}
+            <div className="bg-brand-900 text-white p-8 md:p-10 rounded-[32px] border border-white/10 shadow-lg relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                <div
+                  className="absolute -bottom-1/2 -right-1/4 w-full h-full rounded-full"
+                  style={{
+                    background: "var(--accent-600)",
+                    filter: "blur(60px)",
+                    opacity: 0.15,
+                  }}
                 />
-                {formData.partnerRequirements && (
-                  <p className="file-info">File selected: {formData.partnerRequirements.name}</p>
-                )}
-                {fileError && <p className="error-text">{fileError}</p>}
-                <small>Accepted formats: PDF, DOC, DOCX, TXT, XLS, XLSX (max 5MB)</small>
               </div>
-            </>
-          )}
-
-          {formData.inquiryType === "volunteer" && (
-            <>
-              <textarea
-                rows={3}
-                placeholder="Tell us about your skills and interests"
-                required
-                value={formData.volunteerSkills}
-                onChange={(event) =>
-                  setFormData((prev) => ({ ...prev, volunteerSkills: event.target.value }))
-                }
+              
+            <div className="card overflow-hidden h-56 group bg-surface-200 border border-border-subtle">
+              <iframe
+                title="Location Map"
+                className="w-full h-full border-none"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=34.50%2C0.53%2C34.60%2C0.59&layer=mapnik"
               />
-              <input
-                placeholder="Your availability (e.g., Weekends, Evenings, Full-time)"
-                value={formData.volunteerAvailability}
-                onChange={(event) =>
-                  setFormData((prev) => ({ ...prev, volunteerAvailability: event.target.value }))
-                }
-              />
-            </>
-          )}
+            </div>
+          </div>
+          </div>
 
-          <textarea
-            rows={6}
-            placeholder="Message"
-            required
-            value={formData.message}
-            onChange={(event) =>
-              setFormData((prev) => ({ ...prev, message: event.target.value }))
-            }
-          />
+          {/* Right Column: Form */}
+          <div className="xl:col-span-8">
+            <form
+              id="contact-form"
+              className="card p-8 md:p-12 xl:p-16 flex flex-col gap-8 border border-border-subtle"
+              onSubmit={onSubmit}
+            >
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2.5">
+                  <MessageSquare size={18} className="text-accent-600" />
+                  <span className="label text-brand-800">Official Inquiry</span>
+                </div>
+                <h2 className="h2 text-brand-900 uppercase tracking-tight">
+                  Leave a{" "}
+                  <span className="text-brand-600">Message</span>
+                </h2>
+              </div>
 
-          <input
-            className="hidden-field"
-            tabIndex={-1}
-            autoComplete="off"
-            placeholder="Do not fill"
-            value={formData.website}
-            onChange={(event) =>
-              setFormData((prev) => ({ ...prev, website: event.target.value }))
-            }
-          />
+              <div className="flex flex-col gap-7">
+                {/* Inquiry Type */}
+                <div className="flex flex-col gap-3">
+                  <label className="form-label text-brand-800">
+                    Type of Connection
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                    {[
+                      { id: "general", label: "General", icon: <User size={13} /> },
+                      { id: "partner", label: "Partner", icon: <Handshake size={13} /> },
+                      { id: "volunteer", label: "Volunteer", icon: <HeartHandshake size={13} /> },
+                    ].map((type) => (
+                      <button
+                        key={type.id}
+                        type="button"
+                        className={`flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border border-border-subtle cursor-pointer ${
+                          formData.inquiryType === type.id
+                            ? "bg-brand-900 text-white shadow-lg"
+                            : "bg-surface-200 text-text-500 hover:bg-brand-100"
+                        }`}
+                        onClick={() =>
+                          setFormData((p) => ({
+                            ...p,
+                            inquiryType: type.id,
+                          }))
+                        }
+                      >
+                        {type.icon} {type.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-          <button className="btn btn-primary" type="submit" disabled={loading}>
-            {loading ? "Sending..." : "Send Message"}
-          </button>
-          {submitted && <p className="success-text">Thank you. We received your message.</p>}
-        </form>
-      </section>
+                {/* Name + Email */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="flex flex-col gap-2">
+                    <label className="form-label text-brand-800">Full Name</label>
+                    <input
+                      className="input-field"
+                      placeholder="John Doe"
+                      required
+                      value={formData.fullName}
+                      onChange={(e) =>
+                        setFormData((p) => ({
+                          ...p,
+                          fullName: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="form-label text-brand-800">Email Address</label>
+                    <input
+                      className="input-field"
+                      placeholder="john@example.com"
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData((p) => ({
+                          ...p,
+                          email: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Subject */}
+                <div className="flex flex-col gap-2">
+                  <label className="form-label text-brand-800">Inquiry Subject</label>
+                  <input
+                    className="input-field"
+                    placeholder="How can we help?"
+                    required
+                    value={formData.subject}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        subject: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
+                <AnimatePresence mode="wait">
+                  {formData.inquiryType === "partner" && (
+                    <motion.div
+                      key="partner"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex flex-col gap-5 overflow-hidden"
+                    >
+                      <div className="flex flex-col gap-2">
+                        <label className="form-label text-brand-800">Organization Name</label>
+                        <input
+                          className="input-field"
+                          placeholder="Global Impact Corp"
+                          required
+                          value={formData.partnerCompanyName}
+                          onChange={(e) =>
+                            setFormData((p) => ({
+                              ...p,
+                              partnerCompanyName: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="form-label text-brand-800">Brief Overview / Sector</label>
+                        <input
+                          className="input-field"
+                          placeholder="e.g. Healthcare, Education, FinTech..."
+                          required
+                          value={formData.partnerDescription}
+                          onChange={(e) =>
+                            setFormData((p) => ({
+                              ...p,
+                              partnerDescription: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="form-label text-brand-800">Proposal Documents (PDF/DOCX)</label>
+                        <label className="flex items-center justify-center gap-2 w-full py-3.5 px-5 bg-brand-100 rounded-md cursor-pointer hover:bg-brand-200 transition-colors border-2 border-dashed border-brand-800/20 text-brand-800 font-bold text-[10px] uppercase tracking-widest">
+                          <Upload size={16} />
+                          {formData.partnerRequirements
+                            ? formData.partnerRequirements.name
+                            : "Select Proposal File"}
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".pdf,.doc,.docx"
+                            onChange={handleFileChange}
+                            required={formData.inquiryType === "partner"}
+                          />
+                        </label>
+                        {fileError && (
+                          <span className="input-error-text">{fileError}</span>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {formData.inquiryType === "volunteer" && (
+                    <motion.div
+                      key="volunteer"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex flex-col gap-2 overflow-hidden"
+                    >
+                      <label className="form-label text-brand-800">
+                        Availability & Skills
+                      </label>
+                      <input
+                        className="input-field"
+                        placeholder="e.g. Weekends, Mentorship, Web Design"
+                        required
+                        value={formData.volunteerSkills}
+                        onChange={(e) =>
+                          setFormData((p) => ({
+                            ...p,
+                            volunteerSkills: e.target.value,
+                          }))
+                        }
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Message */}
+                <div className="flex flex-col gap-2">
+                  <label className="form-label text-brand-800">
+                    Detailed Message
+                  </label>
+                  <textarea
+                    className="textarea-field min-h-[140px] rounded-xl resize-y leading-relaxed"
+                    placeholder="Share your thoughts with us..."
+                    required
+                    value={formData.message}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        message: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
+                {/* Honeypot */}
+                <input
+                  className="hidden opacity-0 absolute -z-10"
+                  value={formData.website}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, website: e.target.value }))
+                  }
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-5 pt-6 border-t border-border-subtle">
+                <p className="text-xs text-text-400 font-semibold uppercase tracking-wider max-w-[220px]">
+                  By sending, you agree to our privacy protocols.
+                </p>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-primary px-10 py-4 shadow-lg w-full sm:w-auto"
+                >
+                  {loading ? (
+                    "Delivering..."
+                  ) : (
+                    <>
+                      <Send size={16} /> Send Narrative
+                    </>
+                  )}
+                </button>
+              </div>
+              {submitted && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center text-success font-bold text-xs uppercase tracking-widest"
+                >
+                  Message successfully delivered to Shield Support.
+                </motion.p>
+              )}
+            </form>
+          </div>
+          </div>
+        </section>
+      </div>
     </PageTransition>
   );
 }
