@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS programs (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  parentId INT NULL,
   title VARCHAR(255) NOT NULL,
   slug VARCHAR(255) NOT NULL UNIQUE,
   summary TEXT NULL,
@@ -27,7 +28,24 @@ CREATE TABLE IF NOT EXISTS programs (
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_programs_slug (slug),
-  INDEX idx_programs_status (status)
+  INDEX idx_programs_status (status),
+  INDEX idx_programs_parent (parentId)
+);
+
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) NOT NULL UNIQUE,
+  excerpt TEXT NULL,
+  content LONGTEXT NULL,
+  coverImage VARCHAR(512) NULL,
+  category VARCHAR(120) NULL,
+  author VARCHAR(255) NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'published',
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_blog_posts_slug (slug),
+  INDEX idx_blog_posts_status (status)
 );
 
 CREATE TABLE IF NOT EXISTS stories (

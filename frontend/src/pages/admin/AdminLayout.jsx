@@ -17,7 +17,9 @@ import {
   Globe,
   Menu,
   ChevronRight,
-  User
+  User,
+  Newspaper,
+  GitBranch
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import LogoBrand from "../../components/LogoBrand";
@@ -25,6 +27,8 @@ import LogoBrand from "../../components/LogoBrand";
 const navItems = [
   { to: "/admin/dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
   { to: "/admin/programs", label: "Programs", icon: <Briefcase size={20} /> },
+  { to: "/admin/sub-programs", label: "Sub-Programs", icon: <GitBranch size={20} /> },
+  { to: "/admin/blog", label: "Blog", icon: <Newspaper size={20} /> },
   { to: "/admin/stories", label: "Stories", icon: <BookOpen size={20} /> },
   { to: "/admin/impact", label: "Impact Stats", icon: <BarChart3 size={20} /> },
   { to: "/admin/partners", label: "Partners", icon: <Users2 size={20} /> },

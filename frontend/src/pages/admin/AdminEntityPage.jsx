@@ -8,19 +8,23 @@ import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { useDialog } from "../../context/DialogContext";
 
-const numericFields = new Set(["goalAmount", "raisedAmount", "value", "trend", "orderIndex"]);
+const numericFields = new Set(["parentId", "goalAmount", "raisedAmount", "value", "trend", "orderIndex"]);
 const arrayFields = new Set(["tags", "galleryImages"]);
 const imageFields = new Set(["heroImage", "coverImage", "galleryImages", "logoUrl", "videoUrl"]);
 const largeTextFields = new Set(["description", "content", "summary", "excerpt"]);
 const dateTimeFields = new Set(["eventDate", "publishedAt"]);
 const previewColumnsByEndpoint = {
   "/programs": ["title", "category", "status", "summary"],
+  "/sub-programs": ["title", "parentId", "status", "summary"],
+  "/blog": ["title", "status", "author", "category"],
   "/events": ["title", "status", "eventDate", "location"],
   "/stories": ["title", "status", "author", "category"],
 };
 
 const statusOptionsByEndpoint = {
   "/programs": ["active", "draft", "archived"],
+  "/sub-programs": ["active", "draft", "archived"],
+  "/blog": ["published", "draft"],
   "/stories": ["published", "draft"],
   "/events": ["upcoming", "ongoing", "completed", "draft"],
 };
@@ -102,7 +106,7 @@ function AdminEntityPage({ title, endpoint, fields }) {
   const statusOptions = useMemo(() => statusOptionsByEndpoint[endpoint] || null, [endpoint]);
 
   const load = async () => {
-    const querySuffix = ["/programs", "/stories", "/events"].includes(endpoint) ? "?admin=true" : "";
+    const querySuffix = ["/programs", "/sub-programs", "/blog", "/stories", "/events"].includes(endpoint) ? "?admin=true" : "";
     const response = await apiFetch(`${endpoint}${querySuffix}`, { token });
     setItems(response.data || []);
   };

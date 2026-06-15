@@ -20,6 +20,17 @@ class Router {
         $this->routes['GET /api/programs/{id}'] = [ProgramRoutes::class, 'handleGet'];
         $this->routes['PUT /api/programs/{id}'] = [ProgramRoutes::class, 'handleUpdate'];
         $this->routes['DELETE /api/programs/{id}'] = [ProgramRoutes::class, 'handleDelete'];
+        $this->routes['GET /api/sub-programs'] = [ProgramRoutes::class, 'handleSubList'];
+        $this->routes['POST /api/sub-programs'] = [ProgramRoutes::class, 'handleSubCreate'];
+        $this->routes['PUT /api/sub-programs/{id}'] = [ProgramRoutes::class, 'handleSubUpdate'];
+        $this->routes['DELETE /api/sub-programs/{id}'] = [ProgramRoutes::class, 'handleSubDelete'];
+
+        // Blog routes
+        $this->routes['GET /api/blog'] = [BlogRoutes::class, 'handleList'];
+        $this->routes['POST /api/blog'] = [BlogRoutes::class, 'handleCreate'];
+        $this->routes['GET /api/blog/{id}'] = [BlogRoutes::class, 'handleGet'];
+        $this->routes['PUT /api/blog/{id}'] = [BlogRoutes::class, 'handleUpdate'];
+        $this->routes['DELETE /api/blog/{id}'] = [BlogRoutes::class, 'handleDelete'];
 
         // Stories routes
         $this->routes['GET /api/stories'] = [StoryRoutes::class, 'handleList'];

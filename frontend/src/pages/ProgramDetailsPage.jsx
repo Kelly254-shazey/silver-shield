@@ -66,7 +66,7 @@ function ProgramDetailsPage() {
           </div>
         </header>
 
-        <section className="container -mt-20 relative z-20">
+        <section className="container mt-12 relative z-20">
           <div className="flex flex-col gap-20">
             {/* Main Stats/Description */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -112,7 +112,7 @@ function ProgramDetailsPage() {
                   <h2 className="h2 text-brand-900 uppercase tracking-tight">Focus Initiatives</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                <div className="subprogram-grid">
                   {program.sub_programs.map((sub, i) => (
                     <motion.div
                       key={sub.id}
@@ -121,21 +121,21 @@ function ProgramDetailsPage() {
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.1 }}
                       whileHover={{ y: -12 }}
-                      className="program-card group"
+                      className="subprogram-card group"
                     >
-                      <div className="program-media">
+                      <div className="subprogram-media">
                         <img
-                          src={resolveMediaUrl(sub.coverImage)}
+                          src={resolveMediaUrl(sub.heroImage || sub.coverImage)}
                           alt={sub.title}
                         />
                         <div className="program-meta">
                            Sub-Program
                         </div>
                       </div>
-                      <div className="program-body">
-                        <h3 className="program-title text-text-900 mb-1 leading-tight uppercase tracking-tight line-clamp-2">{sub.title}</h3>
-                        <p className="program-description line-clamp-2">
-                          {sub.description}
+                      <div className="subprogram-body">
+                        <h3 className="subprogram-title">{sub.title}</h3>
+                        <p className="subprogram-description">
+                          {sub.summary || sub.description}
                         </p>
 
                         <div className="pt-4 mt-2 border-t border-border-subtle flex flex-col gap-4">

@@ -77,6 +77,7 @@ function App() {
                   title="Programs"
                   endpoint="/programs"
                   fields={[
+                    "parentId",
                     "title",
                     "slug",
                     "summary",
@@ -118,10 +119,18 @@ function App() {
                   title="Sub-Programs"
                   endpoint="/sub-programs"
                   fields={[
-                    "program_id",
+                    "parentId",
                     "title",
+                    "slug",
+                    "summary",
                     "description",
-                    "coverImage",
+                    "category",
+                    "heroImage",
+                    "galleryImages",
+                    "goalAmount",
+                    "raisedAmount",
+                    "location",
+                    "status",
                   ]}
                 />
               }

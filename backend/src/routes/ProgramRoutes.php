@@ -35,6 +35,29 @@ class ProgramRoutes {
         }
     }
 
+    public static function handleSubList() {
+        if (Utils::getRequestMethod() !== 'GET') {
+            Utils::errorResponse('Method not allowed', 405);
+        }
+
+        try {
+            self::ensureColumns();
+            $where = empty($_GET['admin'])
+                ? "WHERE parentId IS NOT NULL AND status <> 'archived'"
+                : "WHERE parentId IS NOT NULL";
+            $rows = Database::query("SELECT * FROM programs $where ORDER BY createdAt DESC");
+            foreach ($rows as &$row) {
+                $row['galleryImages'] = json_decode($row['galleryImages'] ?? '[]', true) ?: [];
+                $row['program_id'] = $row['parentId'] ?? null;
+                $row['coverImage'] = $row['heroImage'] ?? '';
+            }
+            Utils::jsonResponse($rows);
+        } catch (Exception $e) {
+            error_log('Sub-programs list error: ' . $e->getMessage());
+            Utils::errorResponse('Failed to fetch sub-programs', 500);
+        }
+    }
+
     public static function handleCreate() {
         if (Utils::getRequestMethod() !== 'POST') {
             Utils::errorResponse('Method not allowed', 405);
@@ -78,6 +101,11 @@ class ProgramRoutes {
             error_log('Programs create error: ' . $e->getMessage());
             Utils::errorResponse('Failed to create program', 500);
         }
+    }
+
+    public static function handleSubCreate() {
+        $_POST['_subProgramRoute'] = true;
+        self::handleCreate();
     }
 
     public static function handleGet($id) {
@@ -159,6 +187,10 @@ class ProgramRoutes {
         }
     }
 
+    public static function handleSubUpdate($id) {
+        self::handleUpdate($id);
+    }
+
     public static function handleDelete($id) {
         if (Utils::getRequestMethod() !== 'DELETE') {
             Utils::errorResponse('Method not allowed', 405);
@@ -173,5 +205,9 @@ class ProgramRoutes {
             error_log('Programs delete error: ' . $e->getMessage());
             Utils::errorResponse('Failed to delete program', 500);
         }
+    }
+
+    public static function handleSubDelete($id) {
+        self::handleDelete($id);
     }
 }
