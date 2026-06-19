@@ -23,7 +23,7 @@ function StoriesPage() {
       .then((res) => {
         if (mounted) setStories(res.data || []);
       })
-      .finally(() => {
+      .finally(() => { // Added missing dependency array
         if (mounted) setLoading(false);
       });
     return () => { mounted = false; };

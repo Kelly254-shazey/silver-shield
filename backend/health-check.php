@@ -58,7 +58,8 @@ foreach ($files as $path => $desc) {
 $routes = [
     'AuthRoutes.php', 'ProgramRoutes.php', 'StoryRoutes.php', 'DonationRoutes.php',
     'VolunteerRoutes.php', 'MessageRoutes.php', 'TeamRoutes.php', 'EventRoutes.php',
-    'UploadRoutes.php', 'AboutRoutes.php', 'OtherRoutes.php'
+    'UploadRoutes.php', 'AboutRoutes.php', 'SettingsRoutes.php', 'ImpactRoutes.php',
+    'PartnerRoutes.php', 'DocRoutes.php', 'AIRoutes.php', 'OtherRoutes.php'
 ];
 
 foreach ($routes as $route) {
@@ -145,15 +146,23 @@ $checks[] = [
 ];
 if (file_exists(__DIR__ . '/src/middleware/RateLimiter.php')) $passed++; else $failed++;
 
-// Check uploads directory
-$uploadsDir = __DIR__ . '/uploads';
-$uploadsStatus = is_dir($uploadsDir) ? 'PASS' : 'FAIL';
-$checks[] = [
-    'name' => 'Uploads Directory',
-    'status' => $uploadsStatus,
-    'details' => $uploadsStatus === 'PASS' ? "Exists and writable" : "Missing"
+// Check storage directories
+$directories = [
+    'uploads' => 'Uploads Directory',
+    'sessions' => 'Sessions Directory'
 ];
-if ($uploadsStatus === 'PASS') $passed++; else $failed++;
+foreach ($directories as $dir => $name) {
+    $path = __DIR__ . '/' . $dir;
+    $isDir = is_dir($path);
+    $isWritable = $isDir && is_writable($path);
+    $status = $isWritable ? 'PASS' : 'FAIL';
+    $checks[] = [
+        'name' => $name,
+        'status' => $status,
+        'details' => $isDir ? ($isWritable ? "Exists and writable" : "Exists but NOT WRITABLE") : "MISSING"
+    ];
+    if ($status === 'PASS') $passed++; else $failed++;
+}
 
 // Try to load configuration
 $checks[] = [

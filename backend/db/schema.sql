@@ -131,9 +131,11 @@ CREATE TABLE IF NOT EXISTS volunteers (
   lastName VARCHAR(120) NULL,
   email VARCHAR(255) NULL UNIQUE,
   phone VARCHAR(32) NULL,
+  location VARCHAR(255) NULL,
   skills TEXT NULL,
   interests TEXT NULL,
   availability VARCHAR(120) NULL,
+  message TEXT NULL,
   status VARCHAR(32) NOT NULL DEFAULT 'active',
   joinedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_volunteers_status (status)
@@ -143,6 +145,7 @@ CREATE TABLE IF NOT EXISTS messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
   senderName VARCHAR(255) NULL,
   senderEmail VARCHAR(255) NULL,
+  phone VARCHAR(32) NULL,
   subject VARCHAR(255) NULL,
   message LONGTEXT NULL,
   type VARCHAR(64) NOT NULL DEFAULT 'inquiry',
@@ -150,6 +153,15 @@ CREATE TABLE IF NOT EXISTS messages (
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_messages_status (status),
   INDEX idx_messages_type (type)
+);
+
+CREATE TABLE IF NOT EXISTS message_replies (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  messageId INT NOT NULL,
+  replyText LONGTEXT NOT NULL,
+  adminName VARCHAR(255) NULL,
+  sentAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_message_replies_message (messageId)
 );
 
 CREATE TABLE IF NOT EXISTS team_members (
@@ -162,6 +174,10 @@ CREATE TABLE IF NOT EXISTS team_members (
   profileImage VARCHAR(512) NOT NULL,
   department VARCHAR(120) NOT NULL DEFAULT 'general',
   linkedinUrl VARCHAR(512) NULL,
+  twitterUrl VARCHAR(512) NULL,
+  facebookUrl VARCHAR(512) NULL,
+  instagramUrl VARCHAR(512) NULL,
+  websiteUrl VARCHAR(512) NULL,
   orderIndex INT NOT NULL DEFAULT 0,
   status VARCHAR(32) NOT NULL DEFAULT 'active',
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -175,8 +191,15 @@ CREATE TABLE IF NOT EXISTS board_members (
   name VARCHAR(255) NOT NULL,
   role VARCHAR(120) NOT NULL,
   credentials TEXT NOT NULL,
+  email VARCHAR(255) NULL,
+  phone VARCHAR(32) NULL,
+  bio TEXT NULL,
   profileImage VARCHAR(512) NOT NULL,
   linkedinUrl VARCHAR(512) NULL,
+  twitterUrl VARCHAR(512) NULL,
+  facebookUrl VARCHAR(512) NULL,
+  instagramUrl VARCHAR(512) NULL,
+  websiteUrl VARCHAR(512) NULL,
   orderIndex INT NOT NULL DEFAULT 0,
   status VARCHAR(32) NOT NULL DEFAULT 'active',
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -215,6 +238,7 @@ CREATE TABLE IF NOT EXISTS impact_stats (
   value INT NOT NULL DEFAULT 0,
   unit VARCHAR(64) NULL,
   trend INT NOT NULL DEFAULT 0,
+  orderIndex INT NOT NULL DEFAULT 0,
   icon VARCHAR(120) NULL,
   reportUrl VARCHAR(512) NULL,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -264,14 +288,3 @@ CREATE TABLE IF NOT EXISTS realtime_events (
   INDEX idx_realtime_created (createdAt)
 );
 
-INSERT IGNORE INTO about (id, title, storyContent, mission, vision, values, heroImage, videoUrl)
-VALUES (
-  1,
-  'About Silver Shield',
-  '',
-  'Shaping lives through mentorship, outreach, and practical opportunity.',
-  'A world where every individual has access to transformative mentorship and support.',
-  'Integrity, Compassion, Excellence',
-  '',
-  ''
-);

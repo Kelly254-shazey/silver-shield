@@ -5,9 +5,6 @@ import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import PaginationControls from "../components/PaginationControls";
 import { apiFetch, resolveMediaUrl } from "../app/api";
-import { getProgramPath } from "../app/programCatalog";
-import { FALLBACK_PROGRAMS } from "../app/fallbackContent";
-import { truncateText } from "../app/text";
 import { useToast } from "../context/ToastContext";
 import { Heart } from "lucide-react";
 
@@ -18,251 +15,309 @@ function ProgramsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("title-asc");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(9);
+
   const { pushToast } = useToast();
 
   useEffect(() => {
     let mounted = true;
-    apiFetch("/programs")
-      .then((response) => {
-        if (mounted) setPrograms(response.data || []);
-      })
-      .catch((error) => pushToast(error.message, "error"))
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-    return () => { mounted = false; };
+
+    async function loadPrograms() {
+      try {
+        setLoading(true);
+
+        const response = await apiFetch("/programs");
+
+        console.log("PROGRAM RESPONSE:", response);
+
+        if (!mounted) return;
+
+        if (Array.isArray(response?.data)) {
+          setPrograms(response.data);
+        } else if (Array.isArray(response)) {
+          setPrograms(response);
+        } else {
+          setPrograms([]);
+        }
+      } catch (error) {
+        console.error("Failed loading programs:", error);
+        pushToast("Failed to load programs", "error");
+        setPrograms([]);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadPrograms();
+
+    return () => {
+      mounted = false;
+    };
   }, [pushToast]);
 
-  const programItems = useMemo(() => {
-    const live = programs.filter(
-      (p) => String(p.status || "").toLowerCase() !== "draft"
-    );
-    return live.length ? live : FALLBACK_PROGRAMS;
+  const categories = useMemo(() => {
+    return [
+      "all",
+      ...new Set(
+        programs
+          .map((p) => p.category)
+          .filter(Boolean)
+      ),
+    ];
   }, [programs]);
 
-  const categories = useMemo(
-    () => ["all", ...new Set(programItems.map((p) => p.category).filter(Boolean))],
-    [programItems]
-  );
+  const filteredPrograms = useMemo(() => {
+    let filtered = [...programs];
 
-  const filtered = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
-    const next = programItems.filter((p) => {
-      const matchesCategory = category === "all" ? true : p.category === category;
-      const haystack = [p.title, p.category, p.summary, p.description, p.location]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return matchesCategory && (!query || haystack.includes(query));
-    });
+    if (category !== "all") {
+      filtered = filtered.filter(
+        (p) => p.category === category
+      );
+    }
 
-    return [...next].sort((a, b) => {
-      if (sortBy === "goal-desc") return Number(b.goalAmount || 0) - Number(a.goalAmount || 0);
-      if (sortBy === "raised-desc") return Number(b.raisedAmount || 0) - Number(a.raisedAmount || 0);
-      if (sortBy === "title-desc") return String(b.title || "").localeCompare(String(a.title || ""));
-      return String(a.title || "").localeCompare(String(b.title || ""));
-    });
-  }, [programItems, category, searchTerm, sortBy]);
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+
+      filtered = filtered.filter((p) =>
+        [
+          p.title,
+          p.summary,
+          p.description,
+          p.category,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(search)
+      );
+    }
+
+    switch (sortBy) {
+      case "title-desc":
+        filtered.sort((a, b) =>
+          b.title.localeCompare(a.title)
+        );
+        break;
+
+      case "goal-desc":
+        filtered.sort(
+          (a, b) =>
+            Number(b.goalAmount || 0) -
+            Number(a.goalAmount || 0)
+        );
+        break;
+
+      case "raised-desc":
+        filtered.sort(
+          (a, b) =>
+            Number(b.raisedAmount || 0) -
+            Number(a.raisedAmount || 0)
+        );
+        break;
+
+      default:
+        filtered.sort((a, b) =>
+          a.title.localeCompare(b.title)
+        );
+    }
+
+    return filtered;
+  }, [programs, category, searchTerm, sortBy]);
 
   useEffect(() => {
     setPage(1);
-  }, [category, searchTerm, sortBy, pageSize]);
+  }, [category, searchTerm, sortBy]);
 
   const pagedPrograms = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, page, pageSize]);
+    return filteredPrograms.slice(start, start + pageSize);
+  }, [filteredPrograms, page, pageSize]);
 
   return (
     <PageTransition>
       <div className="programs-page">
+
+        {/* Hero */}
         <section className="programs-hero">
-          <div
-            className="hero-backdrop"
-            style={{ 
-              background: "radial-gradient(circle at 50% 120%, var(--color-brand-600) 0%, transparent 65%)",
-              opacity: 0.2,
-            }}
-          />
-          <div className="container text-center">
-            <motion.span
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="label text-accent-400 hero-eyebrow"
-            >
+          <div className="container text-center py-20">
+            <span className="label text-accent-400">
               Our Initiatives
-            </motion.span>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="hero-heading"
-            >
-              Strategic <span className="text-accent-400">Pathways</span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="hero-copy"
-            >
-              Programmes designed with clear metrics and sustainable community
-              outcomes for long-term growth.
-            </motion.p>
+            </span>
+
+            <h1 className="hero-heading mt-4">
+              Strategic{" "}
+              <span className="text-accent-400">
+                Pathways
+              </span>
+            </h1>
+
+            <p className="hero-copy mt-4">
+              Programmes designed with clear metrics and
+              sustainable community outcomes.
+            </p>
           </div>
         </section>
 
-        <div className="container programs-filter-shell">
-          <input
-            className="filter-field"
-            type="search"
-            placeholder="Search programs..."
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            aria-label="Search programs"
-          />
-          <select
-            className="filter-field"
-            value={sortBy}
-            onChange={(event) => setSortBy(event.target.value)}
-            aria-label="Sort programs"
-          >
-            <option value="title-asc">Title A-Z</option>
-            <option value="title-desc">Title Z-A</option>
-            <option value="goal-desc">Highest goal</option>
-            <option value="raised-desc">Most raised</option>
-          </select>
-          <div className="filter-pill-group">
-            {categories.map((item) => (
+        {/* Filters */}
+        <div className="container py-8">
+
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+
+            <input
+              type="search"
+              className="filter-field"
+              placeholder="Search programs..."
+              value={searchTerm}
+              onChange={(e) =>
+                setSearchTerm(e.target.value)
+              }
+            />
+
+            <select
+              className="filter-field"
+              value={sortBy}
+              onChange={(e) =>
+                setSortBy(e.target.value)
+              }
+            >
+              <option value="title-asc">
+                Title A-Z
+              </option>
+
+              <option value="title-desc">
+                Title Z-A
+              </option>
+
+              <option value="goal-desc">
+                Highest Goal
+              </option>
+
+              <option value="raised-desc">
+                Most Raised
+              </option>
+            </select>
+
+          </div>
+
+          <div className="flex flex-wrap gap-2 mb-10">
+            {categories.map((cat) => (
               <button
-                key={item}
-                className={`filter-pill ${category === item ? "filter-pill-active" : ""}`}
-                onClick={() => setCategory(item)}
+                key={cat}
+                onClick={() => setCategory(cat)}
+                className={`filter-pill ${
+                  category === cat
+                    ? "filter-pill-active"
+                    : ""
+                }`}
               >
-                {item}
+                {cat}
               </button>
             ))}
           </div>
-        </div>
 
-        <section className="section programs-grid-section">
-          <div className="container grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            {loading
-              ? Array(6)
-                  .fill(0)
-                  .map((_, i) => (
-                    <LoadingSkeleton
-                      key={i}
-                      className="programs-skeleton"
+          {/* Loading */}
+          {loading && (
+            <div className="grid md:grid-cols-3 gap-8">
+              {[1, 2, 3, 4, 5, 6].map((item) => (
+                <LoadingSkeleton
+                  key={item}
+                  className="h-80 rounded-3xl"
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Empty */}
+          {!loading && pagedPrograms.length === 0 && (
+            <div className="text-center py-20">
+              <h3 className="text-2xl font-bold">
+                No programs found
+              </h3>
+
+              <p className="text-gray-500 mt-2">
+                No matching programs were found.
+              </p>
+            </div>
+          )}
+
+          {/* Programs */}
+          {!loading && pagedPrograms.length > 0 && (
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
+
+              {pagedPrograms.map((program, index) => (
+                <motion.article
+                  key={program.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: index * 0.05,
+                  }}
+                  className="program-card overflow-hidden"
+                >
+
+                  <div className="h-56 overflow-hidden">
+                    <img
+                      src={resolveMediaUrl(
+                        program.heroImage
+                      )}
+                      alt={program.title}
+                      className="w-full h-full object-cover"
                     />
-                  ))
-              : pagedPrograms.map((p, i) => (
-                  <motion.article
-                    key={p.id || i}
-                    initial={{ opacity: 0, y: 24 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-60px" }}
-                    transition={{
-                      delay: i * 0.04,
-                      type: "spring",
-                      stiffness: 350,
-                      damping: 25,
-                    }}
-                    whileHover={{ y: -12 }}
-                    className="program-card group"
-                  >
-                    <div className="program-media">
-                      <img
-                        src={resolveMediaUrl(p.heroImage)}
-                        className="program-media-img"
-                        alt=""
-                      />
-                    <div className="program-meta">
-                        {p.category || "Impact"}
-                      </div>
+                  </div>
+
+                  <div className="p-6">
+
+                    <span className="text-xs bg-gray-200 px-3 py-1 rounded-full">
+                      {program.category}
+                    </span>
+
+                    <h3 className="font-bold text-xl mt-4">
+                      {program.title}
+                    </h3>
+
+                    <p className="text-gray-600 mt-3 line-clamp-3">
+                      {program.summary}
+                    </p>
+
+                    <div className="flex gap-2 mt-6">
+
+                      <Link
+                        to={`/programs/${program.slug}`}
+                        className="btn btn-primary flex-1"
+                      >
+                        View Details
+                      </Link>
+
+                      <Link
+                        to={`/donate?programId=${program.id}`}
+                        className="btn btn-secondary"
+                      >
+                        <Heart size={16} />
+                      </Link>
+
                     </div>
 
-                    <div className="program-body">
-                      <h3 className="program-title text-text-900 mb-1 leading-tight uppercase tracking-tight line-clamp-2">
-                        {p.title}
-                      </h3>
-                      <p className="program-description line-clamp-3">
-                        {truncateText(
-                          p.summary ||
-                            "Description in development. We are working on providing full details for this initiative.",
-                          150
-                        )}
-                      </p>
+                  </div>
 
-                      <div className="pt-4 mt-2 border-t border-border-subtle flex flex-col gap-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <span className="label text-text-400 text-[9px]">Goal</span>
-                            <div className="text-sm font-black text-brand-900">
-                              ${Number(p.goalAmount || 0).toLocaleString()}
-                            </div>
-                          </div>
-                          <div className="program-metric-status">
-                            <span className="label text-accent-600 text-[9px]">Secured</span>
-                            <div className="text-sm font-black text-accent-600">
-                              ${Number(p.raisedAmount || 0).toLocaleString()}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="program-progress">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            whileInView={{
-                              width: `${Math.min(100, (p.raisedAmount / (p.goalAmount || 1)) * 100)}%`,
-                            }}
-                            viewport={{ once: true }}
-                            transition={{
-                              duration: 1.5,
-                              ease: [0.16, 1, 0.3, 1],
-                            }}
-                            className="program-progress-fill"
-                          />
-                        </div>
-                      </div>
+                </motion.article>
+              ))}
 
-                      <div className="flex gap-2 mt-2">
-                        <Link
-                          to={
-                            p.id && !p.isFallback
-                              ? getProgramPath(p)
-                              : "/programs"
-                          }
-                          className="btn btn-primary btn-sm flex-grow"
-                        >
-                          Details
-                        </Link>
-                        <Link
-                          to={
-                            p.id && !p.isFallback
-                              ? `/donate?programId=${p.id}`
-                              : "/donate"
-                          }
-                          className="btn btn-secondary btn-icon"
-                        >
-                          <Heart size={14} className="fill-current text-accent-600" />
-                        </Link>
-                      </div>
-                    </div>
-                  </motion.article>
-                ))}
-          </div>
+            </div>
+          )}
+
           {!loading && (
             <PaginationControls
               page={page}
               pageSize={pageSize}
-              totalItems={filtered.length}
+              totalItems={filteredPrograms.length}
               onPageChange={setPage}
               onPageSizeChange={setPageSize}
               label="programs"
             />
           )}
-        </section>
+        </div>
       </div>
     </PageTransition>
   );

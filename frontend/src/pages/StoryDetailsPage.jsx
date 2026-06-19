@@ -24,7 +24,7 @@ function StoryDetailsPage() {
   }, [id, pushToast]);
 
   if (loading) return <PageTransition><div className="p-12"><LoadingSkeleton className="h-[600px] rounded-[40px]"/></div></PageTransition>;
-  if (!story) return <PageTransition><div className="container py-24 text-center"><h1 className="display-1">Story Archive Empty</h1><Link to="/stories" className="btn btn-primary mt-8 no-underline inline-block border-none cursor-pointer">Back to Library</Link></div></PageTransition>;
+  if (!story) return <PageTransition><div className="container py-24 text-center flex flex-col items-center"><h1 className="display-1">Story Archive Empty</h1><Link to="/stories" className="btn btn-primary mt-8 no-underline inline-block border-none cursor-pointer">Back to Library</Link></div></PageTransition>;
 
   return (
     <PageTransition>

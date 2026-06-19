@@ -1,2 +1,182 @@
-/* globals.css - Silver Shield Premium Design System (Utility Cleanup) */
-/* Fonts are loaded in index.css - this file only contains shared utilities */
+/* globals.css - Silver Shield Premium Design System (Utility Cleanup)
+   Note: This file is currently minimal in the repo snapshot.
+   Navbar styles are defined here to guarantee text visibility and dropdown stacking.
+*/
+
+:root {
+  color-scheme: light;
+
+  /* Core Brand Palette */
+  --color-brand-900: #60236c;
+  --color-brand-700: #c0a0f3;
+  --color-brand-600: #b9a0e3;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+
+  --color-surface: #f7eaf7;
+  --color-bg: #edcee8;
+  --color-border: rgba(96, 35, 108, 0.12);
+
+  --font-weight-bold: 700;
+  --transition-fast: 150ms ease;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+/* ========================================================== */
+/* Navbar system (explicit visibility + stacking)             */
+/* ========================================================== */
+
+.navbar-shell {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.navbar-shell.navbar-scrolled {
+  box-shadow: 0 14px 34px rgba(96, 35, 108, 0.12);
+}
+
+/* Desktop nav visibility */
+.main-desktop-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.nav-item-link {
+  display: inline-flex;
+  align-items: center;
+  height: 3rem;
+  padding: 0 0.85rem;
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-secondary) !important;
+  text-decoration: none;
+  background: transparent;
+  border-radius: 10px;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.nav-item-link:hover {
+  color: var(--color-brand-900) !important;
+  background: rgba(96, 35, 108, 0.06);
+}
+
+.nav-item-link--active {
+  color: var(--color-brand-900) !important;
+  background: rgba(96, 35, 108, 0.08);
+}
+
+.nav-item-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 3rem;
+  padding: 0 0.85rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary) !important;
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-bold);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast);
+  position: relative;
+  z-index: 1001;
+}
+
+.nav-item-button:hover {
+  color: var(--color-brand-900) !important;
+  background: rgba(96, 35, 108, 0.06);
+}
+
+.nav-item-active {
+  color: var(--color-brand-900) !important;
+  background: rgba(96, 35, 108, 0.08);
+}
+
+/* Dropdown stacking */
+.nav-dropdown-wrap {
+  position: relative;
+  z-index: 1002;
+}
+
+.nav-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  min-width: 20rem;
+  padding: 0.25rem 0;
+
+  background: rgba(247, 234, 247, 0.98);
+  border: 1px solid rgba(96, 35, 108, 0.16);
+  border-radius: 1rem;
+
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.16);
+  z-index: 9999 !important;
+
+  /* Prevent animations from creating visibility glitches */
+  opacity: 1;
+  transform: translateZ(0);
+  pointer-events: auto;
+}
+
+.program-dropdown-header {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.program-dropdown-link {
+  display: block;
+  padding: 0.8rem 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast), padding-left var(--transition-fast);
+  white-space: nowrap;
+}
+
+.program-dropdown-link:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-primary);
+  padding-left: 1.85rem;
+}
+
+.program-dropdown-link-active {
+  color: var(--color-brand-900);
+  background: rgba(127, 105, 250, 0.10);
+}
+
+/* Mobile menu (independent, no overlap) */
+.mobile-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 500;
+}
+
+.mobile-menu-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(95vw, 380px);
+  padding: 2.5rem 1.75rem 1.75rem;
+  background: var(--color-surface);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.18);
+  z-index: 510;
+  overflow-y: auto;
+}
+

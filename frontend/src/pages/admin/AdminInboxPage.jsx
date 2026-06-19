@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Inbox, Send, Archive, Trash2, Mail, Phone, User, Reply, Globe } from "lucide-react";
-import PageTransition from "../../components/PageTransition";
+import { Inbox, Send, Archive, Trash2, Mail, Phone, User, Reply, Globe, Eye } from "lucide-react";
+import PageTransition from "../../components/PageTransition"; // Ensure PageTransition is imported
 import LoadingSkeleton from "../../components/LoadingSkeleton";
 import { apiFetch } from "../../app/api";
 import { useAuth } from "../../context/AuthContext";
@@ -18,7 +18,7 @@ function AdminInboxPage() {
   const [loading, setLoading] = useState(true);
 
   const loadList = async () => {
-    const suffix = filter === "ALL" ? "" : `?status=${filter}`;
+    const suffix = filter === "ALL" ? "" : `?status=${filter.toLowerCase()}`;
     const response = await apiFetch(`/messages${suffix}`, { token });
     setMessages(response.data || []);
   };
@@ -39,7 +39,7 @@ function AdminInboxPage() {
     }, 30000);
 
     return () => { mounted = false; clearInterval(interval); };
-  }, [filter, token]);
+  }, [filter, token, pushToast]); // Added pushToast to dependencies
 
   const onReply = async () => {
     if (!selected?.id || !replyText.trim()) return;
@@ -87,22 +87,36 @@ function AdminInboxPage() {
     });
   };
 
+  const onMarkAsRead = async (id) => {
+    try {
+      await apiFetch(`/messages/${id}/read`, { method: "POST", token });
+      pushToast("Message marked as read.", "success");
+      // Update the message status in the local state without reloading the entire list
+      setMessages(prevMessages => prevMessages.map(msg =>
+        msg.id === id ? { ...msg, status: 'READ' } : msg
+      ));
+      // If the selected message was marked as read, update its status too
+      setSelected(prevSelected => prevSelected && prevSelected.id === id ? { ...prevSelected, status: 'READ' } : prevSelected);
+      // Consider adding a mechanism to refresh the dashboard summary here if needed
+    } catch (error) { pushToast(error.message, "error"); }
+  };
+
   return (
     <PageTransition>
       <div className="flex flex-col gap-8">
         
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 px-1">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-black text-accent-600 uppercase tracking-widest">Communications</span>
-            <h2 className="text-3xl font-black text-brand-900 m-0 uppercase tracking-tighter leading-tight">Inquiry Inbox</h2>
+            <span className="text-xs font-black text-accent-600 uppercase tracking-widest">Communications</span>
+            <h2 className="text-2xl font-black text-brand-900 m-0 uppercase tracking-tight leading-tight">Inquiry Inbox</h2>
           </div>
           
-          <div className="flex bg-white p-1 rounded-2xl border border-border-subtle shadow-sm">
+          <div className="flex bg-white p-1 rounded-xl border border-border-subtle shadow-sm">
             {["ALL", "UNREAD", "READ", "ARCHIVED"].map((status) => (
               <button
                 key={status}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-none cursor-pointer ${
-                  filter === status ? "bg-brand-900 text-white shadow-md" : "text-text-400 hover:text-brand-900"
+                className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all border-none cursor-pointer ${
+                  filter === status ? "bg-brand-900 text-white shadow-md" : "text-text-400 hover:text-brand-900 bg-transparent"
                 }`}
                 onClick={() => { setFilter(status); setSelected(null); }}
               >
@@ -112,18 +126,18 @@ function AdminInboxPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start min-h-[600px]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* List Panel */}
-          <div className="lg:col-span-4 h-full flex flex-col gap-4 overflow-hidden">
-            <div className="bg-white rounded-[32px] border border-border-subtle shadow-sm flex-grow overflow-y-auto max-h-[700px]">
+          <div className="lg:col-span-4 flex flex-col gap-4">
+           <div className="bg-white rounded-3xl border border-border-subtle shadow-md overflow-y-auto max-h-[calc(100vh-250px)] custom-scrollbar">
               {loading ? (
                 <div className="p-6 flex flex-col gap-4">
-                  {Array(4).fill(0).map((_, i) => <LoadingSkeleton key={i} className="h-20 rounded-2xl" />)}
+                  {Array(4).fill(0).map((_, i) => <LoadingSkeleton key={i} className="h-20 rounded-xl" />)}
                 </div>
               ) : messages.length === 0 ? (
                 <div className="p-20 text-center flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center text-brand-400">
+                  <div className="w-16 h-16 bg-surface-200 rounded-2xl flex items-center justify-center text-brand-400 border border-border-subtle">
                     <Inbox size={32} />
                   </div>
                   <h3 className="text-sm font-bold text-brand-900 uppercase">No Messages</h3>
@@ -131,23 +145,37 @@ function AdminInboxPage() {
               ) : (
                 <div className="flex flex-col">
                   {messages.map((msg) => (
+                    (() => {
+                      const status = String(msg.status || "").toUpperCase();
+                      return (
                     <button
                       key={msg.id}
-                      className={`p-6 text-left border-b border-border-subtle last:border-0 hover:bg-surface-200 transition-colors group relative border-none cursor-pointer w-full bg-transparent ${
-                        selected?.id === msg.id ? "bg-brand-100/50" : ""
+                      className={`p-6 text-left border-b border-border-subtle last:border-0 hover:bg-brand-50/50 transition-all group relative border-none cursor-pointer w-full bg-transparent ${
+                        selected?.id === msg.id ? "bg-brand-50" : ""
                       }`}
                       onClick={() => loadDetails(msg.id)}
                     >
-                      {msg.status === 'UNREAD' && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-accent-600 rounded-full" />}
+                      {status === 'UNREAD' && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-accent-600 rounded-full" />}
                       <div className="flex justify-between items-start mb-1">
                         <span className="text-[10px] font-black text-text-400 uppercase tracking-tighter">#{msg.id}</span>
                         <span className="text-[10px] font-bold text-text-400">{new Date(msg.createdAt).toLocaleDateString()}</span>
                       </div>
-                      <h4 className={`text-sm font-black m-0 truncate ${msg.status === 'UNREAD' ? 'text-brand-900' : 'text-text-700'}`}>
-                        {msg.subject}
+                      <h4 className={`text-sm font-black m-0 truncate ${status === 'UNREAD' ? 'text-brand-900' : 'text-text-700'}`}>
+                        {msg.subject || "No subject"}
                       </h4>
-                      <p className="text-xs text-text-500 font-medium truncate mt-1 m-0">{msg.fullName}</p>
+                      <div className="flex justify-between items-center mt-1">
+                        <p className="text-xs text-text-500 font-bold truncate m-0">{msg.senderName || msg.senderEmail || "Unknown sender"}</p>
+                        {status === 'UNREAD' && (
+                          <button onClick={(e) => { e.stopPropagation(); onMarkAsRead(msg.id); }}
+                                  className="p-1 text-brand-600 hover:bg-brand-100 rounded-lg transition-colors bg-transparent border-none cursor-pointer"
+                                  title="Mark as Read">
+                            <Eye size={14} />
+                          </button>
+                        )}
+                      </div>
                     </button>
+                      );
+                    })()
                   ))}
                 </div>
               )}
@@ -155,43 +183,43 @@ function AdminInboxPage() {
           </div>
 
           {/* Detail Panel */}
-          <div className="lg:col-span-8 h-full">
-            <div className="bg-white rounded-[40px] border border-border-subtle shadow-sm min-h-[600px] h-full flex flex-col overflow-hidden">
+          <div className="lg:col-span-8">
+            <div className="bg-white rounded-3xl border border-border-subtle shadow-md min-h-[500px] flex flex-col overflow-hidden">
               {!selected ? (
                 <div className="flex-grow flex flex-col items-center justify-center gap-4 text-text-400">
                   <Mail size={48} className="opacity-20" />
-                  <p className="text-[10px] font-black uppercase tracking-widest m-0">Select a thread to view</p>
+                  <p className="text-xs font-black uppercase tracking-widest m-0">Select a thread to view</p>
                 </div>
               ) : (
-                <div className="flex flex-col h-full p-10 overflow-y-auto max-h-[700px]">
+                <div className="flex flex-col p-10 overflow-y-auto max-h-[calc(100vh-250px)] custom-scrollbar">
                   <div className="flex flex-col md:flex-row justify-between items-start border-b border-border-subtle pb-8 mb-8 gap-4">
                     <div className="flex flex-col gap-2 flex-grow">
                       <div className="flex items-center gap-2">
-                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${selected.status === 'UNREAD' ? 'bg-accent-600 text-white' : 'bg-surface-300 text-text-500'}`}>
+                        <span className={`text-[11px] font-black px-2.5 py-1 rounded-full uppercase ${String(selected.status || "").toUpperCase() === 'UNREAD' ? 'bg-accent-600 text-white' : 'bg-surface-300 text-text-500'}`}>
                           {selected.status}
                         </span>
-                        <span className="text-[10px] font-bold text-text-400 uppercase tracking-widest">{new Date(selected.createdAt).toLocaleString()}</span>
+                        <span className="text-xs font-bold text-text-400 uppercase tracking-widest">{new Date(selected.createdAt).toLocaleString()}</span>
                       </div>
-                      <h2 className="text-2xl font-black text-brand-900 uppercase tracking-tighter m-0">{selected.subject}</h2>
+                      <h2 className="text-xl font-black text-brand-900 uppercase tracking-tight m-0">{selected.subject}</h2>
                       <div className="flex flex-wrap gap-6 mt-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-800"><User size={16}/></div>
+                          <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-800"><User size={18}/></div>
                           <div className="flex flex-col leading-tight">
-                            <span className="text-xs font-black text-text-900">{selected.fullName}</span>
-                            <span className="text-[10px] font-bold text-text-400 uppercase tracking-tighter">{selected.email}</span>
+                            <span className="text-sm font-black text-text-900">{selected.fullName}</span>
+                            <span className="text-xs font-bold text-text-400 lowercase">{selected.email}</span>
                           </div>
                         </div>
                         {selected.phone && (
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-surface-300 flex items-center justify-center text-text-700"><Phone size={16}/></div>
-                            <span className="text-xs font-bold text-text-700">{selected.phone}</span>
+                            <div className="w-10 h-10 rounded-xl bg-surface-100 flex items-center justify-center text-text-700"><Phone size={18}/></div>
+                            <span className="text-sm font-bold text-text-700">{selected.phone}</span>
                           </div>
                         )}
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={onArchive} className="p-3 bg-surface-200 text-brand-800 rounded-2xl hover:bg-brand-100 transition-colors border-none cursor-pointer shadow-sm" title="Archive"><Archive size={20}/></button>
-                      <button onClick={onDelete} className="p-3 bg-danger/10 text-danger rounded-2xl hover:bg-danger/20 transition-colors border-none cursor-pointer shadow-sm" title="Delete"><Trash2 size={20}/></button>
+                      <button onClick={onArchive} className="p-3 bg-surface-100 text-brand-800 rounded-xl hover:bg-brand-100 transition-colors border-none cursor-pointer shadow-sm" title="Archive"><Archive size={20}/></button>
+                      <button onClick={onDelete} className="p-3 bg-danger/10 text-danger rounded-xl hover:bg-danger/20 transition-colors border-none cursor-pointer shadow-sm" title="Delete"><Trash2 size={20}/></button>
                     </div>
                   </div>
 
@@ -201,12 +229,12 @@ function AdminInboxPage() {
                     </p>
 
                     <div className="flex flex-col gap-6">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         <Reply size={18} className="text-accent-600" />
-                        <h3 className="text-xs font-black text-brand-800 uppercase tracking-widest m-0">Send Official Response</h3>
+                        <h3 className="text-sm font-black text-brand-800 uppercase tracking-widest m-0">Official Response</h3>
                       </div>
-                      <textarea 
-                        className="w-full bg-surface-200 border-none p-6 rounded-[32px] focus:ring-2 focus:ring-brand-600 outline-none text-sm font-semibold min-h-[160px] leading-relaxed"
+                      <textarea
+                        className="w-full bg-surface-50 border border-border-subtle p-6 rounded-2xl focus:ring-2 focus:ring-brand-600 outline-none text-sm font-semibold min-h-[160px] leading-relaxed"
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
                         placeholder="Compose your reply here..."
@@ -215,7 +243,7 @@ function AdminInboxPage() {
                         <button 
                           onClick={onReply} 
                           disabled={!replyText.trim()}
-                          className="btn btn-primary px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg border-none cursor-pointer flex items-center gap-2"
+                          className="btn btn-primary px-10 py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg border-none cursor-pointer flex items-center gap-2"
                         >
                           <Send size={16}/> Send Reply
                         </button>

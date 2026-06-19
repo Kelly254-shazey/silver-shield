@@ -3,6 +3,36 @@
  * Team and Board Routes
  */
 class TeamRoutes {
+    private static function ensureTables() {
+        $defs = [
+            'team_members' => [
+                'twitterUrl' => "ALTER TABLE team_members ADD COLUMN twitterUrl VARCHAR(512) NULL AFTER linkedinUrl",
+                'facebookUrl' => "ALTER TABLE team_members ADD COLUMN facebookUrl VARCHAR(512) NULL AFTER twitterUrl",
+                'instagramUrl' => "ALTER TABLE team_members ADD COLUMN instagramUrl VARCHAR(512) NULL AFTER facebookUrl",
+                'websiteUrl' => "ALTER TABLE team_members ADD COLUMN websiteUrl VARCHAR(512) NULL AFTER instagramUrl",
+            ],
+            'board_members' => [
+                'email' => "ALTER TABLE board_members ADD COLUMN email VARCHAR(255) NULL AFTER credentials",
+                'phone' => "ALTER TABLE board_members ADD COLUMN phone VARCHAR(32) NULL AFTER email",
+                'bio' => "ALTER TABLE board_members ADD COLUMN bio TEXT NULL AFTER phone",
+                'twitterUrl' => "ALTER TABLE board_members ADD COLUMN twitterUrl VARCHAR(512) NULL AFTER linkedinUrl",
+                'facebookUrl' => "ALTER TABLE board_members ADD COLUMN facebookUrl VARCHAR(512) NULL AFTER twitterUrl",
+                'instagramUrl' => "ALTER TABLE board_members ADD COLUMN instagramUrl VARCHAR(512) NULL AFTER facebookUrl",
+                'websiteUrl' => "ALTER TABLE board_members ADD COLUMN websiteUrl VARCHAR(512) NULL AFTER instagramUrl",
+            ],
+        ];
+
+        foreach ($defs as $table => $missingColumns) {
+            $columns = Database::query("SHOW COLUMNS FROM $table");
+            $names = array_map(function ($column) { return $column['Field']; }, $columns);
+            foreach ($missingColumns as $column => $sql) {
+                if (!in_array($column, $names, true)) {
+                    Database::query($sql);
+                }
+            }
+        }
+    }
+
     public static function handleList() {
         self::handleMembers();
     }
@@ -37,9 +67,10 @@ class TeamRoutes {
         }
 
         try {
+            self::ensureTables();
             Database::query(
-                "INSERT INTO team_members (name, role, email, phone, bio, profileImage, department, linkedinUrl, orderIndex, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO team_members (name, role, email, phone, bio, profileImage, department, linkedinUrl, twitterUrl, facebookUrl, instagramUrl, websiteUrl, orderIndex, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
                     $input['name'],
                     $input['role'],
@@ -49,6 +80,10 @@ class TeamRoutes {
                     $input['profileImage'],
                     $input['department'] ?? 'general',
                     $input['linkedinUrl'] ?? '',
+                    $input['twitterUrl'] ?? '',
+                    $input['facebookUrl'] ?? '',
+                    $input['instagramUrl'] ?? '',
+                    $input['websiteUrl'] ?? '',
                     (int)($input['orderIndex'] ?? 0),
                     $input['status'] ?? 'active'
                 ]
@@ -66,9 +101,10 @@ class TeamRoutes {
         $input = Utils::getJsonInput();
 
         try {
+            self::ensureTables();
             Database::query(
                 "UPDATE team_members
-                 SET name = ?, role = ?, email = ?, phone = ?, bio = ?, profileImage = ?, department = ?, linkedinUrl = ?, orderIndex = ?, status = ?, updatedAt = NOW()
+                 SET name = ?, role = ?, email = ?, phone = ?, bio = ?, profileImage = ?, department = ?, linkedinUrl = ?, twitterUrl = ?, facebookUrl = ?, instagramUrl = ?, websiteUrl = ?, orderIndex = ?, status = ?, updatedAt = NOW()
                  WHERE id = ?",
                 [
                     $input['name'] ?? '',
@@ -79,6 +115,10 @@ class TeamRoutes {
                     $input['profileImage'] ?? '',
                     $input['department'] ?? 'general',
                     $input['linkedinUrl'] ?? '',
+                    $input['twitterUrl'] ?? '',
+                    $input['facebookUrl'] ?? '',
+                    $input['instagramUrl'] ?? '',
+                    $input['websiteUrl'] ?? '',
                     (int)($input['orderIndex'] ?? 0),
                     $input['status'] ?? 'active',
                     $id
@@ -103,15 +143,23 @@ class TeamRoutes {
         }
 
         try {
+            self::ensureTables();
             Database::query(
-                "INSERT INTO board_members (name, role, credentials, profileImage, linkedinUrl, orderIndex, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO board_members (name, role, credentials, email, phone, bio, profileImage, linkedinUrl, twitterUrl, facebookUrl, instagramUrl, websiteUrl, orderIndex, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
                     $input['name'],
                     $input['role'],
                     $input['credentials'],
+                    $input['email'] ?? '',
+                    $input['phone'] ?? '',
+                    $input['bio'] ?? '',
                     $input['profileImage'],
                     $input['linkedinUrl'] ?? '',
+                    $input['twitterUrl'] ?? '',
+                    $input['facebookUrl'] ?? '',
+                    $input['instagramUrl'] ?? '',
+                    $input['websiteUrl'] ?? '',
                     (int)($input['orderIndex'] ?? 0),
                     $input['status'] ?? 'active'
                 ]
@@ -129,16 +177,24 @@ class TeamRoutes {
         $input = Utils::getJsonInput();
 
         try {
+            self::ensureTables();
             Database::query(
                 "UPDATE board_members
-                 SET name = ?, role = ?, credentials = ?, profileImage = ?, linkedinUrl = ?, orderIndex = ?, status = ?, updatedAt = NOW()
+                 SET name = ?, role = ?, credentials = ?, email = ?, phone = ?, bio = ?, profileImage = ?, linkedinUrl = ?, twitterUrl = ?, facebookUrl = ?, instagramUrl = ?, websiteUrl = ?, orderIndex = ?, status = ?, updatedAt = NOW()
                  WHERE id = ?",
                 [
                     $input['name'] ?? '',
                     $input['role'] ?? '',
                     $input['credentials'] ?? '',
+                    $input['email'] ?? '',
+                    $input['phone'] ?? '',
+                    $input['bio'] ?? '',
                     $input['profileImage'] ?? '',
                     $input['linkedinUrl'] ?? '',
+                    $input['twitterUrl'] ?? '',
+                    $input['facebookUrl'] ?? '',
+                    $input['instagramUrl'] ?? '',
+                    $input['websiteUrl'] ?? '',
                     (int)($input['orderIndex'] ?? 0),
                     $input['status'] ?? 'active',
                     $id
@@ -161,6 +217,7 @@ class TeamRoutes {
         }
 
         try {
+            self::ensureTables();
             $where = $admin ? '' : "WHERE status = 'active'";
             $rows = Database::query("SELECT * FROM $table $where ORDER BY orderIndex ASC, createdAt ASC");
             Utils::jsonResponse($rows);

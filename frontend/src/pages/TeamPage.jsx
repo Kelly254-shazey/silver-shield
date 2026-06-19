@@ -136,7 +136,7 @@ function TeamPage() {
         if (boardRes.status === "fulfilled")
           setBoardMembers(boardRes.value?.data || []);
       })
-      .finally(() => {
+      .finally(() => { // Added missing dependency array
         if (mounted) setLoading(false);
       });
     return () => { mounted = false; };

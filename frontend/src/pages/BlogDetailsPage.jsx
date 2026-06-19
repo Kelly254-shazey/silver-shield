@@ -39,7 +39,7 @@ function BlogDetailsPage() {
   );
 
   if (!post) return (
-    <div className="container py-32 text-center flex flex-col items-center gap-6">
+    <div className="container py-32 text-center flex flex-col items-center gap-6"> {/* Added flex-col and items-center for better centering */}
       <h1 className="h1 text-brand-900">Article Not Found</h1>
       <p className="body-lg text-text-500">The article you are looking for might have been moved or removed.</p>
       <Link to="/blog" className="btn btn-primary">Return to Blog</Link>
@@ -50,7 +50,17 @@ function BlogDetailsPage() {
     <PageTransition>
       <div className="pb-24">
         <header className="bg-brand-900 pt-24 pb-24 text-white relative overflow-hidden">
-          <div className="absolute inset-0 opacity-70" style={{ background: `url(${resolveMediaUrl(post.coverImage)}) center/cover no-repeat` }} />
+          {post.coverImage && (
+            <div 
+              className="absolute inset-0 opacity-70 pointer-events-none" 
+              style={{ 
+                backgroundImage: `url("${resolveMediaUrl(post.coverImage)}")`,
+                backgroundPosition: 'center',
+                backgroundSize: 'cover',
+                backgroundRepeat: 'no-repeat'
+              }} 
+            />
+          )}
           <div className="container relative z-10">
             <div className="max-w-4xl mx-auto flex flex-col gap-8">
               <Link to="/blog" className="flex items-center gap-2 text-[10px] font-black text-brand-400 uppercase tracking-[0.3em] hover:text-white transition-colors no-underline w-fit">
@@ -77,9 +87,11 @@ function BlogDetailsPage() {
 
         <article className="container -mt-32 relative z-20">
           <div className="max-w-4xl mx-auto flex flex-col gap-10">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-[40px] md:rounded-[60px] overflow-hidden border-8 border-white shadow-premium bg-surface-200">
-              <img src={resolveMediaUrl(post.coverImage)} className="w-full aspect-video object-cover" alt="Article Cover" />
-            </motion.div>
+            {post.coverImage && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-[40px] md:rounded-[60px] overflow-hidden border-8 border-white shadow-premium bg-surface-200">
+                <img src={resolveMediaUrl(post.coverImage)} className="w-full aspect-video object-cover" alt="Article Cover" />
+              </motion.div>
+            )}
             <div className="card p-8 md:p-16 border border-border-subtle shadow-sm flex flex-col gap-8">
               {post.excerpt && (
                 <p className="body-lg text-brand-900 font-bold leading-relaxed italic border-l-4 border-accent-500 pl-6 m-0">

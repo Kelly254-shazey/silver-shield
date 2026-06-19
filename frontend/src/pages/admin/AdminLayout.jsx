@@ -1,149 +1,258 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  LayoutDashboard, 
-  Briefcase, 
-  BookOpen, 
-  BarChart3, 
-  Users2, 
-  Info, 
-  Calendar, 
-  Users, 
-  Heart, 
-  Inbox, 
-  FileText, 
-  LogOut, 
-  Globe,
-  Menu,
-  ChevronRight,
-  User,
-  Newspaper,
-  GitBranch
+import { useState, useMemo } from "react";
+import { Outlet, useLocation, Link, NavLink } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { useMediaQuery } from "react-responsive";
+import {
+  Menu, User, ChevronRight, Bell, Search, LogOut, Globe,
+  LayoutDashboard, Briefcase, BookOpen, BarChart3, Users2,
+  Info, Calendar, Users, Heart, Inbox, HeartHandshake,
+  FileText, Settings, Newspaper, GitBranch,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import LogoBrand from "../../components/LogoBrand";
 
-const navItems = [
-  { to: "/admin/dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
-  { to: "/admin/programs", label: "Programs", icon: <Briefcase size={20} /> },
-  { to: "/admin/sub-programs", label: "Sub-Programs", icon: <GitBranch size={20} /> },
-  { to: "/admin/blog", label: "Blog", icon: <Newspaper size={20} /> },
-  { to: "/admin/stories", label: "Stories", icon: <BookOpen size={20} /> },
-  { to: "/admin/impact", label: "Impact Stats", icon: <BarChart3 size={20} /> },
-  { to: "/admin/partners", label: "Partners", icon: <Users2 size={20} /> },
-  { to: "/admin/about", label: "About Page", icon: <Info size={20} /> },
-  { to: "/admin/events", label: "Events", icon: <Calendar size={20} /> },
-  { to: "/admin/team", label: "Team & Board", icon: <Users size={20} /> },
-  { to: "/admin/donations", label: "Donations", icon: <Heart size={20} /> },
-  { to: "/admin/inbox", label: "Inbox", icon: <Inbox size={20} /> },
-  { to: "/admin/docs", label: "Documentation", icon: <FileText size={20} /> },
+// ─── Navigation groups ───
+const navGroups = [
+  {
+    label: "Intelligence",
+    items: [
+      { to: "/admin/dashboard", label: "Overview", icon: <LayoutDashboard size={18} /> },
+      { to: "/admin/inbox", label: "Inquiry Feed", icon: <Inbox size={18} /> },
+    ],
+  },
+  {
+    label: "Communications",
+    items: [
+      { to: "/admin/programs", label: "Programs", icon: <Briefcase size={18} /> },
+      { to: "/admin/sub-programs", label: "Sub-Tracks", icon: <GitBranch size={18} /> },
+      { to: "/admin/blog", label: "Blog Console", icon: <Newspaper size={18} /> },
+      { to: "/admin/stories", label: "Narratives", icon: <BookOpen size={18} /> },
+      { to: "/admin/events", label: "Activations", icon: <Calendar size={18} /> },
+      { to: "/admin/about", label: "Brand Story", icon: <Info size={18} /> },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { to: "/admin/impact", label: "Site Metrics", icon: <BarChart3 size={18} /> },
+      { to: "/admin/donations", label: "Support Ledger", icon: <Heart size={18} /> },
+      { to: "/admin/partners", label: "Alliances", icon: <Users2 size={18} /> },
+      { to: "/admin/team", label: "The Collective", icon: <Users size={18} /> },
+      { to: "/admin/volunteers", label: "Personnel", icon: <HeartHandshake size={18} /> },
+    ],
+  },
+  {
+    label: "Systems",
+    items: [
+      { to: "/admin/docs", label: "AI Grounding", icon: <FileText size={18} /> },
+      { to: "/admin/settings", label: "Global Master", icon: <Settings size={18} /> },
+    ],
+  },
 ];
 
-function AdminLayout() {
-  const { user, logout } = useAuth();
-  const [navOpen, setNavOpen] = useState(false);
-  const location = useLocation();
+const allNavItems = navGroups.flatMap(g => g.items);
 
-  useEffect(() => {
-    setNavOpen(false);
-  }, [location.pathname]);
-
-  const currentTitle = navItems.find(item => item.to === location.pathname)?.label || "Admin Console";
-
+// ─── Sidebar component ───
+function Sidebar({ logout, onClose }) {
   return (
-    <div className="flex min-h-screen bg-surface-200 overflow-x-hidden font-body">
-      
-      {/* Sidebar */}
-      <aside className={`fixed lg:sticky top-0 left-0 h-screen w-72 bg-brand-900 text-white z-sticky transition-transform duration-300 ${
-        navOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-      }`}>
-        <div className="flex flex-col h-full p-6">
-          <div className="flex items-center gap-3 mb-10 px-2">
-            <LogoBrand variant="icon" className="invert brightness-0" />
-            <div className="flex flex-col leading-tight">
-              <h2 className="text-sm font-black tracking-wider uppercase m-0">Silver Shield</h2>
-              <p className="text-[10px] font-bold text-brand-400 tracking-widest uppercase m-0">Admin Console</p>
-            </div>
+    <div className="flex flex-col h-full w-72 bg-slate-900">
+      {/* Logo */}
+      <div className="p-6 border-b border-white/10 shrink-0">
+        <div className="flex items-center gap-3">
+          <LogoBrand />
+          <div>
+            <h2 className="text-white text-sm font-black uppercase tracking-wide">
+              Silver Shield
+            </h2>
+            <p className="text-slate-400 text-xs uppercase">Admin Console</p>
           </div>
+        </div>
+      </div>
 
-          <nav className="flex-grow flex flex-col gap-1 overflow-y-auto">
-            {navItems.map((item) => (
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-4 custom-scrollbar">
+        {navGroups.map((group) => (
+          <div key={group.label} className="mb-6">
+            <div className="px-5 mb-2 text-[10px] uppercase tracking-widest text-slate-400">
+              {group.label}
+            </div>
+            {group.items.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) => 
-                  `flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm no-underline ${
-                    isActive ? "bg-white/10 text-white shadow-sm" : "text-brand-400 hover:text-white hover:bg-white/5"
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `mx-3 mb-1 flex items-center gap-3 rounded-xl px-4 py-3 no-underline transition-colors ${
+                    isActive
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-white hover:bg-white/10"
                   }`
                 }
               >
                 {item.icon}
-                <span className="flex-grow">{item.label}</span>
-                <ChevronRight size={14} className="opacity-40" />
+                <span className="font-bold">{item.label}</span>
               </NavLink>
             ))}
-          </nav>
-
-          <div className="mt-8 pt-6 border-t border-white/5 flex flex-col gap-4">
-            <Link to="/" className="flex items-center gap-3 px-4 py-2 text-xs font-bold text-brand-500 hover:text-white transition-colors no-underline">
-              <Globe size={16} /> Public Website
-            </Link>
-            <button 
-              onClick={logout}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl bg-danger/10 text-danger hover:bg-danger/20 transition-all font-bold text-sm border-none cursor-pointer text-left"
-            >
-              <LogOut size={20} /> Sign Out
-            </button>
           </div>
-        </div>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div className="p-4 border-t border-white/10 shrink-0">
+        <Link
+          to="/"
+          className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white no-underline transition-colors"
+        >
+          <Globe size={18} />
+          Public Website
+        </Link>
+        <button
+          onClick={logout}
+          className="w-full mt-3 rounded-xl bg-white/5 hover:bg-red-500/10 hover:text-red-400 px-4 py-3 text-white/70 border border-white/10 transition-all cursor-pointer"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <LogOut size={18} />
+            <span className="font-bold">End Session</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Layout ───
+export default function AdminLayout() {
+  const { user, logout } = useAuth();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // ✅ Correctly detect large screens (≥1024px)
+  const isDesktop = useMediaQuery({ query: "(min-width: 1024px)" });
+
+  const location = useLocation();
+
+  // Breadcrumbs
+  const breadcrumbs = useMemo(() => {
+    const segments = location.pathname.split("/").filter(Boolean);
+    let path = "";
+    const crumbs = [{ label: "Console", to: "/admin" }];
+    segments.forEach((seg) => {
+      path += `/${seg}`;
+      if (seg === "admin") return;
+      const found = allNavItems.find(item => item.to === path);
+      crumbs.push({
+        label: found?.label || seg.charAt(0).toUpperCase() + seg.slice(1),
+        to: path,
+      });
+    });
+    return crumbs;
+  }, [location.pathname]);
+
+  const closeMobileSidebar = () => setMobileSidebarOpen(false);
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* ─── DESKTOP SIDEBAR (always visible on large screens) ─── */}
+      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-72 z-20">
+        <Sidebar logout={logout} onClose={closeMobileSidebar} />
       </aside>
 
-      {/* Backdrop */}
+      {/* ─── MOBILE SIDEBAR (overlay + slide-in) ─── */}
       <AnimatePresence>
-        {navOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-brand-900/60 backdrop-blur-sm z-[90] lg:hidden"
-            onClick={() => setNavOpen(false)}
-          />
+        {!isDesktop && mobileSidebarOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              className="fixed inset-0 bg-black/50 z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeMobileSidebar}
+            />
+            {/* Drawer */}
+            <motion.aside
+              className="fixed left-0 top-0 h-screen z-50"
+              initial={{ x: -288 }}
+              animate={{ x: 0 }}
+              exit={{ x: -288 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            >
+              <Sidebar logout={logout} onClose={closeMobileSidebar} />
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
-      <main className="flex-grow flex flex-col min-w-0">
-        <header className="sticky top-0 z-[80] bg-surface-100/80 backdrop-blur-md border-b border-border-subtle p-4 lg:px-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button 
-              className="lg:hidden p-2 text-text-900 bg-transparent border-none cursor-pointer"
-              onClick={() => setNavOpen(true)}
-            >
-              <Menu size={24} />
-            </button>
-            <h1 className="text-lg font-black text-brand-900 uppercase tracking-widest hidden sm:block">{currentTitle}</h1>
-          </div>
+      {/* ─── MAIN CONTENT ─── */}
+      <div
+        className={`flex flex-col flex-1 min-h-screen ${
+          isDesktop ? "pl-72" : ""
+        }`}
+      >
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
+          <div className="h-16 px-4 lg:px-6 flex items-center justify-between">
+            {/* Left: toggle + breadcrumbs */}
+            <div className="flex items-center gap-3 min-w-0">
+              {/* ✅ Toggle button is ONLY rendered on mobile */}
+              {!isDesktop && (
+                <button
+                  onClick={() => setMobileSidebarOpen(true)}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  aria-label="Open menu"
+                >
+                  <Menu size={20} />
+                </button>
+              )}
 
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col text-right hidden sm:flex leading-tight">
-                <span className="text-sm font-black text-text-900">{user?.name || "Administrator"}</span>
-                <span className="text-[10px] font-bold text-text-400 uppercase tracking-widest">Global Master</span>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-brand-100 border border-brand-800/10 flex items-center justify-center text-brand-800">
-                <User size={24} />
+              <nav className="flex items-center gap-1 flex-nowrap overflow-x-auto">
+                {breadcrumbs.map((crumb, i) => (
+                  <span key={crumb.to} className="flex items-center gap-1 whitespace-nowrap">
+                    <Link
+                      to={crumb.to}
+                      className={`text-xs font-bold no-underline ${
+                        i === breadcrumbs.length - 1
+                          ? "text-indigo-600"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
+                    >
+                      {crumb.label}
+                    </Link>
+                    {i < breadcrumbs.length - 1 && (
+                      <ChevronRight size={12} className="text-gray-300" />
+                    )}
+                  </span>
+                ))}
+              </nav>
+            </div>
+
+            {/* Right: actions + user */}
+            <div className="flex items-center gap-3 shrink-0">
+              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Search">
+                <Search size={16} className="text-gray-500" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative" aria-label="Notifications">
+                <Bell size={16} className="text-gray-500" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              </button>
+              <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200">
+                <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white shrink-0">
+                  <User size={14} />
+                </div>
+                <span className="text-xs font-bold hidden md:block text-gray-700">
+                  {user?.name || "Admin"}
+                </span>
               </div>
             </div>
           </div>
         </header>
 
-        <div className="p-4 lg:p-8 flex-grow">
-          <Outlet />
-        </div>
-      </main>
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
-
-export default AdminLayout;

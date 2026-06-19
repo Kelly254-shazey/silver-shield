@@ -11,6 +11,7 @@ function ConfirmDialog({
   confirmText = "Confirm",
   cancelText = "Cancel",
   variant = "primary",
+  isProcessing = false,
 }) {
   const handleBackdropClick = useCallback(
     (event) => {
@@ -38,7 +39,10 @@ function ConfirmDialog({
             className="absolute inset-0 bg-brand-900/40 backdrop-blur-sm"
             onClick={handleBackdropClick}
           />
-          <motion.div 
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-dialog-title"
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -49,11 +53,12 @@ function ConfirmDialog({
                 <div className={`p-2 rounded-xl ${variant === 'danger' ? 'bg-danger/10' : 'bg-brand-100'}`}>
                   {icons[variant] || icons.primary}
                 </div>
-                <h3 className="text-xl font-black text-brand-900 m-0 uppercase tracking-tight">{title}</h3>
+                <h3 id="confirm-dialog-title" className="text-xl font-black text-brand-900 m-0 uppercase tracking-tight">{title}</h3>
               </div>
               <button 
                 className="p-2 text-text-400 hover:text-brand-900 transition-colors bg-transparent border-none cursor-pointer"
                 onClick={onCancel}
+                disabled={isProcessing}
               >
                 <X size={20} />
               </button>
@@ -67,6 +72,7 @@ function ConfirmDialog({
               <button 
                 className="btn btn-secondary flex-grow py-3 rounded-2xl font-bold"
                 onClick={onCancel}
+                disabled={isProcessing}
               >
                 {cancelText}
               </button>
@@ -75,8 +81,9 @@ function ConfirmDialog({
                   variant === 'danger' ? 'bg-danger hover:bg-danger/90' : 'bg-brand-800 hover:bg-brand-900'
                 }`}
                 onClick={onConfirm}
+                disabled={isProcessing}
               >
-                {confirmText}
+                {isProcessing ? "Working..." : confirmText}
               </button>
             </div>
           </motion.div>

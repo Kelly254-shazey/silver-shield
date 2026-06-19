@@ -13,6 +13,9 @@ import {
 import { apiFetch, resolveMediaUrl } from "../app/api";
 import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
+import { useSiteSettings } from "../context/SiteSettingsContext";
+
+const DEFAULT_HERO = "https://edumin.co.ke/backend/uploads/com1-1771957870271-956089917.jpeg";
 
 function toYoutubeEmbed(url) {
   const value = String(url || "").trim();
@@ -26,11 +29,12 @@ function toYoutubeEmbed(url) {
 
 function AboutPage() {
   const [loading, setLoading] = useState(true);
+  const { settings } = useSiteSettings();
   const [about, setAbout] = useState({
     title: "About Silver Shield",
     storyContent: "",
-    mission: "",
-    vision: "",
+    mission: "", // Will be set from API or fallback in useEffect
+    vision: "",  // Will be set from API or fallback in useEffect
     heroImage: "",
     videoUrl: "",
   });
@@ -40,7 +44,12 @@ function AboutPage() {
     apiFetch("/about")
       .then((res) => {
         if (mounted)
-          setAbout((prev) => ({ ...prev, ...(res.data || {}) }));
+          setAbout((prev) => ({
+            ...prev,
+            ...(res.data || {}),
+            mission: res.data?.mission || settings?.mission || prev.mission, // Prioritize API, then settings, then current state
+            vision: res.data?.vision || settings?.vision || prev.vision,   // Prioritize API, then settings, then current state
+          }));
       })
       .finally(() => {
         if (mounted) setLoading(false);
@@ -48,10 +57,10 @@ function AboutPage() {
     return () => { mounted = false; };
   }, []);
 
-  const heroImage = useMemo(
-    () => resolveMediaUrl(about.heroImage),
-    [about.heroImage]
-  );
+  const heroImage = useMemo(() => {
+    const url = resolveMediaUrl(about.heroImage);
+    return url && !url.endsWith('/') ? url : DEFAULT_HERO;
+  }, [about.heroImage]);
   const youtubeEmbed = useMemo(
     () => toYoutubeEmbed(about.videoUrl),
     [about.videoUrl]

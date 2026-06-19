@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Send, Download, Heart, ArrowRight } from "lucide-react";
 import { apiFetch, apiUrl } from "../app/api";
 import { useToast } from "../context/ToastContext";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 import LogoBrand from "./LogoBrand";
 import SocialLinks from "./SocialLinks";
 
@@ -12,6 +13,7 @@ const quickLinks = [
   { to: "/programs", label: "Our Programs" },
   { to: "/events", label: "Upcoming Events" },
   { to: "/stories", label: "Impact Stories" },
+  { to: "/blog", label: "Shield Blog" },
   { to: "/contact", label: "Contact Us" },
 ];
 
@@ -27,6 +29,7 @@ function Footer() {
   const [newsletterDoc, setNewsletterDoc] = useState(null);
   const [subscriberEmail, setSubscriberEmail] = useState("");
   const [subscribing, setSubscribing] = useState(false);
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     let mounted = true;
@@ -77,20 +80,20 @@ function Footer() {
         <div className="footer-brand">
           <LogoBrand variant="minimal" tone="light" />
           <p className="footer-copy">
-            Building dignity, opportunity, and resilience across Bungoma through mentorship, outreach, and practical opportunity.
+            {settings?.footerTagline || "Building dignity, opportunity, and resilience across Bungoma through mentorship, outreach, and practical opportunity."}
           </p>
           <div className="footer-contact">
-            <a href="mailto:Shieldsilver105@gmail.com" className="footer-contact-link">
+            <a href={`mailto:${settings?.contactEmail || ""}`} className="footer-contact-link">
               <span className="footer-contact-icon"><Mail size={18} /></span>
-              Shieldsilver105@gmail.com
+              {settings?.contactEmail || "N/A"}
             </a>
-            <a href="tel:+254726836021" className="footer-contact-link">
+            <a href={`tel:${settings?.contactPhone || ""}`} className="footer-contact-link">
               <span className="footer-contact-icon"><Phone size={18} /></span>
-              0726 836021 / 0115 362421
+              {settings?.contactPhone || "N/A"}
             </a>
             <div className="footer-contact-link">
               <span className="footer-contact-icon"><MapPin size={18} /></span>
-              Kanduyi, Bungoma, Kenya
+              {settings?.officeLocation || "N/A"}
             </div>
           </div>
           <SocialLinks className="footer-socials" />

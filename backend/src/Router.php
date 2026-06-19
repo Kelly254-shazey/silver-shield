@@ -50,6 +50,8 @@ class Router {
         // Volunteers routes
         $this->routes['GET /api/volunteers'] = [VolunteerRoutes::class, 'handleList'];
         $this->routes['POST /api/volunteers'] = [VolunteerRoutes::class, 'handleRegister'];
+        $this->routes['PUT /api/volunteers/{id}'] = [VolunteerRoutes::class, 'handleUpdate'];
+        $this->routes['DELETE /api/volunteers/{id}'] = [VolunteerRoutes::class, 'handleDelete'];
 
         // Messages routes
         $this->routes['GET /api/messages'] = [MessageRoutes::class, 'handleList'];
@@ -90,6 +92,11 @@ class Router {
         // About routes
         $this->routes['GET /api/about'] = [AboutRoutes::class, 'handleGet'];
         $this->routes['PUT /api/about'] = [AboutRoutes::class, 'handleUpdate'];
+
+        // Settings routes
+        $this->routes['GET /api/settings'] = [SettingsRoutes::class, 'handleGet'];
+        $this->routes['PUT /api/settings'] = [SettingsRoutes::class, 'handleUpdate'];
+        $this->routes['GET /api/settings/public'] = [SettingsRoutes::class, 'handleGetPublic'];
 
         // Partners, Impact, Docs, AI routes
         $this->routes['GET /api/partners'] = [PartnerRoutes::class, 'handleList'];

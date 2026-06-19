@@ -1,12 +1,14 @@
 import LogoBrand from "./LogoBrand";
 import { Mail, Phone, MapPin, Globe } from "lucide-react";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 function DocumentHeader({ variant = "standard", customContact = null }) {
-  const contactInfo = customContact || {
-    address: "Community Impact Centre, Kanduyi, Kenya",
-    email: "Shieldsilver105@gmail.com",
-    phone: "0726 836021 / 0115 362421",
-    website: "www.silvershield.org",
+  const { settings } = useSiteSettings();
+  const contactInfo = customContact || { // Fallback to settings if customContact is not provided
+    address: settings?.officeLocation || "Community Impact Centre, Kanduyi, Kenya",
+    email: settings?.contactEmail || "Shieldsilver105@gmail.com",
+    phone: settings?.contactPhone || "0726 836021 / 0115 362421",
+    website: settings?.websiteUrl || "silvershield.org", // Use dynamic website URL if available
   };
 
   const titles = {

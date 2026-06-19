@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Smartphone, Copy, Check, ShieldCheck, Zap } from "lucide-react";
 import { apiFetch } from "../app/api";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 const fallbackDetails = {
   paybill: "522522",
@@ -8,15 +9,25 @@ const fallbackDetails = {
 };
 
 function MpesaPaymentCard() {
+  const { settings, loading: settingsLoading } = useSiteSettings();
   const [mpesaDetails, setMpesaDetails] = useState(fallbackDetails);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(null);
 
   useEffect(() => {
-    apiFetch("/donations/mpesa/details")
+    apiFetch("/donations/mpesa/details") // This API call is for STK configuration status
       .then(res => setMpesaDetails(res?.data || fallbackDetails))
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => {
+        // If settings are loaded, use them as fallback if API doesn't provide
+        if (!settingsLoading && settings) {
+          setMpesaDetails(prev => ({
+            paybill: settings.mpesaPaybill || prev.paybill,
+            accountNumber: settings.mpesaAccount || prev.accountNumber,
+          }));
+        } // This block ensures settings from context are used if API doesn't provide
+        setLoading(false);
+      });
+  }, [settings, settingsLoading]); // Added settings and settingsLoading to dependencies
 
   const copy = async (val, field) => {
     await navigator.clipboard.writeText(val);

@@ -14,11 +14,13 @@ import {
   Globe,
   Sparkles,
 } from "lucide-react";
+import CountUp from "../components/CountUp";
 import { apiFetch, resolveMediaUrl } from "../app/api";
 import { getProgramPath } from "../app/programCatalog";
 import { truncateText } from "../app/text";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import PageTransition from "../components/PageTransition";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 const ABOUT_FALLBACK = {
   title: "Silver Shield Organisation",
@@ -32,6 +34,14 @@ const ABOUT_FALLBACK = {
 const BASE = "https://edumin.co.ke/backend/uploads";
 const HERO_IMAGE_FALLBACK = `${BASE}/com1-1771957870271-956089917.jpeg`;
 
+// ─── Pillar colours (solid, no images) ────────────────────────────────────
+const PILLAR_COLORS = [
+  "#7c3aed", // purple – Women
+  "#4f46e5", // indigo – Youth
+  "#0ea5e9", // sky blue – Schools
+  "#8b5cf6", // violet – Community
+];
+
 const DEFAULT_PILLARS = [
   {
     key: "women",
@@ -39,8 +49,8 @@ const DEFAULT_PILLARS = [
     label: "Women Empowerment",
     title: "Women Empowerment",
     desc: "Dignity, skills, and practical economic opportunity for women and girls.",
-    image: `${BASE}/wezesha-1771957330475-984046030.jpeg`,
-    icon: <Users className="text-white" size={24} />,
+    icon: <Users size={28} />,
+    color: PILLAR_COLORS[0],
   },
   {
     key: "youth",
@@ -48,8 +58,8 @@ const DEFAULT_PILLARS = [
     label: "Youth Leadership",
     title: "Youth Leadership",
     desc: "Mentorship, exposure, and clear pathways for young people to lead and grow.",
-    image: `${BASE}/school1-1771957696185-702314221.jpeg`,
-    icon: <TrendingUp className="text-white" size={24} />,
+    icon: <TrendingUp size={28} />,
+    color: PILLAR_COLORS[1],
   },
   {
     key: "schools",
@@ -57,8 +67,8 @@ const DEFAULT_PILLARS = [
     label: "School Mentorship",
     title: "School Mentorship",
     desc: "Confidence, discipline, and career guidance delivered closer to learners.",
-    image: `${BASE}/school2-1771957710886-585105571.jpeg`,
-    icon: <ShieldCheck className="text-white" size={24} />,
+    icon: <ShieldCheck size={28} />,
+    color: PILLAR_COLORS[2],
   },
   {
     key: "community",
@@ -66,15 +76,90 @@ const DEFAULT_PILLARS = [
     label: "Community Outreach",
     title: "Community Outreach",
     desc: "Field engagement that connects families to support, hope, and practical next steps.",
-    image: `${BASE}/com1-1771957870271-956089917.jpeg`,
-    icon: <Globe className="text-white" size={24} />,
+    icon: <Globe size={28} />,
+    color: PILLAR_COLORS[3],
   },
 ];
+
+/* ─── Pillar styles – solid background, no images ────────────────────── */
+const pillarStyles = `
+  .pillar-card {
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.28s ease, box-shadow 0.28s ease;
+    box-shadow: 0 4px 18px -4px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+    padding: 1.5rem;
+    color: #fff;
+  }
+  .pillar-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px -8px rgba(0,0,0,0.4);
+  }
+  .pillar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+  .pillar-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    opacity: 0.3;
+    line-height: 1;
+  }
+  .pillar-icon {
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .pillar-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+  }
+  .pillar-copy {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    line-height: 1.5;
+    flex: 1;
+  }
+  .pillar-card-footer {
+    margin-top: 1rem;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    padding-top: 0.75rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .pillar-card-link {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    text-indent: -9999px;
+  }
+  .pillar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+`;
 
 function HomePage() {
   const [loading, setLoading] = useState(true);
   const [about, setAbout] = useState(ABOUT_FALLBACK);
   const [programs, setPrograms] = useState([]);
+  const [impactStats, setImpactStats] = useState([]);
+  const { settings, loading: settingsLoading } = useSiteSettings();
 
   const { scrollYProgress } = useScroll();
   const heroScale = useTransform(scrollYProgress, [0, 0.3], [1, 1.04]);
@@ -87,12 +172,21 @@ function HomePage() {
         const results = await Promise.allSettled([
           apiFetch("/about"),
           apiFetch("/programs"),
+          apiFetch("/impact/stats"),
         ]);
         if (!mounted) return;
+
         if (results[0].status === "fulfilled" && results[0].value?.data)
           setAbout((prev) => ({ ...prev, ...results[0].value.data }));
+
+        if (!settingsLoading && settings?.tagline)
+          setAbout((prev) => ({ ...prev, tagline: settings.tagline }));
+
         setPrograms(
-          results[1].status === "fulfilled" ? (results[1].value?.data || []) : []
+          results[1].status === "fulfilled" ? results[1].value?.data || [] : []
+        );
+        setImpactStats(
+          results[2].status === "fulfilled" ? results[2].value?.data || [] : []
         );
       } catch (err) {
         console.error("HomePage data fetch error:", err);
@@ -101,8 +195,10 @@ function HomePage() {
       }
     };
     fetchData();
-    return () => { mounted = false; };
-  }, []);
+    return () => {
+      mounted = false;
+    };
+  }, [settings, settingsLoading]);
 
   const featuredPrograms = useMemo(() => {
     const live = programs.filter(
@@ -118,6 +214,8 @@ function HomePage() {
 
   return (
     <PageTransition>
+      <style>{pillarStyles}</style>
+
       <div className="hp-root">
         {/* ─── HERO ─────────────────────────────── */}
         <section className="hero-section section-hero min-h-[65vh] flex items-center py-12 md:py-20">
@@ -125,10 +223,11 @@ function HomePage() {
             style={{ scale: heroScale, opacity: heroOpacity }}
             className="hero-overlay"
           >
-            <div 
-              className="hero-overlay-backdrop" 
-              style={{ 
-                background: "radial-gradient(circle at center, rgba(236, 72, 153, 0.1), rgba(0, 0, 0, 0.6))"
+            <div
+              className="hero-overlay-backdrop"
+              style={{
+                background:
+                  "radial-gradient(circle at center, rgba(236, 72, 153, 0.1), rgba(0, 0, 0, 0.6))",
               }}
             />
             <div
@@ -150,7 +249,7 @@ function HomePage() {
             >
               <span className="hero-eyebrow text-white">
                 <Sparkles size={14} />
-                {about.tagline || "Dignity 	 Opportunity 	 Momentum"}
+                {about.tagline || "Dignity • Opportunity • Momentum"}
               </span>
 
               <h1 className="hero-heading text-white">
@@ -190,6 +289,29 @@ function HomePage() {
           </div>
         </section>
 
+        {/* ─── IMPACT METRICS ─── */}
+        {impactStats.length > 0 && (
+          <section className="bg-brand-900 py-12 border-y border-white/5 relative z-20 shadow-lg">
+            <div className="container grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+              {[...impactStats]
+                .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0))
+                .map((stat) => (
+                  <div
+                    key={stat.id || stat.metricKey}
+                    className="flex flex-col items-center text-center gap-1"
+                  >
+                    <span className="text-3xl md:text-5xl font-black text-white tracking-tighter">
+                      <CountUp value={stat.value} suffix={stat.unit} />
+                    </span>
+                    <span className="text-[10px] font-black text-brand-400 uppercase tracking-[0.2em]">
+                      {stat.label}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </section>
+        )}
+
         {/* ─── FOUR PILLARS GRID ───────────────── */}
         <motion.section
           className="section section-surface section-border"
@@ -219,30 +341,33 @@ function HomePage() {
             </div>
 
             <div className="pillar-grid">
-              {DEFAULT_PILLARS.map((pillar) => (
+              {DEFAULT_PILLARS.map((pillar, i) => (
                 <motion.article
                   key={pillar.key}
-                  whileHover={{ y: -6 }}
-                  transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.1 }}
+                  transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
                   className="pillar-card"
+                  style={{ backgroundColor: pillar.color }} // solid colour
                 >
-                  <img
-                    src={pillar.image}
-                    alt={pillar.title}
-                    className="pillar-image"
-                  />
-
-                  <div className="pillar-card-content">
-                    <span className="pillar-pill">{pillar.initial}</span>
-                    <h3 className="h3 pillar-title">{pillar.title}</h3>
-                    <p className="pillar-copy">{pillar.desc}</p>
-                    <div className="pillar-card-footer">
-                      <div className="pillar-card-icon">{pillar.icon}</div>
-                      <span className="pillar-card-label">{pillar.label}</span>
-                    </div>
+                  <div className="pillar-header">
+                    <span className="pillar-number">{pillar.initial}</span>
+                    <div className="pillar-icon">{pillar.icon}</div>
                   </div>
 
-                  <Link to="/programs" className="pillar-card-link" aria-label={`Explore ${pillar.title}`} />
+                  <h3 className="pillar-title">{pillar.title}</h3>
+                  <p className="pillar-copy">{pillar.desc}</p>
+
+                  <div className="pillar-card-footer">
+                    {pillar.label}
+                  </div>
+
+                  <Link
+                    to="/programs"
+                    className="pillar-card-link"
+                    aria-label={`Explore ${pillar.title}`}
+                  />
                 </motion.article>
               ))}
             </div>

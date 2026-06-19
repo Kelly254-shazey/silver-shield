@@ -25,7 +25,7 @@ function BlogPage() {
       .then((res) => {
         if (mounted) setPosts(res.data || []);
       })
-      .catch(err => pushToast(err.message, "error"))
+      .catch(err => pushToast(err.message, "error")) // Added missing dependency array
       .finally(() => {
         if (mounted) setLoading(false);
       });

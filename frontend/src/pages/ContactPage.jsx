@@ -16,17 +16,11 @@ import {
   MessageSquare,
 } from "lucide-react";
 import PageTransition from "../components/PageTransition";
-import { apiFetch } from "../app/api";
+import { useSiteSettings } from "../context/SiteSettingsContext";
+import { apiFetch, resolveMediaUrl } from "../app/api";
 import { useToast } from "../context/ToastContext";
 import { useDialog } from "../context/DialogContext";
 import LoadingSkeleton from "../components/LoadingSkeleton";
-
-const detailCards = [
-  { title: "Email", value: "Shieldsilver105@gmail.com", icon: <Mail size={18} /> },
-  { title: "Phone", value: "0726 836021 / 0115 362421", icon: <Phone size={18} /> },
-  { title: "Location", value: "Community Impact Centre, Kanduyi, Bungoma", icon: <MapPin size={18} /> },
-  { title: "Working Hours", value: "Mon - Fri, 8:00 AM - 5:00 PM", icon: <Clock size={18} /> },
-];
 
 const INITIAL_FORM_DATA = {
   fullName: "",
@@ -43,12 +37,15 @@ const INITIAL_FORM_DATA = {
   volunteerAvailability: "",
 };
 
+const CONTACT_HERO_FALLBACK = "https://edumin.co.ke/backend/uploads/com1-1771957870271-956089917.jpeg";
+
 function ContactPage() {
   const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fileError, setFileError] = useState("");
+  const { settings, loading: settingsLoading } = useSiteSettings();
   const { pushToast } = useToast();
   const { showConfirm } = useDialog();
 
@@ -122,7 +119,7 @@ function ContactPage() {
           <div 
             className="absolute inset-0 opacity-60 pointer-events-none"
             style={{ 
-              backgroundImage: `url('https://edumin.co.ke/backend/uploads/com1-1771957870271-956089917.jpeg')`,
+              backgroundImage: `url('${resolveMediaUrl(settings?.contactHeroImage) || CONTACT_HERO_FALLBACK}')`, // Ensure resolveMediaUrl is imported
               backgroundSize: 'cover',
               backgroundPosition: 'center'
             }}
@@ -169,25 +166,37 @@ function ContactPage() {
             {/* Left Column: Context & Intel */}
             <div className="lg:col-span-5 flex flex-col gap-8">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
-              {detailCards.map((card, i) => (
-                <motion.div
-                  key={i}
-                  whileHover={{ y: -4 }}
-                  className="card p-6 md:p-8 flex flex-col gap-4 border border-border-subtle"
-                >
-                  <header className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center text-brand-800 shadow-sm">
-                    {card.icon}
+              {settingsLoading ? (
+                <>
+                  <LoadingSkeleton className="h-32 rounded-3xl" />
+                  <LoadingSkeleton className="h-32 rounded-3xl" />
+                  <LoadingSkeleton className="h-32 rounded-3xl" />
+                  <LoadingSkeleton className="h-32 rounded-3xl" />
+                </>
+              ) : (
+                [
+                  { title: "Email", value: settings?.contactEmail || "N/A", icon: <Mail size={18} /> },
+                  { title: "Phone", value: settings?.contactPhone || "N/A", icon: <Phone size={18} /> },
+                  { title: "Location", value: settings?.officeLocation || "N/A", icon: <MapPin size={18} /> },
+                  { title: "Working Hours", value: "Mon - Fri, 8:00 AM - 5:00 PM", icon: <Clock size={18} /> }, // Assuming working hours are not in settings yet
+                ].map((card, i) => (
+                  <motion.div
+                    key={i}
+                    whileHover={{ y: -4 }}
+                    className="card p-6 md:p-8 flex flex-col gap-4 border border-border-subtle"
+                  >
+                    <header className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center text-brand-800 shadow-sm">
+                      {card.icon}
+                      </div>
+                      <span className="label text-text-400 uppercase tracking-widest">{card.title}</span>
+                    </header>
+                    <div className="card-content flex-grow">
+                      <span className="text-base font-black text-brand-900 break-all tracking-tight">{card.value}</span>
                     </div>
-                    <span className="label text-text-400 uppercase tracking-widest">{card.title}</span>
-                  </header>
-                  <div className="card-content flex-grow">
-                    <span className="text-base font-black text-brand-900 break-all tracking-tight">
-                      {card.value}
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </div>
 
             <motion.div

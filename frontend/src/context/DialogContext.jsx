@@ -5,9 +5,10 @@ const DialogContext = createContext(null);
 
 export function DialogProvider({ children }) {
   const [dialogs, setDialogs] = useState([]);
+  const [busyIds, setBusyIds] = useState(new Set());
 
   const showConfirm = useCallback((options) => {
-    const id = Date.now();
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const {
       title = "Confirm",
       message = "",
@@ -24,9 +25,18 @@ export function DialogProvider({ children }) {
         id,
         title,
         message,
-        onConfirm: () => {
-          onConfirm?.();
-          setDialogs((d) => d.filter((dialog) => dialog.id !== id));
+        onConfirm: async () => {
+          setBusyIds((prev) => new Set(prev).add(id));
+          try {
+            await onConfirm?.();
+            setDialogs((d) => d.filter((dialog) => dialog.id !== id));
+          } finally {
+            setBusyIds((prev) => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+            });
+          }
         },
         onCancel: () => {
           onCancel?.();
@@ -68,6 +78,7 @@ export function DialogProvider({ children }) {
           confirmText={dialog.confirmText}
           cancelText={dialog.cancelText}
           variant={dialog.variant}
+          isProcessing={busyIds.has(dialog.id)}
         />
       ))}
     </DialogContext.Provider>

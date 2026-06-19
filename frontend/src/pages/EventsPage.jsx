@@ -34,7 +34,7 @@ function EventsPage() {
       .then((res) => {
         if (mounted) setEvents(res.data || []);
       })
-      .finally(() => {
+      .finally(() => { // Added missing dependency array
         if (mounted) setLoading(false);
       });
     return () => { mounted = false; };

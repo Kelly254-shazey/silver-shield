@@ -16,44 +16,55 @@ import {
 import { apiFetch } from "../app/api";
 import PageTransition from "../components/PageTransition";
 import { useToast } from "../context/ToastContext";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 const FALLBACK = {
   paybill: "522522",
   accountNumber: "1342183193",
   amount: 10,
-  merchantName: "kellyflo",
+  merchantName: "Silver Shield",
   stkProvider: "PAYHERO",
 };
 const PAYPAL_EMAIL = "Shieldsilver105@gmail.com";
 
+// Removed hardcoded FALLBACK and PAYPAL_EMAIL
+// These will be fetched from site settings
 function DonatePage() {
   const [mpesa, setMpesa] = useState(FALLBACK);
-  const [stkConfigured, setStkConfigured] = useState(true);
-  const [amount, setAmount] = useState("");
+  const [stkConfigured, setStkConfigured] = useState(false);
+  const [amount, setAmount] = useState(FALLBACK.amount); // Default amount for better UX
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [busy, setBusy] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
+  const { settings, loading: settingsLoading } = useSiteSettings();
   const { pushToast } = useToast();
 
   useEffect(() => {
-    let mounted = true;
-    apiFetch("/donations/mpesa/details")
-      .then((res) => {
-        if (!mounted) return;
-        const d = res?.data || {};
-        setMpesa({
-          paybill: String(d.paybill || FALLBACK.paybill),
-          accountNumber: String(d.accountNumber || FALLBACK.accountNumber),
-          amount: Number(d.amount || FALLBACK.amount),
-          merchantName: String(d.merchantName || FALLBACK.merchantName),
-          stkProvider: FALLBACK.stkProvider,
-        });
-        setStkConfigured(Boolean(d.configured));
-      })
-      .catch(() => {});
+    let mounted = true; // Flag to prevent state updates on unmounted component
+    if (settings && !settingsLoading) {
+      // Use settings from context if available
+      const paybill = settings.mpesaPaybill || "522522";
+      const accountNumber = settings.mpesaAccount || "1342183193";
+
+      setMpesa({
+        paybill: paybill,
+        accountNumber: accountNumber,
+        amount: 10,
+        merchantName: settings.merchantName || "Silver Shield", // Use dynamic merchant name if available
+        stkProvider: FALLBACK.stkProvider,
+      });
+
+      apiFetch("/donations/mpesa/details")
+        .then((res) => {
+          if (!mounted) return;
+          const d = res?.data || {};
+          setStkConfigured(Boolean(d.configured));
+        })
+        .catch(() => { if (mounted) setStkConfigured(false); });
+    }
     return () => { mounted = false; };
-  }, []);
+  }, [settings, settingsLoading, pushToast]); // Added pushToast to dependencies
 
   const copy = async (val, field) => {
     try {
@@ -98,7 +109,7 @@ function DonatePage() {
       const response = await apiFetch("/donations/initiate", {
         method: "POST",
         body: {
-          method: FALLBACK.stkProvider,
+          method: mpesa.stkProvider || FALLBACK.stkProvider,
           amount: amountValue,
           donorPhone: phoneResult.formatted,
           currency: "KES",
@@ -113,6 +124,8 @@ function DonatePage() {
       setBusy(false);
     }
   };
+
+  const payPalRecipient = settings?.paypalEmail || PAYPAL_EMAIL;
 
   return (
     <PageTransition>
@@ -364,11 +377,11 @@ function DonatePage() {
                     PayPal Recipient
                   </span>
                   <span className="text-sm font-bold text-text-900 break-all">
-                    {PAYPAL_EMAIL}
+                    {payPalRecipient}
                   </span>
                 </div>
                 <button
-                  onClick={() => copy(PAYPAL_EMAIL, "paypal")}
+                  onClick={() => copy(payPalRecipient, "paypal")}
                   className="w-9 h-9 bg-white rounded-xl text-accent-600 shadow-sm hover:bg-accent-600 hover:text-white transition-all flex items-center justify-center border border-accent-100 shrink-0"
                 >
                   {copiedField === "paypal" ? (
