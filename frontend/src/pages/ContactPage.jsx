@@ -37,7 +37,7 @@ const INITIAL_FORM_DATA = {
   volunteerAvailability: "",
 };
 
-const CONTACT_HERO_FALLBACK = "https://edumin.co.ke/backend/uploads/com1-1771957870271-956089917.jpeg";
+const CONTACT_HERO_FALLBACK = "https://www.edumin.co.ke/backend/uploads/com1-1771957870271-956089917.jpeg";
 
 function ContactPage() {
   const [searchParams] = useSearchParams();

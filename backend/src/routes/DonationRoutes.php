@@ -105,7 +105,9 @@ class DonationRoutes {
                         Env::get('PAYMENT_PROMPT_DESCRIPTION', 'silvershield organization')
                     );
                 } catch (Exception $e) {
-                    if (PaymentService::isConfigured() && self::shouldFallbackToMpesa($e->getMessage())) {
+                    // TEMP DEBUG: fallback disabled so we can see PayHero's real error.
+                    // Restore to: if (PaymentService::isConfigured() && self::shouldFallbackToMpesa($e->getMessage())) {
+                    if (false && PaymentService::isConfigured() && self::shouldFallbackToMpesa($e->getMessage())) {
                         error_log('PayHero STK failed with recoverable channel error; falling back to native M-Pesa.');
                         $method = 'MPESA';
                         if ($donationId !== null) {

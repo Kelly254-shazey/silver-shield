@@ -15,7 +15,7 @@ import PageTransition from "../components/PageTransition";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { useSiteSettings } from "../context/SiteSettingsContext";
 
-const DEFAULT_HERO = "https://edumin.co.ke/backend/uploads/com1-1771957870271-956089917.jpeg";
+const DEFAULT_HERO = "https://www.edumin.co.ke/backend/uploads/com1-1771957870271-956089917.jpeg";
 
 function toYoutubeEmbed(url) {
   const value = String(url || "").trim();

@@ -31,7 +31,7 @@ const ABOUT_FALLBACK = {
   tagline: "DIGNITY \u2022 OPPORTUNITY \u2022 MOMENTUM",
 };
 
-const BASE = "https://edumin.co.ke/backend/uploads";
+const BASE = "https://www.edumin.co.ke/backend/uploads";
 const HERO_IMAGE_FALLBACK = `${BASE}/com1-1771957870271-956089917.jpeg`;
 
 // ─── Pillar colours (solid, no images) ────────────────────────────────────

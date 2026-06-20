@@ -18,7 +18,7 @@
  *   const result = await api.upload('/upload', formData, token)
  */
 
-const LIVE_API_BASE_URL = 'https://edumin.co.ke/backend/'
+const LIVE_API_BASE_URL = 'https://www.edumin.co.ke/backend/'
 const API_BASE_URL = LIVE_API_BASE_URL
 
 function getApiRequestBaseUrl(baseUrl) {
